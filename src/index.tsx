@@ -55,13 +55,28 @@ app.get('/', (c) => {
     <html lang="ja">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
         <title>My Agent Analytics - 不動産投資分析プラットフォーム</title>
         <meta name="description" content="AIエージェントによる不動産データ分析・可視化プラットフォーム">
-        <link rel="icon" type="image/png" href="/static/icons/app-icon.png">
-        <link rel="apple-touch-icon" href="/static/icons/app-icon.png">
+        
+        <!-- Favicon - Multi-size for all browsers -->
+        <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
+        <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+        
+        <!-- Apple Touch Icon - iOS Safari -->
+        <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="MAA">
+        
+        <!-- PWA Manifest -->
         <link rel="manifest" href="/static/manifest.json">
+        
+        <!-- Theme Color - Multi-OS support -->
         <meta name="theme-color" content="#1e40af">
+        <meta name="msapplication-TileColor" content="#1e40af">
+        <meta name="msapplication-TileImage" content="/static/icons/icon-192.png">
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
         <style>
@@ -138,11 +153,11 @@ app.get('/', (c) => {
                 <!-- Feature 4 -->
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                     <div class="text-orange-600 text-4xl mb-4">
-                        <i class="fas fa-map-marked-alt"></i>
+                        <i class="fas fa-chart-area"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">役所調査支援</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">市場分析</h3>
                     <p class="text-gray-600">
-                        都市計画情報、ハザードマップ、建築制限などの役所調査情報を統合的に取得できます。
+                        国土交通省の実取引価格データ・地価公示情報を活用した市場動向分析と価格推定。
                     </p>
                 </div>
 
