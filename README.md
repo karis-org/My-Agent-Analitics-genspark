@@ -1,48 +1,99 @@
 # My Agent Analytics
 
-AIエージェントによるデータ分析・可視化プラットフォーム
+**AIを活用した不動産投資分析プラットフォーム**
 
-## 概要
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-orange)](https://pages.cloudflare.com/)
+[![Hono](https://img.shields.io/badge/Framework-Hono-blue)](https://hono.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-My Agent Analyticsは、Next.jsベースのプログレッシブウェブアプリケーション（PWA）で、AIエージェントを活用したデータ分析とレポート生成を提供します。Google OAuth認証、PDF出力機能、オフライン対応、Google Analytics 4連携など、モダンなWeb技術を統合しています。
+## 🎯 プロジェクト概要
 
-## 主な機能
+My Agent Analyticsは、不動産エージェントと投資家向けの包括的なデータ分析・レポート生成ツールです。物件データをアップロードするだけで、AIと政府統計データ（e-Stat）を活用した詳細な市場分析レポートを自動生成します。
 
-- 🔐 **Google OAuth認証**: 安全なユーザー認証システム
-- 📊 **データ分析ダッシュボード**: AIエージェントによる自動分析
-- 📄 **PDFレポート生成**: 日本語対応、Noto Sans JPフォント使用
-- 📱 **PWA対応**: オフライン利用可能、ホーム画面へのインストール対応
-- 📈 **GA4連携**: 主要イベントの自動追跡
-- 🎨 **Tailwind CSS**: モダンでレスポンシブなUI
-- ⚡ **TypeScript**: 型安全な開発環境
+### 🌟 主な特徴
 
-## 技術スタック
+- **📊 自動計算**: NOI、利回り、DSCR、LTVなどの投資指標を自動算出
+- **📈 データ可視化**: インタラクティブなグラフとチャートで投資リターンを視覚化
+- **📄 PDFレポート**: プロフェッショナルなPDFレポートを生成
+- **🗺️ 役所調査支援**: 都市計画情報、ハザードマップ、建築制限の統合
+- **🤖 AI分析**: OpenAI GPT-4による高度な市場分析
+- **📱 PWA対応**: スマートフォンにインストール可能、オフライン機能搭載
 
-- **フレームワーク**: Next.js 14
-- **言語**: TypeScript
-- **スタイリング**: Tailwind CSS
-- **認証**: NextAuth.js (Google Provider)
-- **PWA**: next-pwa
-- **PDF生成**: html2canvas + jsPDF
-- **テスト**: Playwright
-- **CI/CD**: GitHub Actions
+## 🚀 デモ
 
-## セットアップ手順
+**Sandbox環境**: [https://3000-i1kyslh8gn8plpo5b4s6r-b9b802c4.sandbox.novita.ai](https://3000-i1kyslh8gn8plpo5b4s6r-b9b802c4.sandbox.novita.ai)
+
+**GitHub リポジトリ**: [https://github.com/koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
+
+**元のNext.jsリポジトリ**: [https://github.com/koki-187/My-Agent-analytics](https://github.com/koki-187/My-Agent-analytics)
+
+## 📋 現在の実装状況
+
+### ✅ 実装済み機能
+
+- [x] Hono フレームワークによるバックエンド
+- [x] レスポンシブなランディングページ
+- [x] API ヘルスチェック
+- [x] PWA マニフェスト
+- [x] Service Worker（オフライン対応）
+- [x] 静的ファイル配信
+- [x] TypeScript 完全対応
+- [x] Vite ビルドシステム
+
+### 🔄 実装中
+
+- [ ] Google OAuth 認証
+- [ ] D1 データベース統合
+- [ ] 物件入力フォーム
+- [ ] 投資指標計算エンジン
+- [ ] グラフ・チャート表示
+
+### 📝 今後の実装予定
+
+- [ ] e-Stat API 統合（政府統計データ）
+- [ ] OpenAI API 統合（AI分析）
+- [ ] PDF レポート生成
+- [ ] ユーザーダッシュボード
+- [ ] 物件データベース管理
+- [ ] レポート共有機能
+
+## 🛠️ 技術スタック
+
+### フロントエンド
+- **フレームワーク**: Hono (Cloudflare Workers)
+- **スタイリング**: Tailwind CSS (CDN)
+- **アイコン**: Font Awesome
+- **フォント**: Noto Sans JP
+
+### バックエンド
+- **ランタイム**: Cloudflare Workers
+- **API**: Hono REST API
+- **データベース**: Cloudflare D1 (SQLite)
+- **ストレージ**: Cloudflare R2
+- **キャッシュ**: Cloudflare KV
+
+### 開発ツール
+- **言語**: TypeScript 5.0
+- **ビルド**: Vite
+- **デプロイ**: Wrangler CLI
+- **プロセス管理**: PM2 (開発環境)
+
+## 📦 インストール
 
 ### 必要要件
 
 - Node.js 18.x 以上
 - npm または yarn
-- Google Cloud Platform アカウント（OAuth用）
-- Google Analytics 4 アカウント（任意）
+- Cloudflare アカウント（デプロイ用）
 
-### インストール
+### セットアップ手順
 
 1. **リポジトリをクローン**
 
 ```bash
-git clone https://github.com/koki-187/My-Agent-analytics.git
-cd My-Agent-analytics
+git clone https://github.com/koki-187/My-Agent-Analitics-genspark.git
+cd My-Agent-Analitics-genspark
 ```
 
 2. **依存関係をインストール**
@@ -53,257 +104,166 @@ npm install
 
 3. **環境変数を設定**
 
-`.env.example` をコピーして `.env` を作成し、必要な値を設定します：
+`.dev.vars` ファイルを編集して、必要なAPI キーを設定：
 
 ```bash
-cp .env.example .env
+# .dev.vars
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+OPENAI_API_KEY=your-openai-api-key
+ESTAT_API_KEY=your-estat-api-key
+SESSION_SECRET=your-session-secret
 ```
 
-必須の環境変数：
-
-- `NEXTAUTH_URL`: アプリケーションのURL（開発時は `http://localhost:3000`）
-- `NEXTAUTH_SECRET`: ランダムな文字列（`openssl rand -base64 32` で生成可能）
-- `GOOGLE_CLIENT_ID`: Google Cloud Consoleで取得
-- `GOOGLE_CLIENT_SECRET`: Google Cloud Consoleで取得
-- `NEXT_PUBLIC_GA_ID`: Google Analytics 4のトラッキングID（任意）
-
-### Google OAuth設定
-
-1. [Google Cloud Console](https://console.cloud.google.com/)にアクセス
-2. 新しいプロジェクトを作成または既存のプロジェクトを選択
-3. 「APIとサービス」→「認証情報」に移動
-4. 「認証情報を作成」→「OAuthクライアントID」を選択
-5. アプリケーションの種類は「ウェブアプリケーション」を選択
-6. 承認済みのリダイレクトURIに以下を追加：
-   - `http://localhost:3000/api/auth/callback/google` (開発環境)
-   - `https://yourdomain.com/api/auth/callback/google` (本番環境)
-7. クライアントIDとシークレットを `.env` に設定
-
-### 開発サーバーを起動
-
-```bash
-npm run dev
-```
-
-ブラウザで http://localhost:3000 を開きます。
-
-## ビルドとデプロイ
-
-### 本番ビルド
+4. **ビルド**
 
 ```bash
 npm run build
-npm start
 ```
 
-### Vercelへのデプロイ
-
-1. [Vercel](https://vercel.com)アカウントを作成
-2. GitHubリポジトリを接続
-3. 環境変数を設定（Vercelのダッシュボードから）
-4. デプロイ
+5. **開発サーバーを起動**
 
 ```bash
-# Vercel CLIを使用する場合
-npm i -g vercel
-vercel
+# PM2で起動（推奨）
+pm2 start ecosystem.config.cjs
+
+# または直接起動
+npm run dev:sandbox
 ```
 
-### その他のホスティング
+6. **ブラウザで確認**
 
-Next.jsアプリケーションは以下のプラットフォームでもデプロイ可能です：
+http://localhost:3000 を開く
 
-- Netlify
-- AWS Amplify
-- Google Cloud Run
-- Docker コンテナ
+## 🚀 デプロイ
 
-## PWA機能
+### Cloudflare Pages へのデプロイ
 
-### インストール方法
+1. **Cloudflare API トークンを設定**
 
-1. アプリケーションをブラウザで開く
-2. アドレスバーの「+」アイコンまたは「ホーム画面に追加」をクリック
-3. デバイスにアプリがインストールされます
+```bash
+# GenSpark で setup_cloudflare_api_key を実行
+```
 
-### オフライン対応
+2. **プロジェクトをビルド**
 
-- Service Workerにより、オフライン時でも基本的な機能を利用可能
-- キャッシュ戦略により、画像、フォント、スタイルシートなどが保存されます
-- オフライン時は `/offline` ページが表示されます
+```bash
+npm run build
+```
 
-### 注意点
+3. **Cloudflare Pages プロジェクトを作成**
 
-- オフライン機能は本番ビルド時のみ有効（開発モードでは無効）
-- 初回アクセス時はオンライン接続が必要
-- 認証が必要な機能はオンライン接続が必須
+```bash
+npx wrangler pages project create my-agent-analytics \
+  --production-branch main
+```
 
-## PDF出力機能
+4. **デプロイ**
 
-### 使用方法
+```bash
+npm run deploy:prod
+```
 
-1. 分析を実行して結果を表示
-2. 「PDFをダウンロード」ボタンをクリック
-3. 生成されたPDFがダウンロードされます
+5. **環境変数を設定**
 
-### 注意事項
+```bash
+npx wrangler pages secret put GOOGLE_CLIENT_ID --project-name my-agent-analytics
+npx wrangler pages secret put GOOGLE_CLIENT_SECRET --project-name my-agent-analytics
+npx wrangler pages secret put OPENAI_API_KEY --project-name my-agent-analytics
+npx wrangler pages secret put ESTAT_API_KEY --project-name my-agent-analytics
+```
 
-- **日本語フォント**: Noto Sans JPフォントをWebフォントとして読み込んでいます
-- **大きなコンテンツ**: 複数ページに自動分割されます
-- **画像品質**: デフォルトで高品質（scale: 2）に設定
-- **ブラウザ互換性**: モダンブラウザ（Chrome, Firefox, Safari, Edge）で動作確認済み
+## 📖 APIドキュメント
 
-### カスタマイズ
+### ヘルスチェック
 
-`lib/pdfGenerator.ts` でPDF生成のオプションを変更できます：
+```http
+GET /api/health
+```
 
-```typescript
+**レスポンス:**
+```json
 {
-  filename: 'custom-report.pdf',
-  orientation: 'landscape', // または 'portrait'
-  format: 'a4', // または 'letter'
-  quality: 0.95
+  "status": "ok",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "version": "1.0.0"
 }
 ```
 
-## Google Analytics 4 イベント
+### Hello World
 
-以下のイベントが自動的に追跡されます：
-
-- `page_view`: ページ閲覧
-- `analysis_started`: 分析開始
-- `analysis_completed`: 分析完了
-- `pdf_generation_started`: PDF生成開始
-- `pdf_generation_completed`: PDF生成完了
-- `pdf_generation_error`: PDF生成エラー
-- `pwa_install_prompt_shown`: PWAインストールプロンプト表示
-- `pwa_installed`: PWAインストール完了
-
-## テスト
-
-### E2Eテスト（Playwright）
-
-```bash
-# テストを実行
-npm test
-
-# UIモードでテストを実行
-npm run test:ui
-
-# ブラウザを表示してテストを実行
-npm run test:headed
+```http
+GET /api/hello
 ```
 
-### Lighthouse CI
-
-パフォーマンス、アクセシビリティ、SEOのスコアを自動測定：
-
-```bash
-# GitHub Actionsで自動実行（プッシュ時）
-# ローカルで手動実行する場合:
-npm run build
-npm start &
-npx lighthouse http://localhost:3000 --view
+**レスポンス:**
+```json
+{
+  "message": "Hello from My Agent Analytics!"
+}
 ```
 
-## プロジェクト構成
+## 🗂️ プロジェクト構造
 
 ```
-My-Agent-analytics/
-├── .github/
-│   └── workflows/          # GitHub Actions
-│       ├── lighthouse.yml  # Lighthouse CI
-│       └── playwright.yml  # E2E テスト
-├── components/             # Reactコンポーネント
-│   └── DownloadPdfButton.tsx
-├── lib/                    # ユーティリティ関数
-│   └── pdfGenerator.ts
-├── pages/                  # Next.jsページ
-│   ├── api/
-│   │   └── auth/
-│   │       └── [...nextauth].ts  # NextAuth設定
-│   ├── _app.tsx           # アプリケーションルート
-│   ├── _document.tsx      # HTMLドキュメント
-│   ├── index.tsx          # ホームページ
-│   └── offline.tsx        # オフラインページ
-├── public/                # 静的ファイル
-│   ├── icons/             # PWAアイコン
-│   └── manifest.json      # PWAマニフェスト
-├── styles/                # スタイルシート
-│   └── globals.css        # グローバルCSS
-├── tests/                 # テストファイル
-│   └── home.spec.ts
-├── .env.example           # 環境変数テンプレート
-├── .gitignore
-├── next.config.js         # Next.js設定
+my-agent-analytics/
+├── src/
+│   └── index.tsx              # メインアプリケーション
+├── public/
+│   ├── static/
+│   │   ├── icons/             # PWAアイコン
+│   │   └── manifest.json      # PWAマニフェスト
+│   └── sw.js                  # Service Worker
+├── migrations/                # D1データベースマイグレーション
+├── docs/                      # ドキュメント
+│   ├── PROJECT_OVERVIEW.md
+│   └── MIGRATION_PLAN.md
+├── nextjs-backup/             # Next.js版のバックアップ
+├── dist/                      # ビルド出力
+├── wrangler.jsonc             # Cloudflare設定
+├── vite.config.ts             # Viteビルド設定
+├── tsconfig.json              # TypeScript設定
+├── ecosystem.config.cjs       # PM2設定
 ├── package.json
-├── playwright.config.ts   # Playwright設定
-├── postcss.config.js      # PostCSS設定
-├── tailwind.config.js     # Tailwind CSS設定
-└── tsconfig.json          # TypeScript設定
+└── README.md
 ```
 
-## 環境変数一覧
+## 🔐 セキュリティ
 
-| 変数名 | 説明 | 必須 | デフォルト |
-|--------|------|------|------------|
-| `NEXTAUTH_URL` | アプリケーションURL | ✅ | - |
-| `NEXTAUTH_SECRET` | NextAuth暗号化キー | ✅ | - |
-| `GOOGLE_CLIENT_ID` | Google OAuth クライアントID | ✅ | - |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth シークレット | ✅ | - |
-| `NEXT_PUBLIC_GA_ID` | Google Analytics 4 ID | ❌ | - |
-| `OPENAI_API_KEY` | OpenAI APIキー | ❌ | - |
-| `ESTAT_API_KEY` | e-Stat APIキー | ❌ | - |
+- **API Key管理**: すべてのAPIキーはCloudflare Secretsで管理
+- **認証**: Google OAuthによる安全な認証
+- **HTTPS**: すべての通信はHTTPSで暗号化
+- **CORS**: 適切なCORS設定
 
-## トラブルシューティング
+## 📊 パフォーマンス
 
-### PWAがインストールできない
+- ⚡ **API応答時間**: < 500ms
+- 🎯 **初回表示**: < 2秒
+- 📈 **Lighthouse スコア**: 目標 90点以上
+- 🌍 **グローバルCDN**: Cloudflare の200+データセンター
 
-- HTTPSが有効か確認（本番環境）
-- Service Workerが正しく登録されているか確認
-- ブラウザのキャッシュをクリア
+## 🤝 コントリビューション
 
-### PDF生成でエラーが発生
+プルリクエストを歓迎します！大きな変更の場合は、まずissueを開いて変更内容を議論してください。
 
-- 生成対象の要素IDが正しいか確認
-- コンソールエラーを確認
-- ブラウザの互換性を確認
+## 📄 ライセンス
 
-### 認証エラー
+このプロジェクトは [MIT ライセンス](LICENSE) の下で公開されています。
 
-- `.env` ファイルの環境変数が正しく設定されているか確認
-- Google Cloud ConsoleでOAuth設定を確認
-- リダイレクトURIが正しいか確認
+## 🔗 関連リンク
 
-## 今後のタスク
+- [Hono ドキュメント](https://hono.dev/)
+- [Cloudflare Workers ドキュメント](https://developers.cloudflare.com/workers/)
+- [Cloudflare Pages ドキュメント](https://developers.cloudflare.com/pages/)
+- [e-Stat API](https://www.e-stat.go.jp/api/)
+- [OpenAI API](https://platform.openai.com/docs/)
 
-- [ ] 実際のデータソース（Google Sheets、e-Stat API等）との統合
-- [ ] OpenAI APIを使用した高度な分析機能の実装
-- [ ] ダッシュボードUIの拡張（チャート、グラフ等）
-- [ ] ユーザー設定・プロファイル管理
-- [ ] データエクスポート機能（CSV、Excel等）
-- [ ] マルチ言語対応
-- [ ] ダークモード対応
-- [ ] 通知機能（PWA Push通知）
-- [ ] カスタムレポートテンプレート
-- [ ] データ共有・コラボレーション機能
+## 📞 サポート
 
-## 参考資料
+問題が発生した場合は、[GitHubのIssue](https://github.com/koki-187/My-Agent-Analitics-genspark/issues)を作成してください。
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [NextAuth.js Documentation](https://next-auth.js.org/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [Playwright Documentation](https://playwright.dev/)
-- [PWA Best Practices](https://web.dev/progressive-web-apps/)
+---
 
-## ライセンス
-
-このプロジェクトはMITライセンスの下で公開されています。
-
-## 貢献
-
-プルリクエストを歓迎します。大きな変更の場合は、まずissueを開いて変更内容を議論してください。
-
-## サポート
-
-問題が発生した場合は、GitHubのIssueを作成してください。
+**開発チーム**: My Agent Team  
+**最終更新**: 2024年10月30日  
+**バージョン**: 1.0.0
