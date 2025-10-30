@@ -86,6 +86,10 @@ export interface Bindings {
   GOOGLE_CLIENT_SECRET: string;
   OPENAI_API_KEY: string;
   ESTAT_API_KEY: string;
+  REINFOLIB_API_KEY: string; // 不動産情報ライブラリAPIキー
+  ITANDI_API_KEY: string; // イタンジAPIキー
+  REINS_LOGIN_ID: string; // レインズログインID
+  REINS_PASSWORD: string; // レインズパスワード
   SESSION_SECRET: string;
 }
 
