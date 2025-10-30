@@ -5,14 +5,14 @@
   "pages_build_output_dir": "./dist",
   "compatibility_flags": ["nodejs_compat"],
   
-  // D1 Database configuration (uncomment when database is created)
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "webapp-production",
-  //     "database_id": "your-database-id-here"
-  //   }
-  // ],
+  // D1 Database configuration
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "webapp-production",
+      "database_id": "47496192-3bb1-46d7-95dc-915941ea6eb6"
+    }
+  ],
   
   // KV Namespace configuration (uncomment when needed)
   // "kv_namespaces": [

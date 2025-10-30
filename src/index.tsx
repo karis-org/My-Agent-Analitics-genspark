@@ -1,14 +1,27 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/cloudflare-workers'
+import type { Bindings, Variables } from './types'
+import auth from './routes/auth'
+import dashboard from './routes/dashboard'
+import { optionalAuthMiddleware } from './middleware/auth'
 
-const app = new Hono()
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // Enable CORS for API routes
 app.use('/api/*', cors())
 
 // Serve static files from public/static directory
 app.use('/static/*', serveStatic({ root: './public' }))
+
+// Optional auth middleware for all routes (loads user if logged in)
+app.use('*', optionalAuthMiddleware)
+
+// Auth routes
+app.route('/auth', auth)
+
+// Dashboard routes (requires authentication)
+app.route('/dashboard', dashboard)
 
 // API routes
 app.get('/api/health', (c) => {
@@ -58,9 +71,9 @@ app.get('/', (c) => {
                             <p class="text-sm text-gray-600">不動産投資分析プラットフォーム</p>
                         </div>
                     </div>
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-block">
                         <i class="fas fa-sign-in-alt mr-2"></i>ログイン
-                    </button>
+                    </a>
                 </div>
             </div>
         </header>
@@ -74,9 +87,9 @@ app.get('/', (c) => {
                 <p class="text-xl text-gray-700 mb-8">
                     物件データを入力するだけで、包括的な市場分析レポートを自動生成
                 </p>
-                <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105">
+                <a href="/auth/login" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105 inline-block">
                     <i class="fas fa-rocket mr-2"></i>今すぐ始める
-                </button>
+                </a>
             </div>
 
             <!-- Features Grid -->
@@ -177,9 +190,9 @@ app.get('/', (c) => {
                 <p class="text-xl mb-8 opacity-90">
                     アカウント作成は30秒。クレジットカード不要。
                 </p>
-                <button class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105">
+                <a href="/auth/login" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105 inline-block">
                     <i class="fas fa-user-plus mr-2"></i>無料アカウント作成
-                </button>
+                </a>
             </div>
         </main>
 
