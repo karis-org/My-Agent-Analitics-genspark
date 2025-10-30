@@ -488,4 +488,259 @@ api.post('/properties/price-impact', async (c) => {
   }
 });
 
+/**
+ * Generate PDF report for property
+ * GET /api/properties/:id/pdf
+ */
+api.get('/properties/:id/pdf', async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    const propertyId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    // Get property
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+    
+    if (!property) {
+      return c.json({ error: 'Property not found' }, 404);
+    }
+    
+    // Import PDF generator
+    const { generatePropertyReportHTML } = await import('../lib/pdf-generator');
+    
+    // Generate PDF HTML
+    const html = generatePropertyReportHTML({
+      id: property.id as string,
+      address: property.address as string,
+      price: property.price as number,
+      area: property.area as number,
+      buildingArea: property.building_area as number | undefined,
+      landArea: property.land_area as number | undefined,
+      yearBuilt: property.year_built as number | undefined,
+      propertyType: property.property_type as '戸建て' | 'マンション' | '土地' | 'アパート',
+      createdAt: property.created_at as string,
+    });
+    
+    // Return HTML for browser print API
+    return c.html(html);
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    return c.json({ error: 'Failed to generate PDF' }, 500);
+  }
+});
+
+/**
+ * Generate PDF report for investigation
+ * POST /api/properties/investigation-pdf
+ */
+api.post('/properties/investigation-pdf', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { address } = body;
+    
+    if (!address) {
+      return c.json({ error: 'Address is required' }, 400);
+    }
+    
+    // Import utilities
+    const { 
+      searchAccidentProperty, 
+      assessOverallRisk,
+    } = await import('../lib/property-investigation');
+    
+    const { generateInvestigationReportHTML } = await import('../lib/pdf-generator');
+    
+    // Search for accident property info
+    const accident = await searchAccidentProperty(address);
+    
+    // Mock data
+    const urbanPlanning = {
+      useDistrict: '第一種住居地域',
+      buildingCoverageRatio: 60,
+      floorAreaRatio: 200,
+      firePreventionDistrict: '準防火地域',
+    };
+    
+    const hazards = {
+      floodRisk: 'low',
+      landslideRisk: 'none',
+      liquefactionRisk: 'medium',
+    };
+    
+    const overallRisk = assessOverallRisk(hazards, accident, urbanPlanning);
+    
+    // Generate PDF HTML
+    const html = generateInvestigationReportHTML({
+      address,
+      urbanPlanning,
+      hazards,
+      accident: {
+        hasAccident: accident.hasAccident,
+        accidentType: accident.accidentType || undefined,
+        disclosureRequired: accident.disclosureRequired,
+        priceImpact: accident.priceImpact,
+      },
+      investigationDate: new Date().toISOString(),
+      investigator: 'My Agent Analytics System',
+      overallRisk,
+    });
+    
+    // Return HTML for browser print API
+    return c.html(html);
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    return c.json({ error: 'Failed to generate PDF' }, 500);
+  }
+});
+
+/**
+ * Compare multiple properties
+ * POST /api/properties/compare
+ */
+api.post('/properties/compare', async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    const body = await c.req.json();
+    const { propertyIds } = body;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    if (!propertyIds || !Array.isArray(propertyIds) || propertyIds.length < 2) {
+      return c.json({ error: 'At least 2 property IDs are required' }, 400);
+    }
+    
+    if (propertyIds.length > 5) {
+      return c.json({ error: 'Maximum 5 properties can be compared at once' }, 400);
+    }
+    
+    // Get properties
+    const placeholders = propertyIds.map(() => '?').join(',');
+    const properties = await env.DB.prepare(`
+      SELECT * FROM properties 
+      WHERE id IN (${placeholders}) AND user_id = ?
+      ORDER BY price ASC
+    `).bind(...propertyIds, user.id).all();
+    
+    if (!properties.results || properties.results.length === 0) {
+      return c.json({ error: 'No properties found' }, 404);
+    }
+    
+    // Calculate comparison metrics
+    const comparison = properties.results.map((p: any) => {
+      const pricePerM2 = p.area ? p.price / p.area : 0;
+      const pricePerTsubo = p.land_area ? p.price / (p.land_area / 3.3058) : 0;
+      const buildingAge = p.year_built ? new Date().getFullYear() - p.year_built : null;
+      
+      return {
+        id: p.id,
+        address: p.address,
+        propertyType: p.property_type,
+        price: p.price,
+        area: p.area,
+        buildingArea: p.building_area,
+        landArea: p.land_area,
+        yearBuilt: p.year_built,
+        buildingAge,
+        pricePerM2: Math.round(pricePerM2),
+        pricePerTsubo: Math.round(pricePerTsubo),
+        createdAt: p.created_at,
+      };
+    });
+    
+    // Find best values
+    const bestPrice = Math.min(...comparison.map(p => p.price));
+    const bestPricePerM2 = Math.min(...comparison.filter(p => p.pricePerM2 > 0).map(p => p.pricePerM2));
+    const largestArea = Math.max(...comparison.map(p => p.area));
+    const newestBuilding = Math.min(...comparison.filter(p => p.buildingAge !== null).map(p => p.buildingAge!));
+    
+    return c.json({
+      success: true,
+      comparison,
+      bestValues: {
+        bestPrice,
+        bestPricePerM2,
+        largestArea,
+        newestBuilding,
+      },
+      summary: {
+        totalProperties: comparison.length,
+        averagePrice: Math.round(comparison.reduce((sum, p) => sum + p.price, 0) / comparison.length),
+        priceRange: {
+          min: bestPrice,
+          max: Math.max(...comparison.map(p => p.price)),
+        },
+        averageArea: Math.round(comparison.reduce((sum, p) => sum + p.area, 0) / comparison.length),
+      },
+    });
+  } catch (error) {
+    console.error('Property comparison error:', error);
+    return c.json({ error: 'Failed to compare properties' }, 500);
+  }
+});
+
+/**
+ * Generate PDF report for property comparison
+ * POST /api/properties/comparison-pdf
+ */
+api.post('/properties/comparison-pdf', async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    const body = await c.req.json();
+    const { propertyIds } = body;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    if (!propertyIds || !Array.isArray(propertyIds) || propertyIds.length === 0) {
+      return c.json({ error: 'Property IDs array is required' }, 400);
+    }
+    
+    // Get properties
+    const placeholders = propertyIds.map(() => '?').join(',');
+    const properties = await env.DB.prepare(`
+      SELECT * FROM properties 
+      WHERE id IN (${placeholders}) AND user_id = ?
+      ORDER BY price ASC
+    `).bind(...propertyIds, user.id).all();
+    
+    if (!properties.results || properties.results.length === 0) {
+      return c.json({ error: 'No properties found' }, 404);
+    }
+    
+    // Import PDF generator
+    const { generateComparisonReportHTML } = await import('../lib/pdf-generator');
+    
+    // Generate PDF HTML
+    const html = generateComparisonReportHTML({
+      properties: properties.results.map((p: any) => ({
+        id: p.id,
+        address: p.address,
+        price: p.price,
+        area: p.area,
+        buildingArea: p.building_area,
+        landArea: p.land_area,
+        yearBuilt: p.year_built,
+        propertyType: p.property_type,
+        createdAt: p.created_at,
+      })),
+      comparisonDate: new Date().toISOString(),
+      criteria: ['価格', '面積', '坪単価', '築年'],
+    });
+    
+    // Return HTML for browser print API
+    return c.html(html);
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    return c.json({ error: 'Failed to generate PDF' }, 500);
+  }
+});
+
 export default api;

@@ -5,11 +5,18 @@ import type { Bindings, Variables } from './types'
 import auth from './routes/auth'
 import dashboard from './routes/dashboard'
 import { optionalAuthMiddleware } from './middleware/auth'
+import { cacheMiddleware, CacheStrategy } from './lib/cache'
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 // Enable CORS for API routes
 app.use('/api/*', cors())
+
+// Apply caching to static assets
+app.use('/static/*', cacheMiddleware(CacheStrategy.STATIC))
+
+// Apply caching to API health check
+app.use('/api/health', cacheMiddleware(CacheStrategy.API))
 
 // Serve static files from public/static directory
 app.use('/static/*', serveStatic({ root: './public' }))
