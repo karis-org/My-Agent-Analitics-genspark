@@ -4,8 +4,8 @@
   "description": "不動産投資分析プラットフォーム - AI搭載の市場分析・投資指標計算ツール",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1e40af",
+  "background_color": "#2c5f7f",
+  "theme_color": "#2c5f7f",
   "orientation": "portrait-primary",
   "icons": [
     {

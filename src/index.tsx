@@ -80,9 +80,9 @@ app.get('/', (c) => {
         <!-- PWA Manifest -->
         <link rel="manifest" href="/static/manifest.json">
         
-        <!-- Theme Color - Multi-OS support -->
-        <meta name="theme-color" content="#1e40af">
-        <meta name="msapplication-TileColor" content="#1e40af">
+        <!-- Theme Color - Multi-OS support (matches logo blue) -->
+        <meta name="theme-color" content="#2c5f7f">
+        <meta name="msapplication-TileColor" content="#2c5f7f">
         <meta name="msapplication-TileImage" content="/static/icons/icon-192.png">
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
