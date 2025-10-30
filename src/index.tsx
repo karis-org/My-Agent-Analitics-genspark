@@ -24,6 +24,14 @@ app.route('/auth', auth)
 app.route('/dashboard', dashboard)
 
 // API routes
+import apiRoutes from './routes/api'
+app.route('/api', apiRoutes)
+
+// Properties routes (requires authentication)
+import properties from './routes/properties'
+app.route('/properties', properties)
+
+// API routes
 app.get('/api/health', (c) => {
   return c.json({ 
     status: 'ok', 
