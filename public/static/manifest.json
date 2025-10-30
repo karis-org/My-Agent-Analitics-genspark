@@ -1,0 +1,21 @@
+{
+  "name": "My Agent Analytics",
+  "short_name": "Analytics",
+  "description": "不動産投資分析プラットフォーム",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icons/app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["business", "finance", "productivity"],
+  "lang": "ja"
+}

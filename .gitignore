@@ -35,6 +35,27 @@ playwright-report/
 test-results/
 playwright/.cache/
 
+# Cloudflare Workers
+.wrangler/
+.dev.vars
+wrangler.toml
+
+# PM2
+.pm2/
+pids/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup
+*.backup
+*.bak
+*.tar.gz
+*.zip
+nextjs-backup/
+
 # その他
 .DS_Store
 Thumbs.db
