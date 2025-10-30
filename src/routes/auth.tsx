@@ -12,6 +12,9 @@ const auth = new Hono<{ Bindings: Bindings; Variables: Variables }>();
  * Login page
  */
 auth.get('/login', (c) => {
+  const error = c.req.query('error');
+  const errorMessage = error === 'invalid_credentials' ? '⚠️ メールアドレスまたはパスワードが正しくありません' : '';
+  
   return c.html(`
     <!DOCTYPE html>
     <html lang="ja">
@@ -35,7 +38,10 @@ auth.get('/login', (c) => {
                     <p class="text-gray-600">不動産投資分析プラットフォーム</p>
                 </div>
                 
+                ${errorMessage ? `<div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">${errorMessage}</div>` : ''}
+                
                 <div class="space-y-4">
+                    <!-- Google Login -->
                     <a href="/auth/google" 
                        class="flex items-center justify-center w-full bg-white border-2 border-gray-300 rounded-lg px-6 py-3 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
                         <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48">
@@ -47,16 +53,136 @@ auth.get('/login', (c) => {
                         Googleでログイン
                     </a>
                     
+                    <!-- Divider -->
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">または</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Admin Password Login -->
+                    <form method="POST" action="/auth/password" class="space-y-4">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-user mr-1"></i>メールアドレス
+                            </label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="admin@myagent.local"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-lock mr-1"></i>パスワード
+                            </label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="パスワードを入力"
+                            >
+                        </div>
+                        
+                        <button 
+                            type="submit"
+                            class="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-sign-in-alt mr-2"></i>管理者ログイン
+                        </button>
+                    </form>
+                    
                     <p class="text-center text-sm text-gray-500 mt-6">
                         ログインすることで、<a href="#" class="text-blue-600 hover:underline">利用規約</a>と
                         <a href="#" class="text-blue-600 hover:underline">プライバシーポリシー</a>に同意したものとみなされます。
                     </p>
+                    
+                    <div class="mt-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-xs text-yellow-800">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <strong>管理者用ログイン情報</strong><br>
+                            メール: admin@myagent.local<br>
+                            パスワード: Admin@2025
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </body>
     </html>
   `);
+});
+
+/**
+ * Hash password using Web Crypto API (Cloudflare Workers compatible)
+ */
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Password Login (Admin Only)
+ */
+auth.post('/password', async (c) => {
+  try {
+    const formData = await c.req.formData();
+    const email = formData.get('email')?.toString();
+    const password = formData.get('password')?.toString();
+    
+    if (!email || !password) {
+      return c.redirect('/auth/login?error=missing_fields');
+    }
+    
+    // Hash the provided password using Web Crypto API
+    const passwordHash = await hashPassword(password);
+    
+    // Check user in database
+    const stmt = c.env.DB.prepare(
+      'SELECT * FROM users WHERE email = ? AND password_hash = ? AND is_admin = 1'
+    ).bind(email, passwordHash);
+    
+    const user = await stmt.first();
+    
+    if (!user) {
+      return c.redirect('/auth/login?error=invalid_credentials');
+    }
+    
+    // Create session using Web Crypto API
+    const sessionId = crypto.randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+    
+    await c.env.DB.prepare(
+      'INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)'
+    ).bind(sessionId, user.id, expiresAt.toISOString()).run();
+    
+    // Set session cookie
+    setCookie(c, 'session_id', sessionId, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+    
+    // Redirect to dashboard
+    return c.redirect('/dashboard');
+  } catch (error) {
+    console.error('Password login error:', error);
+    return c.redirect('/auth/login?error=server_error');
+  }
 });
 
 /**
