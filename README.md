@@ -9,7 +9,9 @@
 
 ## 🎯 プロジェクト概要
 
-My Agent Analyticsは、不動産エージェントと投資家向けの包括的なデータ分析・レポート生成ツールです。物件データをアップロードするだけで、AIと政府統計データ（e-Stat）を活用した詳細な市場分析レポートを自動生成します。
+My Agent Analyticsは、不動産エージェントと投資家向けの包括的なデータ分析・レポート生成ツールです。物件データを入力するだけで、AIと政府統計データを活用した詳細な市場分析レポートを自動生成します。
+
+**🚀 面倒な設定は一切不要！ログインするだけですぐに使えます。**
 
 ### 🌟 主な特徴
 
@@ -49,7 +51,7 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 - [x] 認証ミドルウェア
 - [x] ログイン/ログアウト機能
 - [x] ユーザー管理
-- [x] **設定ページ** - APIキー設定状況の可視化 🆕
+- [x] **システム情報ページ** - 利用可能機能の確認 🆕
 
 #### Phase 3: データベース統合
 - [x] Cloudflare D1 データベース
@@ -151,22 +153,24 @@ cd My-Agent-Analitics-genspark
 npm install
 ```
 
-3. **環境変数を設定**
+3. **環境変数を設定（管理者のみ）**
 
-⚠️ **重要**: APIキーの設定が必要です
+⚠️ **管理者向け**: APIキーは管理者が一括設定します。ユーザーは設定不要です。
 
 ```bash
-# APIキー設定状況を確認
-bash check-api-keys.sh
-
-# .dev.vars ファイルを編集
+# .dev.vars ファイルを作成・編集
 # 詳細な設定方法は API_KEY_SETUP.md を参照
 ```
 
-**必須APIキー:**
+**必須APIキー（管理者が設定）:**
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - ログイン機能
 - `REINFOLIB_API_KEY` - 市場分析機能
 - `SESSION_SECRET` - セッション管理
+
+**任意APIキー（追加機能を有効化）:**
+- `OPENAI_API_KEY` - AI分析機能
+- `ESTAT_API_KEY` - 政府統計データ
+- `ITANDI_API_KEY` / `REINS_LOGIN_ID` / `REINS_PASSWORD` - 賃貸情報・REINS連携
 
 **📖 詳細ガイド**: [API_KEY_SETUP.md](./API_KEY_SETUP.md) を参照
 
@@ -486,7 +490,7 @@ my-agent-analytics/
 │   ├── routes/
 │   │   ├── auth.tsx           # 認証ルート
 │   │   ├── dashboard.tsx      # ダッシュボード
-│   │   ├── settings.tsx       # 設定ページ（APIキー管理） 🆕
+│   │   ├── settings.tsx       # システム情報ページ 🆕
 │   │   ├── properties.tsx     # 物件管理UI
 │   │   └── api.tsx            # API エンドポイント
 │   └── middleware/
@@ -566,7 +570,7 @@ pm2 start ecosystem.config.cjs
 # - Firefox: Ctrl + F5 (Windows) / Cmd + Shift + R (Mac)
 ```
 
-### APIキーが読み込まれない
+### APIキーが読み込まれない（管理者向け）
 
 **確認方法:**
 ```bash
@@ -577,15 +581,14 @@ bash check-api-keys.sh
 pm2 logs my-agent-analytics --nostream
 ```
 
-**または Web UI で確認:**
-- ログイン後、右上の⚙️アイコンから設定ページにアクセス
-- 各APIキーの設定状況を確認
-- 必要なAPIキーの取得方法も表示されます
-
 **解決方法:**
 1. `.dev.vars` ファイルを確認
 2. APIキーに余計な空白やクォートがないか確認
 3. PM2を再起動: `pm2 restart my-agent-analytics`
+
+**ユーザー向け:**
+- システム情報ページ（⚙️アイコン）で利用可能機能を確認できます
+- APIキーの設定は不要です（管理者が一括管理）
 
 ### データベースエラー
 
