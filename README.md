@@ -172,7 +172,9 @@ npm install
 - `ESTAT_API_KEY` - 政府統計データ
 - `ITANDI_API_KEY` / `REINS_LOGIN_ID` / `REINS_PASSWORD` - 賃貸情報・REINS連携
 
-**📖 詳細ガイド**: [API_KEY_SETUP.md](./API_KEY_SETUP.md) を参照
+**📖 詳細ガイド**: 
+- [API_KEY_SETUP_GUIDE.md](./docs/API_KEY_SETUP_GUIDE.md) - APIキー取得と設定の完全ガイド
+- [CLOUDFLARE_DEPLOYMENT.md](./docs/CLOUDFLARE_DEPLOYMENT.md) - Cloudflare本番環境へのデプロイ手順
 
 4. **ビルド**
 
@@ -254,7 +256,7 @@ npx wrangler pages secret put REINS_LOGIN_ID --project-name my-agent-analytics
 npx wrangler pages secret put REINS_PASSWORD --project-name my-agent-analytics
 ```
 
-**📖 各APIキーの取得方法**: [API_KEY_SETUP.md](./API_KEY_SETUP.md) を参照
+**📖 各APIキーの取得方法**: [docs/API_KEY_SETUP_GUIDE.md](./docs/API_KEY_SETUP_GUIDE.md) を参照
 
 ## 📖 APIドキュメント
 
@@ -604,7 +606,8 @@ npm run db:migrate:local
 ### その他の問題
 
 詳細なトラブルシューティングは以下を参照:
-- **APIキー関連**: [API_KEY_SETUP.md](./API_KEY_SETUP.md)
+- **APIキー関連**: [docs/API_KEY_SETUP_GUIDE.md](./docs/API_KEY_SETUP_GUIDE.md)
+- **Cloudflareデプロイ**: [docs/CLOUDFLARE_DEPLOYMENT.md](./docs/CLOUDFLARE_DEPLOYMENT.md)
 - **技術的な問題**: [GitHubのIssue](https://github.com/koki-187/My-Agent-Analitics-genspark/issues)
 
 ## 📞 サポート
