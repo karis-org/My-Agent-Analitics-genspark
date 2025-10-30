@@ -49,6 +49,7 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 - [x] 認証ミドルウェア
 - [x] ログイン/ログアウト機能
 - [x] ユーザー管理
+- [x] **設定ページ** - APIキー設定状況の可視化 🆕
 
 #### Phase 3: データベース統合
 - [x] Cloudflare D1 データベース
@@ -485,6 +486,7 @@ my-agent-analytics/
 │   ├── routes/
 │   │   ├── auth.tsx           # 認証ルート
 │   │   ├── dashboard.tsx      # ダッシュボード
+│   │   ├── settings.tsx       # 設定ページ（APIキー管理） 🆕
 │   │   ├── properties.tsx     # 物件管理UI
 │   │   └── api.tsx            # API エンドポイント
 │   └── middleware/
@@ -575,6 +577,11 @@ bash check-api-keys.sh
 pm2 logs my-agent-analytics --nostream
 ```
 
+**または Web UI で確認:**
+- ログイン後、右上の⚙️アイコンから設定ページにアクセス
+- 各APIキーの設定状況を確認
+- 必要なAPIキーの取得方法も表示されます
+
 **解決方法:**
 1. `.dev.vars` ファイルを確認
 2. APIキーに余計な空白やクォートがないか確認
@@ -610,5 +617,5 @@ npm run db:migrate:local
 ---
 
 **開発チーム**: My Agent Team  
-**最終更新**: 2024年10月30日  
-**バージョン**: 2.0.0
+**最終更新**: 2025年10月30日  
+**バージョン**: 2.1.0
