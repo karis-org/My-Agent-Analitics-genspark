@@ -14,10 +14,11 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 ### 🌟 主な特徴
 
 - **📊 自動計算**: NOI、利回り、DSCR、LTVなどの投資指標を自動算出
-- **📈 データ可視化**: インタラクティブなグラフとチャートで投資リターンを視覚化
+- **📈 実データ分析**: 国土交通省の実取引価格データで市場動向を分析
+- **🏢 価格推定**: 周辺取引事例から物件価格を自動推定
 - **📄 PDFレポート**: プロフェッショナルなPDFレポートを生成
-- **🗺️ 役所調査支援**: 都市計画情報、ハザードマップ、建築制限の統合
-- **🤖 AI分析**: OpenAI GPT-4による高度な市場分析
+- **🏘️ 地価公示データ**: 最新5年分の鑑定評価書情報を活用
+- **🤖 AI分析**: OpenAI GPT-4による高度な市場分析（実装予定）
 - **📱 PWA対応**: スマートフォンにインストール可能、オフライン機能搭載
 
 ## 🚀 デモ
@@ -56,7 +57,7 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 - [x] CRUD操作ライブラリ
 - [x] セッション管理テーブル
 
-#### Phase 4: 物件調査・分析機能
+#### Phase 4: 投資指標計算
 - [x] **投資指標計算エンジン**
   - NOI（純営業利益）
   - 表面利回り/実質利回り
@@ -66,38 +67,41 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
   - BER（損益分岐点比率）
   - リスク評価とレコメンデーション
 
-- [x] **物件調査システム**
-  - 都市計画情報（用途地域、建ぺい率、容積率、防火地域）
-  - ハザードマップ統合（洪水、土砂災害、液状化、地震、津波）
-  - 前面道路情報（種別、幅員、セットバック）
-  - 事故物件データベース検索
-  - 心理的瑕疵調査
-  - 役所調査チェックリスト
-  - 価格インパクト計算
+#### Phase 5: 不動産情報ライブラリAPI統合 🆕
+- [x] **国土交通省 不動産情報ライブラリAPI**
+  - 不動産取引価格情報取得（2005年～）
+  - 地価公示・鑑定評価書情報（2021～2025年）
+  - 市区町村一覧取得
+  - 市場動向分析（価格トレンド、取引件数）
+  - 周辺取引事例検索（類似物件検索）
+  - 価格推定機能（実取引データベース）
 
-- [x] **API エンドポイント**
+- [x] **市場分析API エンドポイント**
+  - POST `/api/market/analyze` - 市場動向分析
+  - GET `/api/market/trade-prices` - 取引価格情報取得
+  - GET `/api/market/land-prices` - 地価公示データ取得
+  - GET `/api/market/municipalities` - 市区町村一覧取得
+  - POST `/api/market/comparables` - 周辺取引事例検索
+  - POST `/api/market/estimate-price` - 物件価格推定
+
+- [x] **物件管理API エンドポイント**
   - POST `/api/properties/analyze` - 財務分析
-  - POST `/api/properties/investigate` - 総合物件調査
-  - POST `/api/properties/price-impact` - 価格調整計算
   - GET `/api/properties` - 物件一覧取得
   - GET `/api/properties/:id` - 物件詳細取得
-
-- [x] **物件管理UI**
-  - 物件一覧ページ
-  - 新規物件登録フォーム
-  - APIとの統合
 
 ### 🔄 実装中
 
 - [ ] データ可視化（グラフ・チャート）
 - [ ] PDF レポート生成
-- [ ] 外部API統合（実データ取得）
+- [ ] イタンジAPI統合
+- [ ] レインズデータ統合
 
 ### 📝 今後の実装予定
 
-- [ ] e-Stat API 統合（政府統計データ）
-- [ ] 大島てる API 統合（事故物件データ）
-- [ ] ハザードマップ API 統合
+- [ ] e-Stat API 統合（人口統計、経済指標）
+- [ ] OpenAI GPT-4 統合（AI市場分析）
+- [ ] 物件比較機能
+- [ ] 投資シミュレーション
 - [ ] OpenAI API 統合（AI分析）
 - [ ] レポート共有機能
 - [ ] 複数物件の比較機能
@@ -211,10 +215,18 @@ npm run deploy:prod
 5. **環境変数を設定**
 
 ```bash
+# 認証関連
 npx wrangler pages secret put GOOGLE_CLIENT_ID --project-name my-agent-analytics
 npx wrangler pages secret put GOOGLE_CLIENT_SECRET --project-name my-agent-analytics
+npx wrangler pages secret put SESSION_SECRET --project-name my-agent-analytics
+
+# API統合
 npx wrangler pages secret put OPENAI_API_KEY --project-name my-agent-analytics
 npx wrangler pages secret put ESTAT_API_KEY --project-name my-agent-analytics
+npx wrangler pages secret put REINFOLIB_API_KEY --project-name my-agent-analytics
+npx wrangler pages secret put ITANDI_API_KEY --project-name my-agent-analytics
+npx wrangler pages secret put REINS_LOGIN_ID --project-name my-agent-analytics
+npx wrangler pages secret put REINS_PASSWORD --project-name my-agent-analytics
 ```
 
 ## 📖 APIドキュメント
@@ -230,7 +242,7 @@ GET /api/health
 {
   "status": "ok",
   "timestamp": "2024-01-01T00:00:00.000Z",
-  "version": "1.0.0"
+  "version": "2.0.0"
 }
 ```
 
@@ -278,17 +290,19 @@ Content-Type: application/json
 }
 ```
 
-### 物件調査
+### 市場動向分析 🆕
 
 ```http
-POST /api/properties/investigate
+POST /api/market/analyze
 Content-Type: application/json
 ```
 
 **リクエストボディ:**
 ```json
 {
-  "address": "東京都渋谷区恵比寿1-1-1"
+  "year": 2024,
+  "area": "13",
+  "city": "13102"
 }
 ```
 
@@ -296,39 +310,74 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "investigation": {
-    "address": "東京都渋谷区恵比寿1-1-1",
-    "urbanPlanning": {
-      "useDistrict": "商業地域",
-      "buildingCoverageRatio": 80,
-      "floorAreaRatio": 600,
-      "firePreventionDistrict": "防火地域"
+  "analysis": {
+    "area": "13102",
+    "averagePrice": 45000000,
+    "averagePricePerSquareMeter": 850000,
+    "transactionCount": 156,
+    "priceRange": {
+      "min": 20000000,
+      "max": 120000000,
+      "median": 42000000
     },
-    "hazards": {
-      "flood": { "risk": "low", "depth": 0 },
-      "landslide": { "risk": "low" },
-      "liquefaction": { "risk": "medium", "potential": "やや高い" },
-      "earthquake": { "risk": "medium" },
-      "tsunami": { "risk": "low" }
+    "pricetrend": {
+      "currentQuarter": 45000000,
+      "previousQuarter": 43500000,
+      "changeRate": 3.45
     },
-    "overallRisk": "medium",
-    "accidentProperty": null
+    "popularPropertyTypes": [
+      { "type": "マンション", "count": 98, "percentage": 62.8 }
+    ]
   }
 }
 ```
 
-### 価格インパクト計算
+### 不動産取引価格取得 🆕
 
 ```http
-POST /api/properties/price-impact
+GET /api/market/trade-prices?year=2024&area=13&city=13102
+```
+
+**レスポンス:**
+```json
+{
+  "success": true,
+  "status": "success",
+  "data": [
+    {
+      "Type": "中古マンション等",
+      "TradePrice": "45000000",
+      "Area": "65",
+      "UnitPrice": "692000",
+      "Period": "2024年第2四半期",
+      "Municipality": "中央区"
+    }
+  ]
+}
+```
+
+### 地価公示データ取得 🆕
+
+```http
+GET /api/market/land-prices?year=2024&area=13&division=00
+```
+
+**レスポンス:** 地価公示の詳細データ（標準地、価格、用途地域等）
+
+### 価格推定 🆕
+
+```http
+POST /api/market/estimate-price
 Content-Type: application/json
 ```
 
 **リクエストボディ:**
 ```json
 {
-  "basePrice": 50000000,
-  "address": "東京都渋谷区恵比寿1-1-1"
+  "city": "13102",
+  "area": 65,
+  "propertyType": "中古マンション等",
+  "buildingYear": "平成15年"
 }
 ```
 
@@ -336,14 +385,43 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "basePrice": 50000000,
-  "adjustedPrice": 47500000,
-  "discount": 2500000,
-  "discountRate": 5,
-  "factors": [
-    { "factor": "心理的瑕疵なし", "impact": 0 },
-    { "factor": "ハザードリスク（中）", "impact": -5 }
-  ]
+  "estimation": {
+    "estimatedPrice": 46200000,
+    "pricePerSquareMeter": 710000,
+    "confidence": "high",
+    "comparableCount": 15,
+    "priceRange": {
+      "min": 40000000,
+      "max": 52000000
+    }
+  }
+}
+```
+
+### 周辺取引事例検索 🆕
+
+```http
+POST /api/market/comparables
+Content-Type: application/json
+```
+
+**リクエストボディ:**
+```json
+{
+  "city": "13102",
+  "propertyType": "中古マンション等",
+  "minArea": 55,
+  "maxArea": 75,
+  "limit": 10
+}
+```
+
+**レスポンス:**
+```json
+{
+  "success": true,
+  "data": [...],
+  "count": 10
 }
 ```
 
@@ -381,7 +459,7 @@ my-agent-analytics/
 │   │   ├── utils.ts           # ユーティリティ関数
 │   │   ├── db.ts              # データベース操作
 │   │   ├── calculator.ts      # 投資指標計算エンジン
-│   │   └── property-investigation.ts  # 物件調査システム
+│   │   └── reinfolib.ts       # 不動産情報ライブラリAPI統合
 │   ├── routes/
 │   │   ├── auth.tsx           # 認証ルート
 │   │   ├── dashboard.tsx      # ダッシュボード
