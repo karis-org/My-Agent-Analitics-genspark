@@ -132,6 +132,11 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 📦 インストール
 
+### 🚀 クイックスタート
+
+**5分で起動する最短手順:**
+- [docs/QUICK_START.md](./docs/QUICK_START.md) を参照
+
 ### 必要要件
 
 - Node.js 18.x 以上
