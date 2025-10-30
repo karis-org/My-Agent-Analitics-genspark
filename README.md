@@ -152,16 +152,22 @@ npm install
 
 3. **環境変数を設定**
 
-`.dev.vars` ファイルを編集して、必要なAPI キーを設定：
+⚠️ **重要**: APIキーの設定が必要です
 
 ```bash
-# .dev.vars
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-OPENAI_API_KEY=your-openai-api-key
-ESTAT_API_KEY=your-estat-api-key
-SESSION_SECRET=your-session-secret
+# APIキー設定状況を確認
+bash check-api-keys.sh
+
+# .dev.vars ファイルを編集
+# 詳細な設定方法は API_KEY_SETUP.md を参照
 ```
+
+**必須APIキー:**
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - ログイン機能
+- `REINFOLIB_API_KEY` - 市場分析機能
+- `SESSION_SECRET` - セッション管理
+
+**📖 詳細ガイド**: [API_KEY_SETUP.md](./API_KEY_SETUP.md) を参照
 
 4. **ビルド**
 
@@ -214,20 +220,36 @@ npm run deploy:prod
 
 5. **環境変数を設定**
 
+**必須APIキー:**
 ```bash
-# 認証関連
+# Google OAuth（ログイン機能）
 npx wrangler pages secret put GOOGLE_CLIENT_ID --project-name my-agent-analytics
 npx wrangler pages secret put GOOGLE_CLIENT_SECRET --project-name my-agent-analytics
-npx wrangler pages secret put SESSION_SECRET --project-name my-agent-analytics
 
-# API統合
-npx wrangler pages secret put OPENAI_API_KEY --project-name my-agent-analytics
-npx wrangler pages secret put ESTAT_API_KEY --project-name my-agent-analytics
+# 不動産情報ライブラリ（市場分析）
 npx wrangler pages secret put REINFOLIB_API_KEY --project-name my-agent-analytics
+
+# セッション管理
+npx wrangler pages secret put SESSION_SECRET --project-name my-agent-analytics
+```
+
+**任意のAPIキー:**
+```bash
+# OpenAI（AI分析機能）
+npx wrangler pages secret put OPENAI_API_KEY --project-name my-agent-analytics
+
+# e-Stat（政府統計データ）
+npx wrangler pages secret put ESTAT_API_KEY --project-name my-agent-analytics
+
+# イタンジ（賃貸物件情報）
 npx wrangler pages secret put ITANDI_API_KEY --project-name my-agent-analytics
+
+# レインズ（不動産流通情報）
 npx wrangler pages secret put REINS_LOGIN_ID --project-name my-agent-analytics
 npx wrangler pages secret put REINS_PASSWORD --project-name my-agent-analytics
 ```
+
+**📖 各APIキーの取得方法**: [API_KEY_SETUP.md](./API_KEY_SETUP.md) を参照
 
 ## 📖 APIドキュメント
 
@@ -518,12 +540,75 @@ my-agent-analytics/
 - [e-Stat API](https://www.e-stat.go.jp/api/)
 - [OpenAI API](https://platform.openai.com/docs/)
 
+## 🔧 トラブルシューティング
+
+### プレビューに変更が反映されない
+
+**原因**: ブラウザキャッシュまたはビルドキャッシュ
+
+**解決方法:**
+```bash
+# 1. ビルドキャッシュをクリア
+cd /home/user/webapp
+rm -rf dist .wrangler
+
+# 2. 再ビルド
+npm run build
+
+# 3. PM2を完全再起動
+pm2 delete all
+pm2 start ecosystem.config.cjs
+
+# 4. ブラウザでスーパーリロード
+# - Chrome/Edge: Ctrl + Shift + R (Windows) / Cmd + Shift + R (Mac)
+# - Firefox: Ctrl + F5 (Windows) / Cmd + Shift + R (Mac)
+```
+
+### APIキーが読み込まれない
+
+**確認方法:**
+```bash
+# APIキー設定状況を確認
+bash check-api-keys.sh
+
+# PM2ログを確認
+pm2 logs my-agent-analytics --nostream
+```
+
+**解決方法:**
+1. `.dev.vars` ファイルを確認
+2. APIキーに余計な空白やクォートがないか確認
+3. PM2を再起動: `pm2 restart my-agent-analytics`
+
+### データベースエラー
+
+**解決方法:**
+```bash
+# データベースをリセット
+npm run db:reset
+
+# マイグレーションを再実行
+npm run db:migrate:local
+```
+
+### その他の問題
+
+詳細なトラブルシューティングは以下を参照:
+- **APIキー関連**: [API_KEY_SETUP.md](./API_KEY_SETUP.md)
+- **技術的な問題**: [GitHubのIssue](https://github.com/koki-187/My-Agent-Analitics-genspark/issues)
+
 ## 📞 サポート
 
-問題が発生した場合は、[GitHubのIssue](https://github.com/koki-187/My-Agent-Analitics-genspark/issues)を作成してください。
+問題が解決しない場合は、[GitHubのIssue](https://github.com/koki-187/My-Agent-Analitics-genspark/issues)を作成してください。
+
+**必要情報:**
+- エラーメッセージ
+- 実行したコマンド
+- 環境（ローカル/Sandbox/本番）
+- ブラウザとバージョン
 
 ---
 
 **開発チーム**: My Agent Team  
 **最終更新**: 2024年10月30日  
-**バージョン**: 1.0.0
+**バージョン**: 2.0.0
