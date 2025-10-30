@@ -348,4 +348,144 @@ api.get('/properties/:id', async (c) => {
   }
 });
 
+/**
+ * Property investigation endpoint (accident property check)
+ * POST /api/properties/investigate
+ */
+api.post('/properties/investigate', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { address } = body;
+    
+    if (!address) {
+      return c.json({ error: 'Address is required' }, 400);
+    }
+    
+    // Import investigation utilities
+    const { 
+      searchAccidentProperty, 
+      assessOverallRisk,
+      generateInvestigationReport,
+      
+      
+      
+    } = await import('../lib/property-investigation');
+    
+    // Search for accident property info
+    const accident = await searchAccidentProperty(address);
+    
+    // Mock data for urban planning (実際はGIS APIから取得)
+    const urbanPlanning = {
+      useDistrict: '第一種住居地域',
+      buildingCoverageRatio: 60,
+      floorAreaRatio: 200,
+      firePreventionDistrict: '準防火地域',
+      heightRestriction: null,
+      scenicDistrictRestriction: null,
+      districtPlanRestriction: null,
+    };
+    
+    // Mock data for hazards (実際はハザードマップAPIから取得)
+    const hazards = {
+      floodRisk: 'low',
+      floodDepth: null,
+      landslideRisk: 'none',
+      liquefactionRisk: 'medium',
+      earthquakeRisk: 'low',
+      tsunamiRisk: 'none',
+    };
+    
+    // Mock data for roads
+    const roads = {
+      frontRoadType: '公道',
+      frontRoadWidth: 6.0,
+      roadSetbackRequired: false,
+      setbackDistance: null,
+    };
+    
+    const overallRisk = assessOverallRisk(hazards, accident, urbanPlanning);
+    
+    const result = {
+      address,
+      urbanPlanning,
+      hazards,
+      roads,
+      accident,
+      investigationDate: new Date().toISOString(),
+      investigator: 'My Agent Analytics System',
+      notes: ['自動調査システムによる結果です'],
+      warnings: accident.hasAccident ? ['心理的瑕疵物件です。詳細は告知内容をご確認ください。'] : [],
+      overallRisk,
+    };
+    
+    const report = generateInvestigationReport(result);
+    
+    return c.json({
+      success: true,
+      investigation: result,
+      report,
+    });
+  } catch (error) {
+    console.error('Investigation error:', error);
+    return c.json({ 
+      error: 'Investigation failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
+  }
+});
+
+/**
+ * Price impact calculation endpoint
+ * POST /api/properties/price-impact
+ */
+api.post('/properties/price-impact', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { basePrice, address } = body;
+    
+    if (!basePrice) {
+      return c.json({ error: 'Base price is required' }, 400);
+    }
+    
+    // Import investigation utilities
+    const investigation = await import('../lib/property-investigation');
+    const { 
+      searchAccidentProperty, 
+      calculatePriceImpact,
+    } = investigation;
+    
+    // Get accident info
+    const accident = await searchAccidentProperty(address || '');
+    
+    // Mock hazards
+    const hazards = {
+      floodRisk: 'low',
+      floodDepth: null,
+      landslideRisk: 'none',
+      liquefactionRisk: 'medium',
+      earthquakeRisk: 'low',
+      tsunamiRisk: 'none',
+    };
+    
+    const priceImpact = calculatePriceImpact(
+      parseFloat(basePrice),
+      accident,
+      hazards
+    );
+    
+    return c.json({
+      success: true,
+      priceImpact,
+      accident,
+      hazards,
+    });
+  } catch (error) {
+    console.error('Price impact calculation error:', error);
+    return c.json({ 
+      error: 'Price impact calculation failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
+  }
+});
+
 export default api;
