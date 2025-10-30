@@ -1,5 +1,5 @@
 // Settings routes for My Agent Analytics
-// API key configuration page
+// System status display page (Admin-configured API keys)
 
 import { Hono } from 'hono';
 import type { Bindings, Variables } from '../types';
@@ -11,22 +11,27 @@ const settings = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 settings.use('/*', authMiddleware);
 
 /**
- * Settings page with API key configuration
+ * Settings page - System status display only
+ * API keys are configured by admin, users don't need to set them
  */
 settings.get('/', (c) => {
   const user = c.get('user');
   const { env } = c;
   
-  // Check which API keys are configured
-  const apiKeysStatus = {
-    googleOAuth: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
-    reinfolib: !!env.REINFOLIB_API_KEY,
-    openai: !!env.OPENAI_API_KEY,
-    estat: !!env.ESTAT_API_KEY,
-    itandi: !!env.ITANDI_API_KEY,
-    reins: !!(env.REINS_LOGIN_ID && env.REINS_PASSWORD),
-    session: !!env.SESSION_SECRET,
+  // Check which features are available (based on admin-configured API keys)
+  const featuresStatus = {
+    authentication: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+    marketAnalysis: !!env.REINFOLIB_API_KEY,
+    aiAnalysis: !!env.OPENAI_API_KEY,
+    governmentStats: !!env.ESTAT_API_KEY,
+    rentalInfo: !!env.ITANDI_API_KEY,
+    reinsData: !!(env.REINS_LOGIN_ID && env.REINS_PASSWORD),
   };
+  
+  // Calculate available features count
+  const totalFeatures = Object.keys(featuresStatus).length;
+  const availableFeatures = Object.values(featuresStatus).filter(Boolean).length;
+  const availabilityPercentage = Math.round((availableFeatures / totalFeatures) * 100);
   
   return c.html(`
     <!DOCTYPE html>
@@ -34,7 +39,7 @@ settings.get('/', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>設定 - My Agent Analytics</title>
+        <title>システム情報 - My Agent Analytics</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
         <style>
@@ -74,240 +79,226 @@ settings.get('/', (c) => {
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <!-- Page Title -->
             <div class="mb-8">
                 <h2 class="text-3xl font-bold text-gray-900 mb-2">
-                    <i class="fas fa-cog mr-2"></i>設定
+                    <i class="fas fa-info-circle mr-2"></i>システム情報
                 </h2>
-                <p class="text-gray-600">APIキーとアプリケーション設定</p>
+                <p class="text-gray-600">利用可能な機能とシステムの状態</p>
             </div>
 
-            <!-- API Keys Section -->
+            <!-- System Status Overview -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 mb-8 text-white">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-5xl font-bold mb-2">${availabilityPercentage}%</div>
+                        <p class="text-lg opacity-90">機能稼働率</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-5xl font-bold mb-2">${availableFeatures}/${totalFeatures}</div>
+                        <p class="text-lg opacity-90">利用可能機能</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-5xl font-bold mb-2">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <p class="text-lg opacity-90">システム正常</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notice -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mb-8 rounded-r-lg">
+                <div class="flex items-start">
+                    <i class="fas fa-lightbulb text-blue-600 text-2xl mr-4 mt-1"></i>
+                    <div>
+                        <p class="font-semibold text-blue-900 mb-2">
+                            すぐに使える、簡単分析
+                        </p>
+                        <p class="text-blue-800 text-sm">
+                            面倒な設定は不要です。ログインするだけで、すべての機能をすぐにご利用いただけます。<br>
+                            物件データを入力すれば、自動的に市場分析、投資指標計算、レポート生成が行われます。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Features -->
             <div class="bg-white rounded-lg shadow p-8 mb-8">
                 <h3 class="text-xl font-bold text-gray-900 mb-6">
-                    <i class="fas fa-key mr-2"></i>APIキー設定状況
+                    <i class="fas fa-check-circle mr-2 text-green-600"></i>利用可能な機能
                 </h3>
 
-                <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
-                    <p class="font-semibold mb-2">
-                        <i class="fas fa-info-circle mr-2"></i>注意
-                    </p>
-                    <p class="text-sm">
-                        セキュリティ上の理由から、APIキーの値は表示されません。<br>
-                        本番環境では<strong>Cloudflare Dashboard</strong>または<strong>Wrangler CLI</strong>で設定してください。
-                    </p>
-                </div>
-
-                <!-- Required API Keys -->
-                <div class="mb-8">
-                    <h4 class="font-semibold text-gray-900 mb-4 flex items-center">
-                        <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded mr-2">必須</span>
-                        必須APIキー
-                    </h4>
-                    
-                    <div class="space-y-4">
-                        <!-- Google OAuth -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg ${apiKeysStatus.googleOAuth ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}">
-                            <div class="flex items-center">
-                                <i class="fas fa-google text-2xl mr-4 ${apiKeysStatus.googleOAuth ? 'text-green-600' : 'text-red-600'}"></i>
-                                <div>
-                                    <p class="font-semibold text-gray-900">Google OAuth</p>
-                                    <p class="text-sm text-gray-600">ログイン認証に必要</p>
-                                </div>
+                <div class="space-y-4">
+                    <!-- Authentication -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.authentication ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.authentication ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-user-shield text-2xl ${featuresStatus.authentication ? 'text-green-600' : 'text-gray-400'}"></i>
                             </div>
-                            <div class="flex items-center">
-                                ${apiKeysStatus.googleOAuth ? 
-                                    '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>設定済み</span>' : 
-                                    '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-times mr-1"></i>未設定</span>'
-                                }
+                            <div>
+                                <p class="font-semibold text-gray-900">ユーザー認証</p>
+                                <p class="text-sm text-gray-600">Google アカウントでのログイン</p>
                             </div>
                         </div>
-
-                        <!-- REINFOLIB -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg ${apiKeysStatus.reinfolib ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}">
-                            <div class="flex items-center">
-                                <i class="fas fa-building text-2xl mr-4 ${apiKeysStatus.reinfolib ? 'text-green-600' : 'text-red-600'}"></i>
-                                <div>
-                                    <p class="font-semibold text-gray-900">不動産情報ライブラリAPI</p>
-                                    <p class="text-sm text-gray-600">市場分析・取引価格データに必要</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                ${apiKeysStatus.reinfolib ? 
-                                    '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>設定済み</span>' : 
-                                    '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-times mr-1"></i>未設定</span>'
-                                }
-                            </div>
-                        </div>
-
-                        <!-- Session Secret -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg ${apiKeysStatus.session ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}">
-                            <div class="flex items-center">
-                                <i class="fas fa-lock text-2xl mr-4 ${apiKeysStatus.session ? 'text-green-600' : 'text-red-600'}"></i>
-                                <div>
-                                    <p class="font-semibold text-gray-900">Session Secret</p>
-                                    <p class="text-sm text-gray-600">セッション管理に必要</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                ${apiKeysStatus.session ? 
-                                    '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>設定済み</span>' : 
-                                    '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-times mr-1"></i>未設定</span>'
-                                }
-                            </div>
+                        <div>
+                            ${featuresStatus.authentication ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm">利用不可</span>'
+                            }
                         </div>
                     </div>
-                </div>
 
-                <!-- Optional API Keys -->
-                <div>
-                    <h4 class="font-semibold text-gray-900 mb-4 flex items-center">
-                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded mr-2">任意</span>
-                        任意APIキー
-                    </h4>
-                    
-                    <div class="space-y-4">
-                        <!-- OpenAI -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg ${apiKeysStatus.openai ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
-                            <div class="flex items-center">
-                                <i class="fas fa-brain text-2xl mr-4 ${apiKeysStatus.openai ? 'text-green-600' : 'text-gray-400'}"></i>
-                                <div>
-                                    <p class="font-semibold text-gray-900">OpenAI API</p>
-                                    <p class="text-sm text-gray-600">AI分析機能に必要</p>
-                                </div>
+                    <!-- Market Analysis -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.marketAnalysis ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.marketAnalysis ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-chart-line text-2xl ${featuresStatus.marketAnalysis ? 'text-green-600' : 'text-gray-400'}"></i>
                             </div>
                             <div>
-                                ${apiKeysStatus.openai ? 
-                                    '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>設定済み</span>' : 
-                                    '<span class="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">未設定</span>'
-                                }
+                                <p class="font-semibold text-gray-900">市場分析</p>
+                                <p class="text-sm text-gray-600">実取引価格データ・地価公示情報・価格推定</p>
                             </div>
                         </div>
+                        <div>
+                            ${featuresStatus.marketAnalysis ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm">利用不可</span>'
+                            }
+                        </div>
+                    </div>
 
-                        <!-- e-Stat -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg ${apiKeysStatus.estat ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
-                            <div class="flex items-center">
-                                <i class="fas fa-chart-bar text-2xl mr-4 ${apiKeysStatus.estat ? 'text-green-600' : 'text-gray-400'}"></i>
-                                <div>
-                                    <p class="font-semibold text-gray-900">e-Stat API</p>
-                                    <p class="text-sm text-gray-600">政府統計データに必要</p>
-                                </div>
+                    <!-- AI Analysis -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.aiAnalysis ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.aiAnalysis ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-brain text-2xl ${featuresStatus.aiAnalysis ? 'text-green-600' : 'text-gray-400'}"></i>
                             </div>
                             <div>
-                                ${apiKeysStatus.estat ? 
-                                    '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>設定済み</span>' : 
-                                    '<span class="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">未設定</span>'
-                                }
+                                <p class="font-semibold text-gray-900">AI分析</p>
+                                <p class="text-sm text-gray-600">GPT-4による高度な市場分析とレポート生成</p>
                             </div>
                         </div>
+                        <div>
+                            ${featuresStatus.aiAnalysis ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm">準備中</span>'
+                            }
+                        </div>
+                    </div>
 
-                        <!-- Itandi -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg ${apiKeysStatus.itandi ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
-                            <div class="flex items-center">
-                                <i class="fas fa-home text-2xl mr-4 ${apiKeysStatus.itandi ? 'text-green-600' : 'text-gray-400'}"></i>
-                                <div>
-                                    <p class="font-semibold text-gray-900">イタンジAPI</p>
-                                    <p class="text-sm text-gray-600">賃貸物件情報に必要</p>
-                                </div>
+                    <!-- Government Stats -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.governmentStats ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.governmentStats ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-chart-bar text-2xl ${featuresStatus.governmentStats ? 'text-green-600' : 'text-gray-400'}"></i>
                             </div>
                             <div>
-                                ${apiKeysStatus.itandi ? 
-                                    '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>設定済み</span>' : 
-                                    '<span class="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">未設定</span>'
-                                }
+                                <p class="font-semibold text-gray-900">政府統計データ</p>
+                                <p class="text-sm text-gray-600">人口統計・経済指標・地域データ</p>
                             </div>
                         </div>
+                        <div>
+                            ${featuresStatus.governmentStats ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm">準備中</span>'
+                            }
+                        </div>
+                    </div>
 
-                        <!-- REINS -->
-                        <div class="flex items-center justify-between p-4 border rounded-lg ${apiKeysStatus.reins ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
-                            <div class="flex items-center">
-                                <i class="fas fa-exchange-alt text-2xl mr-4 ${apiKeysStatus.reins ? 'text-green-600' : 'text-gray-400'}"></i>
-                                <div>
-                                    <p class="font-semibold text-gray-900">レインズ</p>
-                                    <p class="text-sm text-gray-600">不動産流通情報に必要</p>
-                                </div>
+                    <!-- Rental Info -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.rentalInfo ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.rentalInfo ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-home text-2xl ${featuresStatus.rentalInfo ? 'text-green-600' : 'text-gray-400'}"></i>
                             </div>
                             <div>
-                                ${apiKeysStatus.reins ? 
-                                    '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>設定済み</span>' : 
-                                    '<span class="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">未設定</span>'
-                                }
+                                <p class="font-semibold text-gray-900">賃貸物件情報</p>
+                                <p class="text-sm text-gray-600">イタンジ連携による賃貸相場データ</p>
                             </div>
+                        </div>
+                        <div>
+                            ${featuresStatus.rentalInfo ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm">準備中</span>'
+                            }
+                        </div>
+                    </div>
+
+                    <!-- REINS Data -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.reinsData ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.reinsData ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-exchange-alt text-2xl ${featuresStatus.reinsData ? 'text-green-600' : 'text-gray-400'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">レインズデータ</p>
+                                <p class="text-sm text-gray-600">不動産流通情報・成約事例</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${featuresStatus.reinsData ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm">準備中</span>'
+                            }
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Setup Instructions -->
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Local Development -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">
-                        <i class="fas fa-laptop-code mr-2 text-blue-600"></i>ローカル開発環境
-                    </h3>
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 rounded p-4">
-                            <p class="text-sm font-semibold mb-2">1. .dev.vars ファイルを編集</p>
-                            <pre class="text-xs bg-gray-900 text-green-400 p-3 rounded overflow-x-auto"><code>REINFOLIB_API_KEY=your-api-key-here
-GOOGLE_CLIENT_ID=your-client-id
-SESSION_SECRET=$(openssl rand -base64 32)</code></pre>
-                        </div>
-                        <div class="bg-gray-50 rounded p-4">
-                            <p class="text-sm font-semibold mb-2">2. サービスを再起動</p>
-                            <pre class="text-xs bg-gray-900 text-green-400 p-3 rounded overflow-x-auto"><code>pm2 restart my-agent-analytics</code></pre>
-                        </div>
-                        <a href="https://github.com/koki-187/My-Agent-Analitics-genspark/blob/main/API_KEY_SETUP.md" 
-                           target="_blank"
-                           class="block text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors">
-                            <i class="fas fa-book mr-2"></i>詳細ガイドを見る
-                        </a>
-                    </div>
-                </div>
+            <!-- Always Available Features -->
+            <div class="bg-white rounded-lg shadow p-8 mb-8">
+                <h3 class="text-xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-star mr-2 text-yellow-500"></i>常時利用可能な機能
+                </h3>
 
-                <!-- Production -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">
-                        <i class="fas fa-cloud mr-2 text-orange-600"></i>本番環境 (Cloudflare)
-                    </h3>
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 rounded p-4">
-                            <p class="text-sm font-semibold mb-2">Wrangler CLIで設定</p>
-                            <pre class="text-xs bg-gray-900 text-green-400 p-3 rounded overflow-x-auto"><code>npx wrangler pages secret put \\
-  REINFOLIB_API_KEY \\
-  --project-name webapp</code></pre>
-                        </div>
-                        <div class="bg-gray-50 rounded p-4">
-                            <p class="text-sm font-semibold mb-2">または Cloudflare Dashboard</p>
-                            <p class="text-xs text-gray-600">Workers & Pages → webapp → Settings → Environment variables</p>
-                        </div>
-                        <a href="https://dash.cloudflare.com/" 
-                           target="_blank"
-                           class="block text-center bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded transition-colors">
-                            <i class="fas fa-external-link-alt mr-2"></i>Cloudflare Dashboard
-                        </a>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                        <i class="fas fa-calculator text-4xl text-blue-600 mb-4"></i>
+                        <h4 class="font-semibold text-gray-900 mb-2">投資指標計算</h4>
+                        <p class="text-sm text-gray-600">NOI、利回り、DSCR、LTV等の自動計算</p>
+                    </div>
+
+                    <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                        <i class="fas fa-database text-4xl text-green-600 mb-4"></i>
+                        <h4 class="font-semibold text-gray-900 mb-2">物件データ管理</h4>
+                        <p class="text-sm text-gray-600">物件情報の登録・編集・一覧表示</p>
+                    </div>
+
+                    <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                        <i class="fas fa-chart-pie text-4xl text-purple-600 mb-4"></i>
+                        <h4 class="font-semibold text-gray-900 mb-2">データ可視化</h4>
+                        <p class="text-sm text-gray-600">グラフ・チャートによる視覚的分析</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Links -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg p-8 mt-8 text-white">
-                <h3 class="text-xl font-bold mb-4">
-                    <i class="fas fa-link mr-2"></i>APIキー取得方法
+            <!-- Quick Start Guide -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl shadow-lg p-8 text-white">
+                <h3 class="text-2xl font-bold mb-6">
+                    <i class="fas fa-rocket mr-2"></i>今すぐ始める
                 </h3>
-                <div class="grid md:grid-cols-3 gap-4">
-                    <a href="https://console.cloud.google.com/" target="_blank" 
-                       class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded p-4 transition-all">
-                        <p class="font-semibold mb-1">Google Cloud Console</p>
-                        <p class="text-sm opacity-90">OAuth認証情報を取得</p>
-                    </a>
-                    <a href="https://www.reinfolib.mlit.go.jp/" target="_blank" 
-                       class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded p-4 transition-all">
-                        <p class="font-semibold mb-1">不動産情報ライブラリ</p>
-                        <p class="text-sm opacity-90">APIキーを申請</p>
-                    </a>
-                    <a href="https://platform.openai.com/" target="_blank" 
-                       class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded p-4 transition-all">
-                        <p class="font-semibold mb-1">OpenAI Platform</p>
-                        <p class="text-sm opacity-90">APIキーを生成</p>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div>
+                        <div class="text-3xl font-bold mb-2">1</div>
+                        <p class="font-semibold mb-2">物件情報を入力</p>
+                        <p class="text-sm opacity-90">価格、収益、経費などの基本情報</p>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold mb-2">2</div>
+                        <p class="font-semibold mb-2">自動分析実行</p>
+                        <p class="text-sm opacity-90">投資指標・市場動向を自動算出</p>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold mb-2">3</div>
+                        <p class="font-semibold mb-2">レポート生成</p>
+                        <p class="text-sm opacity-90">PDF形式で詳細レポートを出力</p>
+                    </div>
+                </div>
+                <div class="mt-8 text-center">
+                    <a href="/properties/new" 
+                       class="inline-block bg-white text-indigo-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-plus-circle mr-2"></i>新規物件を登録する
                     </a>
                 </div>
             </div>
