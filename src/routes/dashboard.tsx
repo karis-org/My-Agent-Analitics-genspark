@@ -47,6 +47,11 @@ dashboard.get('/', (c) => {
                                 <p class="text-xs text-gray-500">${user?.email}</p>
                             </div>
                         </div>
+                        <a href="/settings" 
+                           class="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded hover:bg-gray-100"
+                           title="設定">
+                            <i class="fas fa-cog"></i>
+                        </a>
                         <a href="/auth/logout" 
                            class="text-sm text-gray-600 hover:text-gray-900">
                             <i class="fas fa-sign-out-alt"></i>

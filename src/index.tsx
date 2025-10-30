@@ -31,6 +31,10 @@ app.route('/api', apiRoutes)
 import properties from './routes/properties'
 app.route('/properties', properties)
 
+// Settings routes (requires authentication)
+import settings from './routes/settings'
+app.route('/settings', settings)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 
