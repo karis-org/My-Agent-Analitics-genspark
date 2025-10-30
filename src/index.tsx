@@ -73,11 +73,7 @@ app.get('/', (c) => {
             <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12">
-                        <div>
-                            <h1 class="text-3xl font-bold text-gray-900">My Agent Analytics</h1>
-                            <p class="text-sm text-gray-600">不動産投資分析プラットフォーム</p>
-                        </div>
+                        <img src="/static/icons/header-logo.png" alt="My Agent Analytics" class="h-16" style="height: auto; max-height: 64px;">
                     </div>
                     <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-block">
                         <i class="fas fa-sign-in-alt mr-2"></i>ログイン
