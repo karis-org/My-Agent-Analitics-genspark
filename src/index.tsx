@@ -42,6 +42,14 @@ app.route('/settings', settings)
 import agentsRoutes from './routes/agents'
 app.route('/agents', agentsRoutes)
 
+// Shared reports routes (public, no auth required)
+import sharedRoutes from './routes/shared'
+app.route('/shared', sharedRoutes)
+
+// Templates routes (requires authentication)
+import templatesRoutes from './routes/templates'
+app.route('/templates', templatesRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 

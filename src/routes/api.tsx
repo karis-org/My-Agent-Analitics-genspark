@@ -31,6 +31,22 @@ import {
   getUserSharedReports,
   getSharedReportAccessLogs,
 } from '../lib/sharing';
+import {
+  createTemplate,
+  getTemplate,
+  getUserTemplates,
+  getTemplatesByCategory,
+  updateTemplate,
+  deleteTemplate,
+  createSection,
+  updateSection,
+  deleteSection,
+  getTemplateSections,
+  duplicateTemplate,
+  getPublicTemplates,
+  setDefaultTemplate,
+  getDefaultTemplate,
+} from '../lib/templates';
 
 const api = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -2075,6 +2091,91 @@ api.delete('/sharing/:token', authMiddleware, async (c) => {
 });
 
 /**
+ * Get report by ID (for shared report display)
+ * GET /api/reports/:reportId
+ * This endpoint allows fetching report data without authentication
+ * for use with shared report links
+ */
+api.get('/reports/:reportId', async (c) => {
+  try {
+    const { env } = c;
+    const reportId = c.req.param('reportId');
+    
+    // Try to find the report in various tables
+    // This is a simplified implementation - in production you would
+    // determine the report type from the shared_reports table
+    
+    // Try properties table first
+    const property = await env.DB.prepare(`
+      SELECT 
+        id,
+        user_id,
+        name,
+        address,
+        property_type,
+        price,
+        area,
+        building_area,
+        land_area,
+        year_built,
+        structure,
+        distance_from_station,
+        monthly_rent,
+        occupancy_rate,
+        annual_expenses,
+        created_at,
+        updated_at
+      FROM properties 
+      WHERE id = ?
+    `).bind(reportId).first();
+    
+    if (property) {
+      // Calculate analysis data
+      const analysis = analyzeProperty({
+        price: property.price || 0,
+        monthlyRent: property.monthly_rent || 0,
+        occupancyRate: property.occupancy_rate || 95,
+        annualExpenses: property.annual_expenses || 0,
+        loanAmount: property.price ? property.price * 0.8 : 0,
+        interestRate: 2.0,
+        loanYears: 30,
+      });
+      
+      return c.json({
+        id: property.id,
+        reportId: property.id,
+        reportType: 'property_analysis',
+        name: property.name,
+        address: property.address,
+        propertyType: property.property_type,
+        price: property.price,
+        area: property.area,
+        age: property.year_built ? new Date().getFullYear() - property.year_built : null,
+        overallScore: Math.round((analysis.roi || 0) * 10),
+        analysis: `
+          <h3>物件分析結果</h3>
+          <p><strong>想定利回り:</strong> ${analysis.grossYield?.toFixed(2)}%</p>
+          <p><strong>実質利回り:</strong> ${analysis.netYield?.toFixed(2)}%</p>
+          <p><strong>年間収支:</strong> ${(analysis.annualCashFlow || 0).toLocaleString()}円</p>
+          <p><strong>ROI:</strong> ${analysis.roi?.toFixed(2)}%</p>
+        `,
+        createdAt: property.created_at,
+      });
+    }
+    
+    // If not found, return a generic not found response
+    return c.json({ error: 'Report not found' }, 404);
+    
+  } catch (error: any) {
+    console.error('Get report error:', error);
+    return c.json({
+      error: 'Failed to fetch report',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
  * Get access logs for shared report
  * GET /api/sharing/:token/logs
  */
@@ -2103,6 +2204,504 @@ api.get('/sharing/:token/logs', authMiddleware, async (c) => {
     console.error('Get access logs error:', error);
     return c.json({
       error: 'Failed to fetch access logs',
+      details: error.message,
+    }, 500);
+  }
+});
+
+// ============================================================
+// TEMPLATE MANAGEMENT ENDPOINTS
+// ============================================================
+
+/**
+ * Create a new report template
+ * POST /api/templates
+ */
+api.post('/templates', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const body = await c.req.json();
+    const { name, description, category, isDefault, isPublic } = body;
+
+    if (!name || !category) {
+      return c.json({ error: 'Name and category are required' }, 400);
+    }
+
+    const template = await createTemplate(env.DB, {
+      userId: user.id,
+      name,
+      description,
+      category,
+      isDefault,
+      isPublic,
+    });
+
+    return c.json({
+      success: true,
+      template,
+    });
+  } catch (error: any) {
+    console.error('Create template error:', error);
+    return c.json({
+      error: 'Failed to create template',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get all templates for current user
+ * GET /api/templates
+ */
+api.get('/templates', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const category = c.req.query('category');
+
+    let templates;
+    if (category) {
+      templates = await getTemplatesByCategory(env.DB, user.id, category as any);
+    } else {
+      templates = await getUserTemplates(env.DB, user.id);
+    }
+
+    return c.json({
+      success: true,
+      templates,
+    });
+  } catch (error: any) {
+    console.error('Get templates error:', error);
+    return c.json({
+      error: 'Failed to fetch templates',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get public templates
+ * GET /api/templates/public
+ */
+api.get('/templates/public', async (c) => {
+  try {
+    const { env } = c;
+
+    const templates = await getPublicTemplates(env.DB);
+
+    return c.json({
+      success: true,
+      templates,
+    });
+  } catch (error: any) {
+    console.error('Get public templates error:', error);
+    return c.json({
+      error: 'Failed to fetch public templates',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get template by ID
+ * GET /api/templates/:id
+ */
+api.get('/templates/:id', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const templateId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const template = await getTemplate(env.DB, templateId);
+
+    if (!template) {
+      return c.json({ error: 'Template not found' }, 404);
+    }
+
+    // Check if user has access (owner or public template)
+    if (template.userId !== user.id && !template.isPublic) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+
+    return c.json({
+      success: true,
+      template,
+    });
+  } catch (error: any) {
+    console.error('Get template error:', error);
+    return c.json({
+      error: 'Failed to fetch template',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Update template
+ * PUT /api/templates/:id
+ */
+api.put('/templates/:id', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const templateId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify ownership
+    const existingTemplate = await getTemplate(env.DB, templateId);
+    if (!existingTemplate || existingTemplate.userId !== user.id) {
+      return c.json({ error: 'Not found or unauthorized' }, 404);
+    }
+
+    const body = await c.req.json();
+    const { name, description, category, isDefault, isPublic } = body;
+
+    const updatedTemplate = await updateTemplate(env.DB, templateId, {
+      name,
+      description,
+      category,
+      isDefault,
+      isPublic,
+    });
+
+    return c.json({
+      success: true,
+      template: updatedTemplate,
+    });
+  } catch (error: any) {
+    console.error('Update template error:', error);
+    return c.json({
+      error: 'Failed to update template',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Delete template
+ * DELETE /api/templates/:id
+ */
+api.delete('/templates/:id', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const templateId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify ownership
+    const existingTemplate = await getTemplate(env.DB, templateId);
+    if (!existingTemplate || existingTemplate.userId !== user.id) {
+      return c.json({ error: 'Not found or unauthorized' }, 404);
+    }
+
+    await deleteTemplate(env.DB, templateId);
+
+    return c.json({
+      success: true,
+      message: 'Template deleted successfully',
+    });
+  } catch (error: any) {
+    console.error('Delete template error:', error);
+    return c.json({
+      error: 'Failed to delete template',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Duplicate template
+ * POST /api/templates/:id/duplicate
+ */
+api.post('/templates/:id/duplicate', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const templateId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const body = await c.req.json();
+    const { name } = body;
+
+    if (!name) {
+      return c.json({ error: 'Name is required' }, 400);
+    }
+
+    // Check if template exists and is accessible
+    const originalTemplate = await getTemplate(env.DB, templateId);
+    if (!originalTemplate) {
+      return c.json({ error: 'Template not found' }, 404);
+    }
+
+    if (originalTemplate.userId !== user.id && !originalTemplate.isPublic) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+
+    const newTemplate = await duplicateTemplate(env.DB, templateId, user.id, name);
+
+    return c.json({
+      success: true,
+      template: newTemplate,
+    });
+  } catch (error: any) {
+    console.error('Duplicate template error:', error);
+    return c.json({
+      error: 'Failed to duplicate template',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Set template as default
+ * POST /api/templates/:id/set-default
+ */
+api.post('/templates/:id/set-default', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const templateId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    await setDefaultTemplate(env.DB, templateId, user.id);
+
+    return c.json({
+      success: true,
+      message: 'Template set as default',
+    });
+  } catch (error: any) {
+    console.error('Set default template error:', error);
+    return c.json({
+      error: 'Failed to set default template',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get default template for category
+ * GET /api/templates/default/:category
+ */
+api.get('/templates/default/:category', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const category = c.req.param('category');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const template = await getDefaultTemplate(env.DB, user.id, category as any);
+
+    if (!template) {
+      return c.json({ error: 'No default template found' }, 404);
+    }
+
+    return c.json({
+      success: true,
+      template,
+    });
+  } catch (error: any) {
+    console.error('Get default template error:', error);
+    return c.json({
+      error: 'Failed to fetch default template',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Create a template section
+ * POST /api/templates/:id/sections
+ */
+api.post('/templates/:id/sections', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const templateId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify ownership
+    const template = await getTemplate(env.DB, templateId);
+    if (!template || template.userId !== user.id) {
+      return c.json({ error: 'Not found or unauthorized' }, 404);
+    }
+
+    const body = await c.req.json();
+    const { title, contentType, content, displayOrder, isVisible, config } = body;
+
+    if (!title || !contentType || !content || displayOrder === undefined) {
+      return c.json({ error: 'Title, contentType, content, and displayOrder are required' }, 400);
+    }
+
+    const section = await createSection(env.DB, {
+      templateId,
+      title,
+      contentType,
+      content,
+      displayOrder,
+      isVisible,
+      config,
+    });
+
+    return c.json({
+      success: true,
+      section,
+    });
+  } catch (error: any) {
+    console.error('Create section error:', error);
+    return c.json({
+      error: 'Failed to create section',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get template sections
+ * GET /api/templates/:id/sections
+ */
+api.get('/templates/:id/sections', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const templateId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify access
+    const template = await getTemplate(env.DB, templateId);
+    if (!template) {
+      return c.json({ error: 'Template not found' }, 404);
+    }
+
+    if (template.userId !== user.id && !template.isPublic) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+
+    const sections = await getTemplateSections(env.DB, templateId);
+
+    return c.json({
+      success: true,
+      sections,
+    });
+  } catch (error: any) {
+    console.error('Get sections error:', error);
+    return c.json({
+      error: 'Failed to fetch sections',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Update template section
+ * PUT /api/sections/:id
+ */
+api.put('/sections/:id', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const sectionId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Get section and verify template ownership
+    const section = await env.DB.prepare(`
+      SELECT ts.*, rt.user_id 
+      FROM template_sections ts
+      JOIN report_templates rt ON ts.template_id = rt.id
+      WHERE ts.id = ?
+    `).bind(sectionId).first();
+
+    if (!section || section.user_id !== user.id) {
+      return c.json({ error: 'Not found or unauthorized' }, 404);
+    }
+
+    const body = await c.req.json();
+    const { title, contentType, content, displayOrder, isVisible, config } = body;
+
+    const updatedSection = await updateSection(env.DB, sectionId, {
+      title,
+      contentType,
+      content,
+      displayOrder,
+      isVisible,
+      config,
+    });
+
+    return c.json({
+      success: true,
+      section: updatedSection,
+    });
+  } catch (error: any) {
+    console.error('Update section error:', error);
+    return c.json({
+      error: 'Failed to update section',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Delete template section
+ * DELETE /api/sections/:id
+ */
+api.delete('/sections/:id', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const sectionId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Get section and verify template ownership
+    const section = await env.DB.prepare(`
+      SELECT ts.*, rt.user_id 
+      FROM template_sections ts
+      JOIN report_templates rt ON ts.template_id = rt.id
+      WHERE ts.id = ?
+    `).bind(sectionId).first();
+
+    if (!section || section.user_id !== user.id) {
+      return c.json({ error: 'Not found or unauthorized' }, 404);
+    }
+
+    await deleteSection(env.DB, sectionId);
+
+    return c.json({
+      success: true,
+      message: 'Section deleted successfully',
+    });
+  } catch (error: any) {
+    console.error('Delete section error:', error);
+    return c.json({
+      error: 'Failed to delete section',
       details: error.message,
     }, 500);
   }
