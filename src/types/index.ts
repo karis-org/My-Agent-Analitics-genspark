@@ -82,8 +82,6 @@ export interface Bindings {
   DB: D1Database;
   // KV: KVNamespace;
   // R2: R2Bucket;
-  GOOGLE_CLIENT_ID: string;
-  GOOGLE_CLIENT_SECRET: string;
   OPENAI_API_KEY: string;
   ESTAT_API_KEY: string;
   REINFOLIB_API_KEY: string; // 不動産情報ライブラリAPIキー
@@ -97,24 +95,4 @@ export interface Bindings {
 export interface Variables {
   user?: User;
   session?: Session;
-}
-
-// OAuth Response
-export interface GoogleTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  scope: string;
-  id_token: string;
-}
-
-export interface GoogleUserInfo {
-  id: string;
-  email: string;
-  verified_email: boolean;
-  name: string;
-  given_name: string;
-  family_name: string;
-  picture: string;
-  locale: string;
 }

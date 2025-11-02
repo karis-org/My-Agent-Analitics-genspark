@@ -1,19 +1,7 @@
 // Database operations for My Agent Analytics
 
 import type { User, Session } from '../types';
-import { generateId, generateSessionId, getSessionExpiration, isSessionExpired } from './utils';
-
-/**
- * Get user by email
- */
-export async function getUserByEmail(db: D1Database, email: string): Promise<User | null> {
-  const result = await db
-    .prepare('SELECT * FROM users WHERE email = ?')
-    .bind(email)
-    .first<User>();
-  
-  return result || null;
-}
+import { generateSessionId, getSessionExpiration, isSessionExpired } from './utils';
 
 /**
  * Get user by ID
@@ -25,68 +13,6 @@ export async function getUserById(db: D1Database, id: string): Promise<User | nu
     .first<User>();
   
   return result || null;
-}
-
-/**
- * Create a new user
- */
-export async function createUser(
-  db: D1Database,
-  data: {
-    email: string;
-    name?: string;
-    picture?: string;
-    provider?: string;
-  }
-): Promise<User> {
-  const id = generateId('user');
-  const now = new Date().toISOString();
-  
-  await db
-    .prepare(
-      'INSERT INTO users (id, email, name, picture, provider, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    )
-    .bind(
-      id,
-      data.email,
-      data.name || null,
-      data.picture || null,
-      data.provider || 'google',
-      now,
-      now
-    )
-    .run();
-  
-  const user = await getUserById(db, id);
-  if (!user) throw new Error('Failed to create user');
-  
-  return user;
-}
-
-/**
- * Update user
- */
-export async function updateUser(
-  db: D1Database,
-  id: string,
-  data: {
-    name?: string;
-    picture?: string;
-  }
-): Promise<User> {
-  const now = new Date().toISOString();
-  
-  await db
-    .prepare(
-      'UPDATE users SET name = ?, picture = ?, updated_at = ? WHERE id = ?'
-    )
-    .bind(data.name || null, data.picture || null, now, id)
-    .run();
-  
-  const user = await getUserById(db, id);
-  if (!user) throw new Error('User not found');
-  
-  return user;
 }
 
 /**

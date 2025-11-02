@@ -17,14 +17,6 @@ export function generateSessionId(): string {
 }
 
 /**
- * Generate a random state for OAuth
- */
-export function generateState(): string {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
-}
-
-/**
  * Calculate session expiration date
  * @param days Number of days until expiration (default: 7)
  */
