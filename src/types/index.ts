@@ -6,6 +6,9 @@ export interface User {
   name: string | null;
   picture: string | null;
   provider: string;
+  role: string;
+  is_admin: number;
+  is_active: number;
   created_at: string;
   updated_at: string;
 }
@@ -89,6 +92,15 @@ export interface Bindings {
   REINS_LOGIN_ID: string; // レインズログインID
   REINS_PASSWORD: string; // レインズパスワード
   SESSION_SECRET: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  user_id: string;
+  admin_id: string;
+  action: string;
+  details: string | null;
+  created_at: string;
 }
 
 // Context Variables
