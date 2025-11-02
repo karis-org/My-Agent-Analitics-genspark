@@ -368,4 +368,398 @@ properties.get('/new', (c) => {
   `);
 });
 
+/**
+ * Property detail page
+ * GET /properties/:id
+ */
+properties.get('/:id', async (c) => {
+  const user = c.get('user');
+  const propertyId = c.req.param('id');
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>物件詳細 - My Agent Analytics</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+            body { font-family: 'Noto Sans JP', sans-serif; }
+        </style>
+    </head>
+    <body class="bg-gray-50">
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <a href="/dashboard">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                        </a>
+                        <h1 class="text-2xl font-bold text-gray-900">物件詳細</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="/properties/\${propertyId}/analyze" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-chart-line mr-2"></i>分析実行
+                        </a>
+                        <a href="/properties" class="text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-arrow-left"></i> 戻る
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div id="loading" class="text-center py-12">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+                <p class="mt-4 text-gray-600">読み込み中...</p>
+            </div>
+            
+            <div id="content" class="hidden">
+                <!-- Property details will be loaded here -->
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script>
+            const propertyId = '${propertyId}';
+            
+            async function loadProperty() {
+                try {
+                    const response = await axios.get(\`/api/properties/\${propertyId}\`);
+                    const { property } = response.data;
+                    
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('content').classList.remove('hidden');
+                    document.getElementById('content').innerHTML = \`
+                        <div class="bg-white rounded-lg shadow p-8 mb-6">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-6">\${property.name}</h2>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">基本情報</h3>
+                                    <dl class="space-y-3">
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">価格:</dt>
+                                            <dd class="font-semibold text-lg">¥\${(property.price || 0).toLocaleString()}</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">所在地:</dt>
+                                            <dd class="font-medium">\${property.location || '未設定'}</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">構造:</dt>
+                                            <dd class="font-medium">\${property.structure || '未設定'}</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">延床面積:</dt>
+                                            <dd class="font-medium">\${property.total_floor_area || 0}㎡</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">築年数:</dt>
+                                            <dd class="font-medium">\${property.age || 0}年</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">駅距離:</dt>
+                                            <dd class="font-medium">\${property.distance_from_station || 0}分</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">アクション</h3>
+                                    <div class="space-y-3">
+                                        <a href="/properties/\${property.id}/analyze" 
+                                           class="block w-full text-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+                                            <i class="fas fa-chart-line mr-2"></i>分析を実行
+                                        </a>
+                                        <button onclick="editProperty()" 
+                                                class="block w-full text-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                                            <i class="fas fa-edit mr-2"></i>編集
+                                        </button>
+                                        <button onclick="deleteProperty()" 
+                                                class="block w-full text-center px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
+                                            <i class="fas fa-trash mr-2"></i>削除
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-8">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4">分析履歴</h3>
+                            <div id="analysis-history">
+                                <p class="text-gray-600">分析履歴はありません</p>
+                            </div>
+                        </div>
+                    \`;
+                } catch (error) {
+                    console.error('Failed to load property:', error);
+                    document.getElementById('loading').innerHTML = \`
+                        <div class="text-center py-12">
+                            <i class="fas fa-exclamation-circle text-4xl text-red-600 mb-4"></i>
+                            <p class="text-gray-600">物件の読み込みに失敗しました</p>
+                            <a href="/properties" class="mt-4 inline-block text-blue-600 hover:underline">物件一覧に戻る</a>
+                        </div>
+                    \`;
+                }
+            }
+            
+            function editProperty() {
+                alert('編集機能は今後実装予定です');
+            }
+            
+            async function deleteProperty() {
+                if (!confirm('この物件を削除してもよろしいですか？')) return;
+                
+                try {
+                    await axios.delete(\`/api/properties/\${propertyId}\`);
+                    alert('物件を削除しました');
+                    window.location.href = '/properties';
+                } catch (error) {
+                    console.error('Failed to delete property:', error);
+                    alert('物件の削除に失敗しました');
+                }
+            }
+            
+            loadProperty();
+        </script>
+    </body>
+    </html>
+  `);
+});
+
+/**
+ * Property analysis page
+ * GET /properties/:id/analyze
+ */
+properties.get('/:id/analyze', async (c) => {
+  const user = c.get('user');
+  const propertyId = c.req.param('id');
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>物件分析 - My Agent Analytics</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+            body { font-family: 'Noto Sans JP', sans-serif; }
+        </style>
+    </head>
+    <body class="bg-gray-50">
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <a href="/dashboard">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                        </a>
+                        <h1 class="text-2xl font-bold text-gray-900">物件分析</h1>
+                    </div>
+                    <a href="/properties/\${propertyId}" class="text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-arrow-left"></i> 戻る
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-lg shadow p-8 mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">収支シミュレーション</h2>
+                
+                <form id="analysis-form" class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">物件価格 (円) *</label>
+                            <input type="number" id="propertyPrice" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">想定家賃収入 (円/月) *</label>
+                            <input type="number" id="monthlyRent" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">稼働率 (%)</label>
+                            <input type="number" id="occupancyRate" value="95" step="0.1"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">年間経費 (円)</label>
+                            <input type="number" id="annualExpenses" value="0"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ローン借入額 (円)</label>
+                            <input type="number" id="loanAmount" value="0"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">金利 (%)</label>
+                            <input type="number" id="interestRate" value="2.0" step="0.01"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">返済期間 (年)</label>
+                            <input type="number" id="loanYears" value="30"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">自己資金 (円)</label>
+                            <input type="number" id="downPayment" value="0"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" onclick="history.back()" 
+                                class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            キャンセル
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                            <i class="fas fa-calculator mr-2"></i>分析実行
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="results" class="hidden space-y-6">
+                <!-- Analysis results will be displayed here -->
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script>
+            const propertyId = '${propertyId}';
+            
+            // Load property data
+            async function loadProperty() {
+                try {
+                    const response = await axios.get(\`/api/properties/\${propertyId}\`);
+                    const { property } = response.data;
+                    
+                    document.getElementById('propertyPrice').value = property.price || 0;
+                } catch (error) {
+                    console.error('Failed to load property:', error);
+                }
+            }
+            
+            document.getElementById('analysis-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    propertyId,
+                    propertyPrice: parseFloat(document.getElementById('propertyPrice').value),
+                    grossIncome: parseFloat(document.getElementById('monthlyRent').value) * 12,
+                    effectiveIncome: parseFloat(document.getElementById('monthlyRent').value) * 12 * (parseFloat(document.getElementById('occupancyRate').value) / 100),
+                    operatingExpenses: parseFloat(document.getElementById('annualExpenses').value),
+                    loanAmount: parseFloat(document.getElementById('loanAmount').value),
+                    interestRate: parseFloat(document.getElementById('interestRate').value),
+                    loanTermYears: parseInt(document.getElementById('loanYears').value),
+                    downPayment: parseFloat(document.getElementById('downPayment').value),
+                };
+                
+                try {
+                    const response = await axios.post('/api/properties/analyze', formData);
+                    const { analysis } = response.data;
+                    
+                    displayResults(analysis);
+                } catch (error) {
+                    console.error('Analysis failed:', error);
+                    alert('分析の実行に失敗しました');
+                }
+            });
+            
+            function displayResults(analysis) {
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('results').innerHTML = \`
+                    <div class="bg-white rounded-lg shadow p-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">分析結果</h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-2">表面利回り</p>
+                                <p class="text-3xl font-bold text-blue-600">\${(analysis.grossYield || 0).toFixed(2)}%</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-2">実質利回り</p>
+                                <p class="text-3xl font-bold text-green-600">\${(analysis.netYield || 0).toFixed(2)}%</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-2">NOI</p>
+                                <p class="text-3xl font-bold text-purple-600">¥\${Math.round(analysis.noi || 0).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900 mb-4">収支詳細</h4>
+                                <dl class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">年間総収入:</dt>
+                                        <dd class="font-semibold">¥\${Math.round(analysis.grossIncome || 0).toLocaleString()}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">年間実効収入:</dt>
+                                        <dd class="font-semibold">¥\${Math.round(analysis.effectiveIncome || 0).toLocaleString()}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">年間運営費:</dt>
+                                        <dd class="font-semibold">¥\${Math.round(analysis.operatingExpenses || 0).toLocaleString()}</dd>
+                                    </div>
+                                    <div class="flex justify-between border-t pt-3">
+                                        <dt class="text-gray-900 font-semibold">年間キャッシュフロー:</dt>
+                                        <dd class="font-bold text-lg \${(analysis.annualCashFlow || 0) >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                            ¥\${Math.round(analysis.annualCashFlow || 0).toLocaleString()}
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-lg font-semibold text-gray-900 mb-4">ローン詳細</h4>
+                                <dl class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">借入額:</dt>
+                                        <dd class="font-semibold">¥\${Math.round(analysis.loanAmount || 0).toLocaleString()}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">月々返済額:</dt>
+                                        <dd class="font-semibold">¥\${Math.round(analysis.monthlyPayment || 0).toLocaleString()}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">LTV:</dt>
+                                        <dd class="font-semibold">\${(analysis.ltv || 0).toFixed(1)}%</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">DSCR:</dt>
+                                        <dd class="font-semibold">\${(analysis.dscr || 0).toFixed(2)}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                \`;
+                
+                // Scroll to results
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            loadProperty();
+        </script>
+    </body>
+    </html>
+  `);
+});
+
 export default properties;

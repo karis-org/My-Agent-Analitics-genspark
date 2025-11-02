@@ -57,6 +57,10 @@ app.route('/templates', templatesRoutes)
 import adminRoutes from './routes/admin'
 app.route('/admin', adminRoutes)
 
+// Help routes (public)
+import helpRoutes from './routes/help'
+app.route('/help', helpRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 

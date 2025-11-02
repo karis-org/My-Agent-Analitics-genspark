@@ -194,11 +194,13 @@ api.get('/health', (c) => {
 /**
  * Property financial analysis endpoint
  */
-api.post('/properties/analyze', async (c) => {
+api.post('/properties/analyze', authMiddleware, async (c) => {
   try {
+    const { env, var: { user } } = c;
     const body = await c.req.json();
     
     const {
+      propertyId,
       propertyPrice,
       grossIncome,
       effectiveIncome,
@@ -225,6 +227,32 @@ api.post('/properties/analyze', async (c) => {
       loanTermYears: parseInt(loanTermYears || 0),
       downPayment: parseFloat(downPayment || 0),
     });
+    
+    // Save analysis result if propertyId is provided
+    if (propertyId && user) {
+      const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const now = new Date().toISOString();
+      
+      await env.DB.prepare(`
+        INSERT INTO analysis_results (
+          id, property_id, noi, gross_yield, net_yield, 
+          dscr, ltv, monthly_cash_flow, analysis_data, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        analysisId,
+        propertyId,
+        analysis.noi || null,
+        analysis.grossYield || null,
+        analysis.netYield || null,
+        analysis.dscr || null,
+        analysis.ltv || null,
+        analysis.monthlyCashFlow ? JSON.stringify(analysis.monthlyCashFlow) : null,
+        JSON.stringify(analysis),
+        now
+      ).run();
+      
+      analysis.id = analysisId;
+    }
     
     return c.json({
       success: true,
@@ -451,7 +479,7 @@ api.post('/market/estimate-price', async (c) => {
  * Properties list endpoint
  * GET /api/properties
  */
-api.get('/properties', async (c) => {
+api.get('/properties', authMiddleware, async (c) => {
   try {
     const { env, var: { user } } = c;
     
@@ -472,6 +500,177 @@ api.get('/properties', async (c) => {
   } catch (error) {
     console.error('Properties list error:', error);
     return c.json({ error: 'Failed to fetch properties' }, 500);
+  }
+});
+
+/**
+ * Create new property
+ * POST /api/properties
+ */
+api.post('/properties', authMiddleware, async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const body = await c.req.json();
+    const { 
+      name, 
+      price, 
+      location, 
+      structure, 
+      total_floor_area, 
+      age, 
+      distance_from_station,
+      has_elevator
+    } = body;
+    
+    if (!name || !price) {
+      return c.json({ error: 'Name and price are required' }, 400);
+    }
+    
+    const propertyId = `prop-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const now = new Date().toISOString();
+    
+    await env.DB.prepare(`
+      INSERT INTO properties (
+        id, user_id, name, price, location, structure, 
+        total_floor_area, age, distance_from_station, has_elevator,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      propertyId,
+      user.id,
+      name,
+      parseFloat(price),
+      location || null,
+      structure || null,
+      total_floor_area ? parseFloat(total_floor_area) : null,
+      age ? parseInt(age) : null,
+      distance_from_station ? parseFloat(distance_from_station) : null,
+      has_elevator ? 1 : 0,
+      now,
+      now
+    ).run();
+    
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ?
+    `).bind(propertyId).first();
+    
+    return c.json({
+      success: true,
+      property,
+    }, 201);
+  } catch (error) {
+    console.error('Property creation error:', error);
+    return c.json({ error: 'Failed to create property' }, 500);
+  }
+});
+
+/**
+ * Update property
+ * PUT /api/properties/:id
+ */
+api.put('/properties/:id', authMiddleware, async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    const propertyId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    // Check ownership
+    const existing = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+    
+    if (!existing) {
+      return c.json({ error: 'Property not found' }, 404);
+    }
+    
+    const body = await c.req.json();
+    const { 
+      name, 
+      price, 
+      location, 
+      structure, 
+      total_floor_area, 
+      age, 
+      distance_from_station,
+      has_elevator
+    } = body;
+    
+    await env.DB.prepare(`
+      UPDATE properties 
+      SET name = ?, price = ?, location = ?, structure = ?, 
+          total_floor_area = ?, age = ?, distance_from_station = ?, 
+          has_elevator = ?, updated_at = ?
+      WHERE id = ? AND user_id = ?
+    `).bind(
+      name || existing.name,
+      price !== undefined ? parseFloat(price) : existing.price,
+      location !== undefined ? location : existing.location,
+      structure !== undefined ? structure : existing.structure,
+      total_floor_area !== undefined ? (total_floor_area ? parseFloat(total_floor_area) : null) : existing.total_floor_area,
+      age !== undefined ? (age ? parseInt(age) : null) : existing.age,
+      distance_from_station !== undefined ? (distance_from_station ? parseFloat(distance_from_station) : null) : existing.distance_from_station,
+      has_elevator !== undefined ? (has_elevator ? 1 : 0) : existing.has_elevator,
+      new Date().toISOString(),
+      propertyId,
+      user.id
+    ).run();
+    
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ?
+    `).bind(propertyId).first();
+    
+    return c.json({
+      success: true,
+      property,
+    });
+  } catch (error) {
+    console.error('Property update error:', error);
+    return c.json({ error: 'Failed to update property' }, 500);
+  }
+});
+
+/**
+ * Delete property
+ * DELETE /api/properties/:id
+ */
+api.delete('/properties/:id', authMiddleware, async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    const propertyId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    // Check ownership
+    const existing = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+    
+    if (!existing) {
+      return c.json({ error: 'Property not found' }, 404);
+    }
+    
+    // Delete property (CASCADE will delete related data)
+    await env.DB.prepare(`
+      DELETE FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).run();
+    
+    return c.json({
+      success: true,
+      message: 'Property deleted successfully',
+    });
+  } catch (error) {
+    console.error('Property deletion error:', error);
+    return c.json({ error: 'Failed to delete property' }, 500);
   }
 });
 
