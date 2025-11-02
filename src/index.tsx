@@ -53,6 +53,10 @@ app.route('/shared', sharedRoutes)
 import templatesRoutes from './routes/templates'
 app.route('/templates', templatesRoutes)
 
+// Admin routes (requires admin authentication)
+import adminRoutes from './routes/admin'
+app.route('/admin', adminRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 

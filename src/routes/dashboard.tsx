@@ -47,6 +47,13 @@ dashboard.get('/', (c) => {
                                 <p class="text-xs text-gray-500">${user?.email}</p>
                             </div>
                         </div>
+                        ${user?.is_admin ? `
+                        <a href="/admin" 
+                           class="text-sm bg-red-500 text-white hover:bg-red-600 px-3 py-2 rounded font-medium transition-colors"
+                           title="運営管理画面">
+                            <i class="fas fa-shield-alt mr-1"></i>管理
+                        </a>
+                        ` : ''}
                         <a href="/settings" 
                            class="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded hover:bg-gray-100"
                            title="設定">
