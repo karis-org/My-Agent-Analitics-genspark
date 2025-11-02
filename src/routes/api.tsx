@@ -3,16 +3,33 @@
 import { Hono } from 'hono';
 import type { Bindings, Variables } from '../types';
 import { authMiddleware } from '../middleware/auth';
+import { rateLimiter, validateInput } from '../middleware/security';
 import { analyzeProperty } from '../lib/calculator';
 import { ReinfolibClient } from '../lib/reinfolib';
+import { EStatClient, analyzeDemographics } from '../lib/estat';
+import { AIMarketAnalyzer } from '../lib/ai-analyzer';
+import { InvestmentSimulator } from '../lib/simulator';
+import {
+  exportPropertiesToCSV,
+  exportAnalysisToCSV,
+  exportSimulationToCSV,
+  exportMarketAnalysisToCSV,
+  createCSVDownloadResponse,
+} from '../lib/exporter';
 
 const api = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// Apply rate limiting to all API routes
+api.use('/*', rateLimiter('api'));
 
 // Apply auth middleware to all agents and executions endpoints
 api.use('/agents*', authMiddleware);
 api.use('/agents', authMiddleware);
 api.use('/executions*', authMiddleware);
 api.use('/executions', authMiddleware);
+
+// Apply stricter rate limiting to AI endpoints
+api.use('/ai/*', rateLimiter('ai'));
 
 /**
  * マイソクOCR endpoint
@@ -1300,6 +1317,484 @@ api.get('/executions/:id', async (c) => {
   } catch (error) {
     console.error('Execution fetch error:', error);
     return c.json({ error: 'Failed to fetch execution' }, 500);
+  }
+});
+
+/**
+ * e-Stat API Endpoints
+ * 政府統計データの取得
+ */
+
+/**
+ * Get population data
+ * POST /api/estat/population
+ */
+api.post('/estat/population', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { prefCode, cityCode } = body;
+
+    if (!prefCode) {
+      return c.json({ error: 'Prefecture code is required' }, 400);
+    }
+
+    // Check if e-Stat API key is configured
+    if (!env.ESTAT_API_KEY || env.ESTAT_API_KEY.trim() === '') {
+      return c.json({
+        error: 'e-Stat API key not configured',
+        message: 'e-Stat APIキーが設定されていません。管理者に連絡してください。',
+      }, 503);
+    }
+
+    const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
+    const data = await eStatClient.getPopulationData(prefCode, cityCode);
+
+    return c.json({
+      success: true,
+      data,
+    });
+  } catch (error: any) {
+    console.error('Population data fetch error:', error);
+    return c.json({
+      error: 'Failed to fetch population data',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get economic indicators
+ * POST /api/estat/economics
+ */
+api.post('/estat/economics', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { prefCode, cityCode } = body;
+
+    if (!prefCode) {
+      return c.json({ error: 'Prefecture code is required' }, 400);
+    }
+
+    if (!env.ESTAT_API_KEY || env.ESTAT_API_KEY.trim() === '') {
+      return c.json({
+        error: 'e-Stat API key not configured',
+        message: 'e-Stat APIキーが設定されていません。管理者に連絡してください。',
+      }, 503);
+    }
+
+    const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
+    const data = await eStatClient.getEconomicIndicators(prefCode, cityCode);
+
+    return c.json({
+      success: true,
+      data,
+    });
+  } catch (error: any) {
+    console.error('Economic indicators fetch error:', error);
+    return c.json({
+      error: 'Failed to fetch economic indicators',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get land price data
+ * POST /api/estat/land-prices
+ */
+api.post('/estat/land-prices', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { prefCode, year } = body;
+
+    if (!prefCode) {
+      return c.json({ error: 'Prefecture code is required' }, 400);
+    }
+
+    if (!env.ESTAT_API_KEY || env.ESTAT_API_KEY.trim() === '') {
+      return c.json({
+        error: 'e-Stat API key not configured',
+        message: 'e-Stat APIキーが設定されていません。管理者に連絡してください。',
+      }, 503);
+    }
+
+    const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
+    const data = await eStatClient.getLandPriceData(prefCode, year);
+
+    return c.json({
+      success: true,
+      data,
+    });
+  } catch (error: any) {
+    console.error('Land price data fetch error:', error);
+    return c.json({
+      error: 'Failed to fetch land price data',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get comprehensive demographic analysis
+ * POST /api/estat/demographics
+ */
+api.post('/estat/demographics', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { prefCode, cityCode } = body;
+
+    if (!prefCode) {
+      return c.json({ error: 'Prefecture code is required' }, 400);
+    }
+
+    if (!env.ESTAT_API_KEY || env.ESTAT_API_KEY.trim() === '') {
+      return c.json({
+        error: 'e-Stat API key not configured',
+        message: 'e-Stat APIキーが設定されていません。管理者に連絡してください。',
+      }, 503);
+    }
+
+    const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
+    const analysis = await analyzeDemographics(eStatClient, prefCode, cityCode);
+
+    return c.json({
+      success: true,
+      analysis,
+    });
+  } catch (error: any) {
+    console.error('Demographics analysis error:', error);
+    return c.json({
+      error: 'Failed to analyze demographics',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get municipality list
+ * GET /api/estat/municipalities?prefCode=13
+ */
+api.get('/estat/municipalities', async (c) => {
+  try {
+    const { env } = c;
+    const prefCode = c.req.query('prefCode');
+
+    if (!env.ESTAT_API_KEY || env.ESTAT_API_KEY.trim() === '') {
+      return c.json({
+        error: 'e-Stat API key not configured',
+        message: 'e-Stat APIキーが設定されていません。管理者に連絡してください。',
+      }, 503);
+    }
+
+    const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
+    const data = await eStatClient.getMunicipalityList(prefCode);
+
+    return c.json({
+      success: true,
+      data,
+    });
+  } catch (error: any) {
+    console.error('Municipality list fetch error:', error);
+    return c.json({
+      error: 'Failed to fetch municipality list',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * AI Market Analysis Endpoints
+ * OpenAI GPT-4による市場分析
+ */
+
+/**
+ * Analyze market with AI
+ * POST /api/ai/analyze-market
+ */
+api.post('/ai/analyze-market', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { marketData, propertyData } = body;
+
+    if (!marketData) {
+      return c.json({ error: 'Market data is required' }, 400);
+    }
+
+    if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === '') {
+      return c.json({
+        error: 'OpenAI API key not configured',
+        message: 'OpenAI APIキーが設定されていません。管理者に連絡してください。',
+      }, 503);
+    }
+
+    const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);
+    const analysis = await analyzer.analyzeMarket(marketData, propertyData);
+
+    return c.json({
+      success: true,
+      analysis,
+    });
+  } catch (error: any) {
+    console.error('AI market analysis error:', error);
+    return c.json({
+      error: 'Failed to analyze market',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Analyze property with AI
+ * POST /api/ai/analyze-property
+ */
+api.post('/ai/analyze-property', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { propertyData, marketData } = body;
+
+    if (!propertyData) {
+      return c.json({ error: 'Property data is required' }, 400);
+    }
+
+    if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === '') {
+      return c.json({
+        error: 'OpenAI API key not configured',
+        message: 'OpenAI APIキーが設定されていません。管理者に連絡してください。',
+      }, 503);
+    }
+
+    const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);
+    const analysis = await analyzer.analyzeProperty(propertyData, marketData);
+
+    return c.json({
+      success: true,
+      analysis,
+    });
+  } catch (error: any) {
+    console.error('AI property analysis error:', error);
+    return c.json({
+      error: 'Failed to analyze property',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Compare multiple properties with AI
+ * POST /api/ai/compare-properties
+ */
+api.post('/ai/compare-properties', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { properties } = body;
+
+    if (!properties || !Array.isArray(properties) || properties.length === 0) {
+      return c.json({ error: 'Properties array is required' }, 400);
+    }
+
+    if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === '') {
+      return c.json({
+        error: 'OpenAI API key not configured',
+        message: 'OpenAI APIキーが設定されていません。管理者に連絡してください。',
+      }, 503);
+    }
+
+    const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);
+    const comparison = await analyzer.compareProperties(properties);
+
+    return c.json({
+      success: true,
+      comparison,
+    });
+  } catch (error: any) {
+    console.error('AI property comparison error:', error);
+    return c.json({
+      error: 'Failed to compare properties',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Investment Simulation Endpoints
+ * 投資シミュレーション機能
+ */
+
+/**
+ * Run investment simulation
+ * POST /api/simulate/investment
+ */
+api.post('/simulate/investment', async (c) => {
+  try {
+    const params = await c.req.json();
+
+    // Validate required parameters
+    const required = ['propertyPrice', 'downPayment', 'loanAmount', 'interestRate', 'loanTerm', 'monthlyRent'];
+    for (const field of required) {
+      if (params[field] === undefined || params[field] === null) {
+        return c.json({ error: `${field} is required` }, 400);
+      }
+    }
+
+    const simulator = new InvestmentSimulator();
+    const result = simulator.simulate(params);
+
+    return c.json({
+      success: true,
+      result,
+    });
+  } catch (error: any) {
+    console.error('Investment simulation error:', error);
+    return c.json({
+      error: 'Failed to run simulation',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Run scenario comparison
+ * POST /api/simulate/scenarios
+ */
+api.post('/simulate/scenarios', async (c) => {
+  try {
+    const params = await c.req.json();
+
+    const simulator = new InvestmentSimulator();
+    const comparison = simulator.compareScenarios(params);
+
+    return c.json({
+      success: true,
+      comparison,
+    });
+  } catch (error: any) {
+    console.error('Scenario comparison error:', error);
+    return c.json({
+      error: 'Failed to compare scenarios',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Run Monte Carlo risk analysis
+ * POST /api/simulate/monte-carlo
+ */
+api.post('/simulate/monte-carlo', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { params, iterations = 1000 } = body;
+
+    const simulator = new InvestmentSimulator();
+    const analysis = simulator.runMonteCarloSimulation(params, iterations);
+
+    return c.json({
+      success: true,
+      analysis,
+    });
+  } catch (error: any) {
+    console.error('Monte Carlo simulation error:', error);
+    return c.json({
+      error: 'Failed to run Monte Carlo simulation',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Data Export Endpoints
+ * CSVデータエクスポート機能
+ */
+
+/**
+ * Export properties to CSV
+ * GET /api/export/properties
+ */
+api.get('/export/properties', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const properties = await env.DB.prepare(`
+      SELECT * FROM properties WHERE user_id = ? ORDER BY created_at DESC
+    `).bind(user.id).all();
+    
+    const csv = exportPropertiesToCSV(properties.results || []);
+    
+    return createCSVDownloadResponse(csv, `properties_${Date.now()}.csv`);
+  } catch (error: any) {
+    console.error('Properties export error:', error);
+    return c.json({
+      error: 'Failed to export properties',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Export analysis results to CSV
+ * POST /api/export/analysis
+ */
+api.post('/export/analysis', async (c) => {
+  try {
+    const analysis = await c.req.json();
+    const csv = exportAnalysisToCSV(analysis);
+    
+    return createCSVDownloadResponse(csv, `analysis_${Date.now()}.csv`);
+  } catch (error: any) {
+    console.error('Analysis export error:', error);
+    return c.json({
+      error: 'Failed to export analysis',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Export simulation results to CSV
+ * POST /api/export/simulation
+ */
+api.post('/export/simulation', async (c) => {
+  try {
+    const simulation = await c.req.json();
+    const csv = exportSimulationToCSV(simulation);
+    
+    return createCSVDownloadResponse(csv, `simulation_${Date.now()}.csv`);
+  } catch (error: any) {
+    console.error('Simulation export error:', error);
+    return c.json({
+      error: 'Failed to export simulation',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Export market analysis to CSV
+ * POST /api/export/market
+ */
+api.post('/export/market', async (c) => {
+  try {
+    const { data } = await c.req.json();
+    const csv = exportMarketAnalysisToCSV(data);
+    
+    return createCSVDownloadResponse(csv, `market_analysis_${Date.now()}.csv`);
+  } catch (error: any) {
+    console.error('Market export error:', error);
+    return c.json({
+      error: 'Failed to export market data',
+      details: error.message,
+    }, 500);
   }
 });
 
