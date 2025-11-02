@@ -282,7 +282,7 @@ app.get('/', (c) => {
                     </div>
                 </div>
                 <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-                    <p>&copy; 2024 My Agent Analytics. All rights reserved.</p>
+                    <p>&copy; 2025 My Agent Analytics. All rights reserved.</p>
                 </div>
             </div>
         </footer>
