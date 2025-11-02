@@ -98,6 +98,20 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
   - GET `/api/properties/:id` - 物件詳細取得
   - POST `/api/properties/ocr` - マイソク画像から情報抽出 🆕
 
+- [x] **AIエージェント管理API** 🆕
+  - GET `/api/agents` - エージェント一覧取得
+  - POST `/api/agents` - エージェント作成
+  - GET `/api/agents/:id` - エージェント詳細取得
+  - PUT `/api/agents/:id` - エージェント更新
+  - DELETE `/api/agents/:id` - エージェント削除
+  - GET `/api/agents/:id/executions` - 実行履歴取得
+
+- [x] **エージェント実行履歴API** 🆕
+  - GET `/api/executions` - 全実行履歴取得
+  - POST `/api/executions` - 実行記録作成
+  - GET `/api/executions/:id` - 実行詳細取得
+  - PUT `/api/executions/:id` - 実行ステータス更新
+
 #### Phase 6: 本番機能実装 🆕
 - [x] **PDFレポート生成** - 物件詳細、調査、比較レポート
 - [x] **データ可視化** - Chart.js による8種類のチャート
