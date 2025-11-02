@@ -16,6 +16,21 @@ import {
   exportMarketAnalysisToCSV,
   createCSVDownloadResponse,
 } from '../lib/exporter';
+import {
+  exportPropertiesToExcel,
+  exportSimulationToExcel,
+  createExcelDownloadResponse,
+} from '../lib/excel-exporter';
+import {
+  createSharedReport,
+  getSharedReport,
+  verifySharedReportAccess,
+  logSharedReportAccess,
+  updateSharedReport,
+  deleteSharedReport,
+  getUserSharedReports,
+  getSharedReportAccessLogs,
+} from '../lib/sharing';
 
 const api = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -1793,6 +1808,301 @@ api.post('/export/market', async (c) => {
     console.error('Market export error:', error);
     return c.json({
       error: 'Failed to export market data',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Export properties to Excel
+ * GET /api/export/properties-excel
+ */
+api.get('/export/properties-excel', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const properties = await env.DB.prepare(`
+      SELECT * FROM properties WHERE user_id = ? ORDER BY created_at DESC
+    `).bind(user.id).all();
+    
+    const excel = exportPropertiesToExcel(properties.results || []);
+    
+    return createExcelDownloadResponse(excel, `properties_${Date.now()}.xlsx`);
+  } catch (error: any) {
+    console.error('Properties Excel export error:', error);
+    return c.json({
+      error: 'Failed to export properties to Excel',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Export simulation results to Excel
+ * POST /api/export/simulation-excel
+ */
+api.post('/export/simulation-excel', async (c) => {
+  try {
+    const simulation = await c.req.json();
+    const excel = exportSimulationToExcel(simulation);
+    
+    return createExcelDownloadResponse(excel, `simulation_${Date.now()}.xlsx`);
+  } catch (error: any) {
+    console.error('Simulation Excel export error:', error);
+    return c.json({
+      error: 'Failed to export simulation to Excel',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Report Sharing Endpoints
+ * レポート共有機能
+ */
+
+/**
+ * Create shared report link
+ * POST /api/sharing/create
+ */
+api.post('/sharing/create', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const body = await c.req.json();
+    const { reportType, reportId, title, description, permission, password, expiresIn, maxAccessCount } = body;
+
+    if (!reportType || !reportId) {
+      return c.json({ error: 'reportType and reportId are required' }, 400);
+    }
+
+    // Calculate expiration date if expiresIn is provided (in hours)
+    let expiresAt: Date | undefined;
+    if (expiresIn) {
+      expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + expiresIn);
+    }
+
+    const result = await createSharedReport(env.DB, {
+      userId: user.id,
+      reportType,
+      reportId,
+      title,
+      description,
+      permission: permission || 'view',
+      password,
+      expiresAt,
+      maxAccessCount,
+    });
+
+    // Generate full share URL
+    const baseUrl = c.req.url.split('/api')[0];
+    const fullShareUrl = `${baseUrl}${result.shareUrl}`;
+
+    return c.json({
+      success: true,
+      shareToken: result.shareToken,
+      shareUrl: fullShareUrl,
+      sharedReport: result.sharedReport,
+    }, 201);
+  } catch (error: any) {
+    console.error('Share creation error:', error);
+    return c.json({
+      error: 'Failed to create shared report',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get shared report
+ * GET /api/sharing/:token
+ */
+api.get('/sharing/:token', async (c) => {
+  try {
+    const { env } = c;
+    const token = c.req.param('token');
+    const password = c.req.query('password');
+
+    const verification = await verifySharedReportAccess(env.DB, token, password);
+
+    if (!verification.valid) {
+      return c.json({
+        error: verification.reason,
+        requiresPassword: verification.reason === 'Password required',
+      }, verification.reason === 'Password required' ? 401 : 403);
+    }
+
+    // Log access
+    const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || 'unknown';
+    const userAgent = c.req.header('user-agent');
+    await logSharedReportAccess(env.DB, token, ip, userAgent);
+
+    return c.json({
+      success: true,
+      sharedReport: verification.report,
+    });
+  } catch (error: any) {
+    console.error('Shared report access error:', error);
+    return c.json({
+      error: 'Failed to access shared report',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get user's shared reports
+ * GET /api/sharing/my-shares
+ */
+api.get('/sharing/my-shares', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const sharedReports = await getUserSharedReports(env.DB, user.id);
+
+    return c.json({
+      success: true,
+      sharedReports,
+    });
+  } catch (error: any) {
+    console.error('Get shared reports error:', error);
+    return c.json({
+      error: 'Failed to fetch shared reports',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Update shared report
+ * PUT /api/sharing/:token
+ */
+api.put('/sharing/:token', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const token = c.req.param('token');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify ownership
+    const existingReport = await getSharedReport(env.DB, token);
+    if (!existingReport || existingReport.userId !== user.id) {
+      return c.json({ error: 'Not found or unauthorized' }, 404);
+    }
+
+    const body = await c.req.json();
+    const { title, description, permission, isActive, expiresIn, maxAccessCount } = body;
+
+    let expiresAt: Date | null | undefined;
+    if (expiresIn !== undefined) {
+      if (expiresIn === null) {
+        expiresAt = null;
+      } else {
+        expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + expiresIn);
+      }
+    }
+
+    const updatedReport = await updateSharedReport(env.DB, token, {
+      title,
+      description,
+      permission,
+      isActive,
+      expiresAt,
+      maxAccessCount,
+    });
+
+    return c.json({
+      success: true,
+      sharedReport: updatedReport,
+    });
+  } catch (error: any) {
+    console.error('Update shared report error:', error);
+    return c.json({
+      error: 'Failed to update shared report',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Delete shared report
+ * DELETE /api/sharing/:token
+ */
+api.delete('/sharing/:token', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const token = c.req.param('token');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify ownership
+    const existingReport = await getSharedReport(env.DB, token);
+    if (!existingReport || existingReport.userId !== user.id) {
+      return c.json({ error: 'Not found or unauthorized' }, 404);
+    }
+
+    await deleteSharedReport(env.DB, token);
+
+    return c.json({
+      success: true,
+      message: 'Shared report deleted successfully',
+    });
+  } catch (error: any) {
+    console.error('Delete shared report error:', error);
+    return c.json({
+      error: 'Failed to delete shared report',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get access logs for shared report
+ * GET /api/sharing/:token/logs
+ */
+api.get('/sharing/:token/logs', authMiddleware, async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const token = c.req.param('token');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // Verify ownership
+    const existingReport = await getSharedReport(env.DB, token);
+    if (!existingReport || existingReport.userId !== user.id) {
+      return c.json({ error: 'Not found or unauthorized' }, 404);
+    }
+
+    const logs = await getSharedReportAccessLogs(env.DB, token);
+
+    return c.json({
+      success: true,
+      logs,
+    });
+  } catch (error: any) {
+    console.error('Get access logs error:', error);
+    return c.json({
+      error: 'Failed to fetch access logs',
       details: error.message,
     }, 500);
   }
