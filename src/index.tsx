@@ -38,6 +38,10 @@ app.route('/properties', properties)
 import settings from './routes/settings'
 app.route('/settings', settings)
 
+// Agents routes (requires authentication)
+import agentsRoutes from './routes/agents'
+app.route('/agents', agentsRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 
@@ -49,30 +53,6 @@ app.get('/api/health', (c) => {
 
 app.get('/api/hello', (c) => {
   return c.json({ message: 'Hello from My Agent Analytics!' })
-})
-
-// Agents API endpoint
-app.get('/api/agents', async (c) => {
-  try {
-    const user = c.get('user')
-    if (!user) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-    
-    const result = await c.env.DB.prepare(`
-      SELECT * FROM agents 
-      WHERE user_id = ? 
-      ORDER BY created_at DESC
-    `).bind(user.id).all()
-    
-    return c.json({
-      success: true,
-      agents: result.results || [],
-    })
-  } catch (error) {
-    console.error('Agents list error:', error)
-    return c.json({ error: 'Failed to fetch agents' }, 500)
-  }
 })
 
 // Home page

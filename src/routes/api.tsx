@@ -2,10 +2,17 @@
 
 import { Hono } from 'hono';
 import type { Bindings, Variables } from '../types';
+import { authMiddleware } from '../middleware/auth';
 import { analyzeProperty } from '../lib/calculator';
 import { ReinfolibClient } from '../lib/reinfolib';
 
 const api = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// Apply auth middleware to all agents and executions endpoints
+api.use('/agents*', authMiddleware);
+api.use('/agents', authMiddleware);
+api.use('/executions*', authMiddleware);
+api.use('/executions', authMiddleware);
 
 /**
  * マイソクOCR endpoint
@@ -858,6 +865,441 @@ api.post('/properties/comparison-pdf', async (c) => {
   } catch (error) {
     console.error('PDF generation error:', error);
     return c.json({ error: 'Failed to generate PDF' }, 500);
+  }
+});
+
+/**
+ * Agents Management APIs
+ * AIエージェントの作成・更新・削除
+ */
+
+/**
+ * List all agents
+ * GET /api/agents
+ */
+api.get('/agents', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const result = await env.DB.prepare(`
+      SELECT * FROM agents 
+      WHERE user_id = ? 
+      ORDER BY created_at DESC
+    `).bind(user.id).all();
+    
+    return c.json({
+      success: true,
+      agents: result.results || [],
+    });
+  } catch (error) {
+    console.error('Agents list error:', error);
+    return c.json({ error: 'Failed to fetch agents' }, 500);
+  }
+});
+
+/**
+ * Create new agent
+ * POST /api/agents
+ */
+api.post('/agents', async (c) => {
+  try {
+    const { var: { user } } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const body = await c.req.json();
+    const { name, description, agent_type, config } = body;
+    
+    if (!name) {
+      return c.json({ error: 'Agent name is required' }, 400);
+    }
+    
+    const agentId = `agent-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
+    await c.env.DB.prepare(`
+      INSERT INTO agents (id, user_id, name, description, agent_type, status, config, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, 'active', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `).bind(
+      agentId,
+      user.id,
+      name,
+      description || null,
+      agent_type || 'analysis',
+      config ? JSON.stringify(config) : null
+    ).run();
+    
+    const agent = await c.env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ?
+    `).bind(agentId).first();
+    
+    return c.json({
+      success: true,
+      agent,
+    }, 201);
+  } catch (error) {
+    console.error('Agent creation error:', error);
+    return c.json({ error: 'Failed to create agent' }, 500);
+  }
+});
+
+/**
+ * Get agent by ID
+ * GET /api/agents/:id
+ */
+api.get('/agents/:id', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const agentId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const agent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).first();
+    
+    if (!agent) {
+      return c.json({ error: 'Agent not found' }, 404);
+    }
+    
+    return c.json({
+      success: true,
+      agent,
+    });
+  } catch (error) {
+    console.error('Agent fetch error:', error);
+    return c.json({ error: 'Failed to fetch agent' }, 500);
+  }
+});
+
+/**
+ * Update agent
+ * PUT /api/agents/:id
+ */
+api.put('/agents/:id', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const agentId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const body = await c.req.json();
+    const { name, description, agent_type, status, config } = body;
+    
+    // Check if agent exists and belongs to user
+    const existing = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).first();
+    
+    if (!existing) {
+      return c.json({ error: 'Agent not found' }, 404);
+    }
+    
+    await env.DB.prepare(`
+      UPDATE agents 
+      SET name = ?, description = ?, agent_type = ?, status = ?, config = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND user_id = ?
+    `).bind(
+      name || existing.name,
+      description !== undefined ? description : existing.description,
+      agent_type || existing.agent_type,
+      status || existing.status,
+      config ? JSON.stringify(config) : existing.config,
+      agentId,
+      user.id
+    ).run();
+    
+    const agent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ?
+    `).bind(agentId).first();
+    
+    return c.json({
+      success: true,
+      agent,
+    });
+  } catch (error) {
+    console.error('Agent update error:', error);
+    return c.json({ error: 'Failed to update agent' }, 500);
+  }
+});
+
+/**
+ * Delete agent
+ * DELETE /api/agents/:id
+ */
+api.delete('/agents/:id', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const agentId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    // Check if agent exists and belongs to user
+    const existing = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).first();
+    
+    if (!existing) {
+      return c.json({ error: 'Agent not found' }, 404);
+    }
+    
+    // Delete agent (CASCADE will delete executions)
+    await env.DB.prepare(`
+      DELETE FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).run();
+    
+    return c.json({
+      success: true,
+      message: 'Agent deleted successfully',
+    });
+  } catch (error) {
+    console.error('Agent deletion error:', error);
+    return c.json({ error: 'Failed to delete agent' }, 500);
+  }
+});
+
+/**
+ * Agent Executions Management APIs
+ * エージェント実行履歴の管理
+ */
+
+/**
+ * Get agent execution history
+ * GET /api/agents/:id/executions
+ */
+api.get('/agents/:id/executions', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const agentId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    // Verify agent ownership
+    const agent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).first();
+    
+    if (!agent) {
+      return c.json({ error: 'Agent not found' }, 404);
+    }
+    
+    const executions = await env.DB.prepare(`
+      SELECT * FROM agent_executions 
+      WHERE agent_id = ? AND user_id = ?
+      ORDER BY created_at DESC
+      LIMIT 50
+    `).bind(agentId, user.id).all();
+    
+    return c.json({
+      success: true,
+      executions: executions.results || [],
+    });
+  } catch (error) {
+    console.error('Executions fetch error:', error);
+    return c.json({ error: 'Failed to fetch executions' }, 500);
+  }
+});
+
+/**
+ * Get all agent executions for user
+ * GET /api/executions
+ */
+api.get('/executions', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const limit = parseInt(c.req.query('limit') || '50');
+    const offset = parseInt(c.req.query('offset') || '0');
+    
+    const executions = await env.DB.prepare(`
+      SELECT e.*, a.name as agent_name 
+      FROM agent_executions e
+      LEFT JOIN agents a ON e.agent_id = a.id
+      WHERE e.user_id = ?
+      ORDER BY e.created_at DESC
+      LIMIT ? OFFSET ?
+    `).bind(user.id, limit, offset).all();
+    
+    return c.json({
+      success: true,
+      executions: executions.results || [],
+      limit,
+      offset,
+    });
+  } catch (error) {
+    console.error('Executions fetch error:', error);
+    return c.json({ error: 'Failed to fetch executions' }, 500);
+  }
+});
+
+/**
+ * Create agent execution
+ * POST /api/executions
+ */
+api.post('/executions', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const body = await c.req.json();
+    const { agent_id, property_id, execution_type, input_data } = body;
+    
+    if (!agent_id || !execution_type) {
+      return c.json({ error: 'agent_id and execution_type are required' }, 400);
+    }
+    
+    // Verify agent ownership
+    const agent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agent_id, user.id).first();
+    
+    if (!agent) {
+      return c.json({ error: 'Agent not found' }, 404);
+    }
+    
+    const executionId = `exec-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
+    await env.DB.prepare(`
+      INSERT INTO agent_executions (
+        id, agent_id, user_id, property_id, execution_type, 
+        input_data, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
+    `).bind(
+      executionId,
+      agent_id,
+      user.id,
+      property_id || null,
+      execution_type,
+      input_data ? JSON.stringify(input_data) : null
+    ).run();
+    
+    const execution = await env.DB.prepare(`
+      SELECT * FROM agent_executions WHERE id = ?
+    `).bind(executionId).first();
+    
+    // Update agent last_used_at
+    await env.DB.prepare(`
+      UPDATE agents SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?
+    `).bind(agent_id).run();
+    
+    return c.json({
+      success: true,
+      execution,
+    }, 201);
+  } catch (error) {
+    console.error('Execution creation error:', error);
+    return c.json({ error: 'Failed to create execution' }, 500);
+  }
+});
+
+/**
+ * Update execution status
+ * PUT /api/executions/:id
+ */
+api.put('/executions/:id', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const executionId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const body = await c.req.json();
+    const { status, result_data, error_message, execution_time_ms } = body;
+    
+    // Verify execution ownership
+    const existing = await env.DB.prepare(`
+      SELECT * FROM agent_executions WHERE id = ? AND user_id = ?
+    `).bind(executionId, user.id).first();
+    
+    if (!existing) {
+      return c.json({ error: 'Execution not found' }, 404);
+    }
+    
+    const completedAt = status === 'completed' || status === 'failed' 
+      ? new Date().toISOString() 
+      : null;
+    
+    await env.DB.prepare(`
+      UPDATE agent_executions 
+      SET status = ?, result_data = ?, error_message = ?, execution_time_ms = ?, completed_at = ?
+      WHERE id = ? AND user_id = ?
+    `).bind(
+      status || existing.status,
+      result_data ? JSON.stringify(result_data) : existing.result_data,
+      error_message || existing.error_message,
+      execution_time_ms || existing.execution_time_ms,
+      completedAt,
+      executionId,
+      user.id
+    ).run();
+    
+    const execution = await env.DB.prepare(`
+      SELECT * FROM agent_executions WHERE id = ?
+    `).bind(executionId).first();
+    
+    return c.json({
+      success: true,
+      execution,
+    });
+  } catch (error) {
+    console.error('Execution update error:', error);
+    return c.json({ error: 'Failed to update execution' }, 500);
+  }
+});
+
+/**
+ * Get execution by ID
+ * GET /api/executions/:id
+ */
+api.get('/executions/:id', async (c) => {
+  try {
+    const { var: { user }, env } = c;
+    const executionId = c.req.param('id');
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const execution = await env.DB.prepare(`
+      SELECT e.*, a.name as agent_name 
+      FROM agent_executions e
+      LEFT JOIN agents a ON e.agent_id = a.id
+      WHERE e.id = ? AND e.user_id = ?
+    `).bind(executionId, user.id).first();
+    
+    if (!execution) {
+      return c.json({ error: 'Execution not found' }, 404);
+    }
+    
+    return c.json({
+      success: true,
+      execution,
+    });
+  } catch (error) {
+    console.error('Execution fetch error:', error);
+    return c.json({ error: 'Failed to fetch execution' }, 500);
   }
 });
 
