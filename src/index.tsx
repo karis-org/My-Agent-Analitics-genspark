@@ -4,7 +4,6 @@ import { serveStatic } from 'hono/cloudflare-workers'
 import type { Bindings, Variables } from './types'
 import auth from './routes/auth'
 import dashboard from './routes/dashboard'
-import { optionalAuthMiddleware } from './middleware/auth'
 import { cacheMiddleware, CacheStrategy } from './lib/cache'
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -21,10 +20,7 @@ app.use('/api/health', cacheMiddleware(CacheStrategy.API))
 // Serve static files from public/static directory
 app.use('/static/*', serveStatic({ root: './public' }))
 
-// Optional auth middleware for all routes (loads user if logged in)
-app.use('*', optionalAuthMiddleware)
-
-// Auth routes
+// Auth routes (no auth middleware needed)
 app.route('/auth', auth)
 
 // Dashboard routes (requires authentication)

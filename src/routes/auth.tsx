@@ -93,6 +93,18 @@ auth.get('/login', (c) => {
                             >
                         </div>
                         
+                        <div class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                id="remember" 
+                                name="remember" 
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            >
+                            <label for="remember" class="ml-2 block text-sm text-gray-700">
+                                ログイン情報を保存する
+                            </label>
+                        </div>
+                        
                         <button 
                             type="submit"
                             class="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:bg-blue-700 transition-colors">
@@ -140,6 +152,7 @@ auth.post('/password', async (c) => {
     const formData = await c.req.formData();
     const email = formData.get('email')?.toString();
     const password = formData.get('password')?.toString();
+    const remember = formData.get('remember')?.toString() === 'on';
     
     if (!email || !password) {
       return c.redirect('/auth/login?error=missing_fields');
@@ -162,7 +175,8 @@ auth.post('/password', async (c) => {
     // Create session using Web Crypto API
     const sessionId = crypto.randomUUID();
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+    const sessionDays = remember ? 30 : 7; // 30 days if remember, 7 days otherwise
+    expiresAt.setDate(expiresAt.getDate() + sessionDays);
     
     await c.env.DB.prepare(
       'INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)'
@@ -173,12 +187,12 @@ auth.post('/password', async (c) => {
       httpOnly: true,
       secure: true,
       sameSite: 'Lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * sessionDays, // 30 or 7 days
       path: '/',
     });
     
-    // Redirect to dashboard
-    return c.redirect('/dashboard');
+    // Redirect to dashboard using 303 See Other to ensure GET method
+    return c.redirect('/dashboard', 303);
   } catch (error) {
     console.error('Password login error:', error);
     return c.redirect('/auth/login?error=server_error');
@@ -316,8 +330,8 @@ auth.get('/google/callback', async (c) => {
       maxAge: 0,
     });
     
-    // Redirect to dashboard
-    return c.redirect('/dashboard');
+    // Redirect to dashboard using 303 See Other to ensure GET method
+    return c.redirect('/dashboard', 303);
   } catch (error) {
     console.error('OAuth callback error:', error);
     return c.html(`
