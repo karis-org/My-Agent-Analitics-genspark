@@ -32,8 +32,14 @@ export async function getCachedResponse(
 ): Promise<Response | null> {
   try {
     const cache = caches.default;
-    const cacheKey = generateCacheKey(request, options.key);
-    const cachedResponse = await cache.match(cacheKey);
+    
+    // Use request URL directly for cache lookup
+    const cacheRequest = new Request(request.url, {
+      method: request.method,
+      headers: request.headers,
+    });
+    
+    const cachedResponse = await cache.match(cacheRequest);
     
     if (!cachedResponse) {
       return null;
@@ -47,7 +53,7 @@ export async function getCachedResponse(
       const age = (Date.now() - parseInt(cachedAt)) / 1000;
       if (age > ttl) {
         // Cache expired
-        await cache.delete(cacheKey);
+        await cache.delete(cacheRequest);
         return null;
       }
     }
@@ -77,7 +83,12 @@ export async function setCachedResponse(
 ): Promise<void> {
   try {
     const cache = caches.default;
-    const cacheKey = generateCacheKey(request, options.key);
+    
+    // Use request URL directly as cache key (must be full URL)
+    const cacheRequest = new Request(request.url, {
+      method: request.method,
+      headers: request.headers,
+    });
     
     // Clone response to avoid consuming the body
     const responseToCache = response.clone();
@@ -102,7 +113,7 @@ export async function setCachedResponse(
       headers,
     });
     
-    await cache.put(cacheKey, cachedResponse);
+    await cache.put(cacheRequest, cachedResponse);
   } catch (error) {
     console.error('Cache set error:', error);
   }
@@ -144,9 +155,17 @@ export function cacheMiddleware(options: CacheOptions = {}) {
     await next();
     
     // Cache response if successful
-    if (c.res.status === 200) {
-      await setCachedResponse(request, c.res, options);
+    if (c.res && c.res.status === 200) {
+      try {
+        await setCachedResponse(request, c.res, options);
+      } catch (error) {
+        // Ignore cache errors in development
+        console.warn('Failed to cache response:', error);
+      }
     }
+    
+    // Return the response
+    return c.res;
   };
 }
 

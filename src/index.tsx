@@ -20,6 +20,9 @@ app.use('/api/health', cacheMiddleware(CacheStrategy.API))
 // Serve static files from public/static directory
 app.use('/static/*', serveStatic({ root: './public' }))
 
+// Serve Service Worker - use serveStatic with rewrite
+app.use('/sw.js', serveStatic({ path: 'sw.js', rewriteRequestPath: () => '/sw.js' }))
+
 // Auth routes (no auth middleware needed)
 app.route('/auth', auth)
 
