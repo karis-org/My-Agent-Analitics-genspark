@@ -12,7 +12,12 @@ const auth = new Hono<{ Bindings: Bindings; Variables: Variables }>();
  */
 auth.get('/login', (c) => {
   const error = c.req.query('error');
-  const errorMessage = error === 'invalid_credentials' ? '⚠️ メールアドレスまたはパスワードが正しくありません' : '';
+  let errorMessage = '';
+  if (error === 'invalid_credentials') {
+    errorMessage = '⚠️ メールアドレスまたはパスワードが正しくありません';
+  } else if (error === 'account_disabled') {
+    errorMessage = '⚠️ このアカウントは無効化されています。管理者にお問い合わせください';
+  }
   
   return c.html(`
     <!DOCTYPE html>
@@ -140,6 +145,11 @@ auth.post('/password', async (c) => {
     
     if (!user) {
       return c.redirect('/auth/login?error=invalid_credentials');
+    }
+    
+    // Check if user is active
+    if (!user.is_active) {
+      return c.redirect('/auth/login?error=account_disabled');
     }
     
     // Create session using Web Crypto API
