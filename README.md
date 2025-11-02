@@ -681,9 +681,14 @@ POST /api/properties/compare
 
 ## 📚 ドキュメント
 
+### Google OAuth設定（重要！）
+- **[OAUTH_QUICK_FIX.md](OAUTH_QUICK_FIX.md)** - 404エラー5分で解決 🔥
+- **[OAUTH_TROUBLESHOOTING_GUIDE.md](OAUTH_TROUBLESHOOTING_GUIDE.md)** - 完全トラブルシューティングガイド
+- **[GOOGLE_CLOUD_CONSOLE_SETUP.md](GOOGLE_CLOUD_CONSOLE_SETUP.md)** - 基本的なOAuth設定
+
+### その他のドキュメント
 - **[RELEASE_NOTES_v2.0.0.md](RELEASE_NOTES_v2.0.0.md)** - リリースノート
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - デプロイメントガイド
-- **[GOOGLE_CLOUD_CONSOLE_SETUP.md](GOOGLE_CLOUD_CONSOLE_SETUP.md)** - OAuth設定
 - **[USER_MANUAL.md](USER_MANUAL.md)** - ユーザーマニュアル
 - **[STARTUP_GUIDE.md](STARTUP_GUIDE.md)** - 起動手順書
 - **[TEST_RESULTS.md](TEST_RESULTS.md)** - テスト結果
