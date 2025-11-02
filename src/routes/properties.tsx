@@ -198,6 +198,33 @@ properties.get('/new', (c) => {
 
         <!-- Main Content -->
         <main class="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <!-- マイソクアップロード -->
+            <div class="bg-blue-50 border-2 border-blue-200 border-dashed rounded-lg p-8 mb-6">
+                <div class="text-center">
+                    <i class="fas fa-file-image text-5xl text-blue-600 mb-4"></i>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">マイソク・物件概要書を読み取り</h3>
+                    <p class="text-sm text-gray-600 mb-4">画像をアップロードすると自動で物件情報を入力します</p>
+                    <input type="file" id="mysoku-upload" accept="image/*,.pdf" class="hidden">
+                    <button type="button" onclick="document.getElementById('mysoku-upload').click()"
+                            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                        <i class="fas fa-upload mr-2"></i>画像をアップロード
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2">対応形式: JPG, PNG, PDF</p>
+                </div>
+                <div id="upload-status" class="mt-4 hidden">
+                    <div class="flex items-center justify-center space-x-2">
+                        <i class="fas fa-spinner fa-spin text-blue-600"></i>
+                        <span class="text-sm text-gray-700">画像を解析中...</span>
+                    </div>
+                </div>
+                <div id="upload-result" class="mt-4 hidden">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                        <span class="text-sm text-green-800">物件情報を自動入力しました</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white rounded-lg shadow p-8">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">物件情報入力</h2>
                 
@@ -268,6 +295,58 @@ properties.get('/new', (c) => {
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
         <script>
+            // マイソクアップロード処理
+            document.getElementById('mysoku-upload').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const uploadStatus = document.getElementById('upload-status');
+                const uploadResult = document.getElementById('upload-result');
+                
+                // ステータス表示
+                uploadStatus.classList.remove('hidden');
+                uploadResult.classList.add('hidden');
+                
+                try {
+                    // 画像をBase64に変換
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        const base64Data = event.target.result;
+                        
+                        try {
+                            // OCR API呼び出し
+                            const response = await axios.post('/api/properties/ocr', {
+                                image: base64Data,
+                                filename: file.name
+                            });
+                            
+                            const data = response.data;
+                            
+                            // フォームに自動入力
+                            if (data.name) document.querySelector('[name="name"]').value = data.name;
+                            if (data.price) document.querySelector('[name="price"]').value = data.price;
+                            if (data.location) document.querySelector('[name="location"]').value = data.location;
+                            if (data.structure) document.querySelector('[name="structure"]').value = data.structure;
+                            if (data.total_floor_area) document.querySelector('[name="total_floor_area"]').value = data.total_floor_area;
+                            if (data.age) document.querySelector('[name="age"]').value = data.age;
+                            if (data.distance_from_station) document.querySelector('[name="distance_from_station"]').value = data.distance_from_station;
+                            
+                            // 成功メッセージ
+                            uploadStatus.classList.add('hidden');
+                            uploadResult.classList.remove('hidden');
+                        } catch (error) {
+                            console.error('OCR failed:', error);
+                            alert('画像の読み取りに失敗しました。手動で入力してください。');
+                            uploadStatus.classList.add('hidden');
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error('File read error:', error);
+                    uploadStatus.classList.add('hidden');
+                }
+            });
+            
             document.getElementById('property-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 

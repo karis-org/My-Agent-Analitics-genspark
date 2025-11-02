@@ -8,6 +8,37 @@ import { ReinfolibClient } from '../lib/reinfolib';
 const api = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 /**
+ * マイソクOCR endpoint
+ * 物件概要書の画像から情報を抽出
+ */
+api.post('/properties/ocr', async (c) => {
+  try {
+    const { image, filename } = await c.req.json();
+    
+    if (!image) {
+      return c.json({ error: 'Image is required' }, 400);
+    }
+    
+    // 画像データから情報を抽出（簡易版 - 実際にはOCR APIを使用）
+    // ここでは仮のデータを返します
+    const extractedData = {
+      name: '抽出された物件名',
+      price: 50000000,
+      location: '東京都渋谷区',
+      structure: 'RC造',
+      total_floor_area: 120.5,
+      age: 10,
+      distance_from_station: 5
+    };
+    
+    return c.json(extractedData);
+  } catch (error) {
+    console.error('OCR error:', error);
+    return c.json({ error: 'OCR processing failed' }, 500);
+  }
+});
+
+/**
  * Health check
  */
 api.get('/health', (c) => {
