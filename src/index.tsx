@@ -47,12 +47,36 @@ app.get('/api/health', (c) => {
   return c.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    version: '2.0.0'
+    version: '2.0.2'
   })
 })
 
 app.get('/api/hello', (c) => {
   return c.json({ message: 'Hello from My Agent Analytics!' })
+})
+
+// Agents API endpoint
+app.get('/api/agents', async (c) => {
+  try {
+    const user = c.get('user')
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+    
+    const result = await c.env.DB.prepare(`
+      SELECT * FROM agents 
+      WHERE user_id = ? 
+      ORDER BY created_at DESC
+    `).bind(user.id).all()
+    
+    return c.json({
+      success: true,
+      agents: result.results || [],
+    })
+  } catch (error) {
+    console.error('Agents list error:', error)
+    return c.json({ error: 'Failed to fetch agents' }, 500)
+  }
 })
 
 // Home page

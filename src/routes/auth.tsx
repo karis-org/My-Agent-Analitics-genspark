@@ -110,7 +110,7 @@ auth.get('/login', (c) => {
                             <i class="fas fa-info-circle mr-1"></i>
                             <strong>管理者用ログイン情報</strong><br>
                             メール: admin@myagent.local<br>
-                            パスワード: Admin@2025
+                            パスワード: kouki0187
                         </p>
                     </div>
                 </div>

@@ -8,8 +8,8 @@ ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0;
 
 -- Create admin user with credentials
 -- Email: admin@myagent.local
--- Password: Admin@2025
--- Password Hash (SHA-256): fcf7bb6d546cfb82d2e55486984ae7a1862a666acb441e0cf8b4ed34a4fcf9d7
+-- Password: kouki0187
+-- Password Hash (SHA-256): e5b2d4dd461d4b4a7ca7fee1b1ff0b8377a448a5c927113ad8cd87a44f4393d6
 
 INSERT OR IGNORE INTO users (
   id,
@@ -25,7 +25,7 @@ INSERT OR IGNORE INTO users (
   'admin@myagent.local',
   '管理者',
   'password',
-  'fcf7bb6d546cfb82d2e55486984ae7a1862a666acb441e0cf8b4ed34a4fcf9d7',
+  'e5b2d4dd461d4b4a7ca7fee1b1ff0b8377a448a5c927113ad8cd87a44f4393d6',
   'admin',
   1,
   CURRENT_TIMESTAMP
