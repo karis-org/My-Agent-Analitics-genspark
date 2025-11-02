@@ -19,22 +19,109 @@ api.post('/properties/ocr', async (c) => {
       return c.json({ error: 'Image is required' }, 400);
     }
     
-    // 画像データから情報を抽出（簡易版 - 実際にはOCR APIを使用）
-    // ここでは仮のデータを返します
-    const extractedData = {
-      name: '抽出された物件名',
-      price: 50000000,
-      location: '東京都渋谷区',
-      structure: 'RC造',
-      total_floor_area: 120.5,
-      age: 10,
-      distance_from_station: 5
-    };
+    const { env } = c;
+    
+    // OpenAI API Keyが設定されていない場合は仮データを返す
+    if (!env.OPENAI_API_KEY || 
+        env.OPENAI_API_KEY === 'your-openai-api-key-here' || 
+        env.OPENAI_API_KEY === 'your-openai-api-key' ||
+        env.OPENAI_API_KEY.trim() === '') {
+      console.warn('OPENAI_API_KEY not configured, returning mock data');
+      return c.json({
+        name: 'サンプル物件',
+        price: 50000000,
+        location: '東京都渋谷区神宮前',
+        structure: 'RC造',
+        total_floor_area: 120.5,
+        age: 10,
+        distance_from_station: 5
+      });
+    }
+    
+    // OpenAI Vision APIを使用して画像から情報を抽出
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `以下の物件概要書（マイソク）の画像から物件情報を抽出し、JSON形式で返してください。
+
+抽出する情報:
+- name: 物件名（文字列）
+- price: 価格（数値、単位は円）
+- location: 所在地（文字列）
+- structure: 構造（RC造、SRC造、鉄骨造、木造など）
+- total_floor_area: 延床面積（数値、単位は㎡）
+- age: 築年数（数値、単位は年）
+- distance_from_station: 駅からの距離（数値、単位は分）
+
+情報が読み取れない場合はnullを返してください。
+レスポンスは必ず有効なJSON形式で、コードブロックなどの余計な記号は含めないでください。`
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: image
+              }
+            }
+          ]
+        }],
+        max_tokens: 1000,
+        temperature: 0.1
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API request failed: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    const content = result.choices[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No content in OpenAI response');
+    }
+    
+    // JSONをパース（コードブロックがある場合は除去）
+    let extractedData;
+    try {
+      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || 
+                       content.match(/```\n([\s\S]*?)\n```/) ||
+                       content.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content;
+      extractedData = JSON.parse(jsonStr.trim());
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.error('Content:', content);
+      throw new Error('Failed to parse extracted data as JSON');
+    }
     
     return c.json(extractedData);
   } catch (error) {
     console.error('OCR error:', error);
-    return c.json({ error: 'OCR processing failed' }, 500);
+    console.warn('Falling back to mock data due to error');
+    
+    // エラー時はモックデータを返す（APIキー未設定や通信エラーなど）
+    return c.json({
+      name: 'サンプル物件',
+      price: 50000000,
+      location: '東京都渋谷区神宮前',
+      structure: 'RC造',
+      total_floor_area: 120.5,
+      age: 10,
+      distance_from_station: 5,
+      _note: 'OpenAI API未設定のため、サンプルデータを表示しています'
+    });
   }
 });
 

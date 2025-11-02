@@ -96,6 +96,7 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
   - POST `/api/properties/analyze` - 財務分析
   - GET `/api/properties` - 物件一覧取得
   - GET `/api/properties/:id` - 物件詳細取得
+  - POST `/api/properties/ocr` - マイソク画像から情報抽出 🆕
 
 #### Phase 6: 本番機能実装 🆕
 - [x] **PDFレポート生成** - 物件詳細、調査、比較レポート
@@ -103,6 +104,7 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 - [x] **物件比較機能** - 最大5物件の並列比較
 - [x] **キャッシング戦略** - Edge/Memory/KV 3層キャッシング
 - [x] **本番デプロイメント** - Cloudflare Pages完全対応
+- [x] **マイソクOCR機能** - OpenAI Vision APIによる物件情報自動抽出 🆕
 
 ### 🔄 実装中
 
@@ -112,6 +114,7 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 ### 📝 今後の実装予定
 
 - [ ] e-Stat API 統合（人口統計、経済指標）
+- [x] OpenAI GPT-4 Vision 統合（マイソクOCR）🆕
 - [ ] OpenAI GPT-4 統合（AI市場分析）
 - [ ] 投資シミュレーション
 - [ ] レポート共有機能
@@ -702,3 +705,5 @@ POST /api/properties/compare
 **テスト結果**: 11/11 PASS ✅  
 **本番URL**: [https://my-agent-analytics.pages.dev](https://my-agent-analytics.pages.dev)  
 **GitHub**: [koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
+litics-genspark)
+tics-genspark)
