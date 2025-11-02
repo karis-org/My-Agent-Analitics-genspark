@@ -7,7 +7,7 @@ ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';
 ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0;
 
 -- Create admin user with credentials
--- Email: admin@myagent.local
+-- Email: realestate.navigator01@gmail.com
 -- Password: kouki0187
 -- Password Hash (SHA-256): e5b2d4dd461d4b4a7ca7fee1b1ff0b8377a448a5c927113ad8cd87a44f4393d6
 
@@ -22,7 +22,7 @@ INSERT OR IGNORE INTO users (
   created_at
 ) VALUES (
   'admin-user-001',
-  'admin@myagent.local',
+  'realestate.navigator01@gmail.com',
   '管理者',
   'password',
   'e5b2d4dd461d4b4a7ca7fee1b1ff0b8377a448a5c927113ad8cd87a44f4393d6',

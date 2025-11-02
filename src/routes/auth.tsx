@@ -109,7 +109,7 @@ auth.get('/login', (c) => {
                         <p class="text-xs text-yellow-800">
                             <i class="fas fa-info-circle mr-1"></i>
                             <strong>管理者用ログイン情報</strong><br>
-                            メール: admin@myagent.local<br>
+                            メール: realestate.navigator01@gmail.com<br>
                             パスワード: kouki0187
                         </p>
                     </div>
