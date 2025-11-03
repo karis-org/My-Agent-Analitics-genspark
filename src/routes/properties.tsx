@@ -2749,6 +2749,56 @@ properties.get('/:id/comprehensive-report', async (c) => {
                         card.style.transform = 'translateY(0)';
                     }, 100);
                 });
+                
+                // Enable inline editing
+                enableInlineEditing();
+            }
+            
+            // Inline editing functionality
+            function enableInlineEditing() {
+                // Add edit mode toggle button
+                const header = document.querySelector('header .flex.items-center.space-x-3');
+                if (header) {
+                    const editButton = document.createElement('button');
+                    editButton.innerHTML = '<i class="fas fa-edit mr-2"></i>編集モード';
+                    editButton.className = 'px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/50 rounded-lg text-yellow-300 transition-all';
+                    editButton.onclick = toggleEditMode;
+                    header.insertBefore(editButton, header.firstChild);
+                }
+            }
+            
+            let editMode = false;
+            function toggleEditMode() {
+                editMode = !editMode;
+                const editButton = document.querySelector('header button');
+                
+                if (editMode) {
+                    editButton.innerHTML = '<i class="fas fa-save mr-2"></i>保存';
+                    editButton.className = 'px-4 py-2 bg-green-600/20 hover:bg-green-600/30 border border-green-500/50 rounded-lg text-green-300 transition-all';
+                    
+                    // Make text elements editable
+                    document.querySelectorAll('.dashboard-card p, .dashboard-card span:not(.risk-badge):not(.metric-label), .dashboard-card h1, .dashboard-card h2, .dashboard-card h3, .dashboard-card h4').forEach(el => {
+                        if (!el.closest('.no-print') && el.textContent.trim()) {
+                            el.contentEditable = 'true';
+                            el.style.outline = '1px dashed rgba(234, 179, 8, 0.5)';
+                            el.style.cursor = 'text';
+                        }
+                    });
+                    
+                    alert('編集モードを有効にしました。テキストをクリックして編集できます。');
+                } else {
+                    editButton.innerHTML = '<i class="fas fa-edit mr-2"></i>編集モード';
+                    editButton.className = 'px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/50 rounded-lg text-yellow-300 transition-all';
+                    
+                    // Disable editing
+                    document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+                        el.contentEditable = 'false';
+                        el.style.outline = 'none';
+                        el.style.cursor = 'default';
+                    });
+                    
+                    alert('編集内容を保存しました。印刷またはPDF出力で編集済みレポートを取得できます。');
+                }
             }
             
             // Initialize everything
