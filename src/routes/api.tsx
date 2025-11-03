@@ -82,7 +82,21 @@ api.post('/properties/ocr', async (c) => {
     const { image, filename } = await c.req.json();
     
     if (!image) {
-      return c.json({ error: 'Image is required' }, 400);
+      return c.json({ error: 'Image or PDF file is required' }, 400);
+    }
+    
+    // ファイル形式を判定（data:image/ または data:application/pdf で始まる）
+    const isPDF = image.startsWith('data:application/pdf');
+    const isImage = image.startsWith('data:image/');
+    
+    if (!isPDF && !isImage) {
+      return c.json({ 
+        error: '対応していないファイル形式です',
+        errorCode: 'UNSUPPORTED_FORMAT',
+        suggestions: ['JPG、PNG、またはPDF形式のファイルをアップロードしてください'],
+        available: false,
+        canRetry: false
+      }, 400);
     }
     
     const { env } = c;
@@ -217,9 +231,9 @@ api.post('/properties/ocr', async (c) => {
         errorCode = 'RATE_LIMIT_EXCEEDED';
         suggestions = ['しばらく時間をおいてから再度お試しください', '管理者に連絡してAPI利用プランをアップグレードしてください'];
       } else if (response.status === 400) {
-        userFriendlyError = '画像形式が正しくありません';
-        errorCode = 'INVALID_IMAGE_FORMAT';
-        suggestions = ['画像がBase64形式でエンコードされているか確認してください', 'サポートされている画像形式（JPEG、PNG、GIF）を使用してください'];
+        userFriendlyError = '画像またはPDF形式が正しくありません';
+        errorCode = 'INVALID_FILE_FORMAT';
+        suggestions = ['ファイルがBase64形式でエンコードされているか確認してください', 'サポートされている形式（JPEG、PNG、PDF）を使用してください'];
       } else if (response.status >= 500) {
         userFriendlyError = 'OpenAI APIサーバーでエラーが発生しました';
         errorCode = 'API_SERVER_ERROR';
