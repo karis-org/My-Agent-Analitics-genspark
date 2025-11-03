@@ -334,10 +334,54 @@ properties.get('/new', (c) => {
                             // 成功メッセージ
                             uploadStatus.classList.add('hidden');
                             uploadResult.classList.remove('hidden');
+                            
+                            // デモモードの警告表示
+                            if (data.mode === 'demonstration') {
+                                uploadResult.innerHTML = \`
+                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                        <i class="fas fa-info-circle text-yellow-600 mr-2"></i>
+                                        <span class="text-sm text-yellow-800">デモモード: サンプルデータを表示しています</span>
+                                    </div>
+                                \`;
+                            }
                         } catch (error) {
                             console.error('OCR failed:', error);
-                            alert('画像の読み取りに失敗しました。手動で入力してください。');
                             uploadStatus.classList.add('hidden');
+                            
+                            // エラー詳細を表示
+                            let errorMessage = '画像の読み取りに失敗しました';
+                            let errorDetails = '';
+                            let suggestions = [];
+                            
+                            if (error.response && error.response.data) {
+                                const errorData = error.response.data;
+                                errorMessage = errorData.error || errorMessage;
+                                errorDetails = errorData.details || '';
+                                suggestions = errorData.suggestions || [];
+                            }
+                            
+                            // エラーメッセージの構築
+                            let suggestionHtml = '';
+                            if (suggestions.length > 0) {
+                                suggestionHtml = '<ul class="list-disc list-inside mt-2 space-y-1">' +
+                                    suggestions.map(s => \`<li class="text-sm">\${s}</li>\`).join('') +
+                                    '</ul>';
+                            }
+                            
+                            uploadResult.innerHTML = \`
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-exclamation-circle text-red-600 mr-2 mt-1"></i>
+                                        <div>
+                                            <p class="text-sm font-medium text-red-800">\${errorMessage}</p>
+                                            \${errorDetails ? \`<p class="text-xs text-red-600 mt-1">\${errorDetails}</p>\` : ''}
+                                            \${suggestionHtml}
+                                            <p class="text-sm text-red-700 mt-2">手動で入力してください。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            \`;
+                            uploadResult.classList.remove('hidden');
                         }
                     };
                     reader.readAsDataURL(file);

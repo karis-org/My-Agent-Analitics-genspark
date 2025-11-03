@@ -38,7 +38,9 @@ auth.get('/login', (c) => {
             <div class="bg-white rounded-2xl shadow-2xl p-8">
                 <div class="text-center mb-8">
                     <img src="/static/icons/app-icon.png" alt="Logo" class="h-20 w-20 mx-auto mb-4">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">My Agent Analytics</h1>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <span class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent">My Agent Analytics</span>
+                    </h1>
                     <p class="text-gray-600">不動産投資分析プラットフォーム</p>
                 </div>
                 

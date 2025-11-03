@@ -237,40 +237,16 @@ app.get('/', (c) => {
         <!-- Footer -->
         <footer class="bg-gray-900 text-white mt-20">
             <div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-                <div class="grid md:grid-cols-4 gap-8">
-                    <div>
-                        <h4 class="text-lg font-bold mb-4">My Agent Analytics</h4>
-                        <p class="text-gray-400 text-sm">
-                            不動産投資をスマートに。AIを活用した次世代の分析プラットフォーム。
-                        </p>
+                <div class="text-center">
+                    <h4 class="text-2xl font-bold mb-4">
+                        <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">My Agent Analytics</span>
+                    </h4>
+                    <p class="text-gray-400 text-sm mb-6">
+                        不動産投資をスマートに。AIを活用した次世代の分析プラットフォーム。
+                    </p>
+                    <div class="border-t border-gray-800 pt-8">
+                        <p class="text-sm text-gray-400">&copy; 2025 My Agent Analytics. All rights reserved.</p>
                     </div>
-                    <div>
-                        <h4 class="text-lg font-bold mb-4">製品</h4>
-                        <ul class="space-y-2 text-sm text-gray-400">
-                            <li><a href="#" class="hover:text-white">機能一覧</a></li>
-                            <li><a href="#" class="hover:text-white">料金プラン</a></li>
-                            <li><a href="#" class="hover:text-white">API</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="text-lg font-bold mb-4">サポート</h4>
-                        <ul class="space-y-2 text-sm text-gray-400">
-                            <li><a href="/help" class="hover:text-white">ヘルプセンター</a></li>
-                            <li><a href="/help" class="hover:text-white">ドキュメント</a></li>
-                            <li><a href="/help" class="hover:text-white">お問い合わせ</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="text-lg font-bold mb-4">企業情報</h4>
-                        <ul class="space-y-2 text-sm text-gray-400">
-                            <li><a href="#" class="hover:text-white">会社概要</a></li>
-                            <li><a href="#" class="hover:text-white">プライバシーポリシー</a></li>
-                            <li><a href="#" class="hover:text-white">利用規約</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-                    <p>&copy; 2025 My Agent Analytics. All rights reserved.</p>
                 </div>
             </div>
         </footer>

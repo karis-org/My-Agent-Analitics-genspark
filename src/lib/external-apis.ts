@@ -49,6 +49,136 @@ export class ItandiClient {
       message: 'イタンジAPIキーが必要です。',
     };
   }
+
+  /**
+   * 周辺賃貸物件相場調査
+   * @param location 物件所在地
+   * @param propertyType 物件タイプ（マンション、アパート、戸建て等）
+   * @param area 専有面積（㎡）
+   * @param radius 検索半径（km）
+   */
+  async getRentalMarketAnalysis(params: {
+    location: string;
+    propertyType?: string;
+    area?: number;
+    radius?: number;
+  }): Promise<{
+    success: boolean;
+    averageRent: number;
+    medianRent: number;
+    minRent: number;
+    maxRent: number;
+    rentPerSqm: number;
+    sampleCount: number;
+    properties: any[];
+    trend: {
+      period: string;
+      averageRent: number;
+      change: number;
+    }[];
+    message?: string;
+  }> {
+    console.log('Itandi BB rental market analysis:', params);
+    
+    // デモデータ（実際のAPI実装時は実データを返す）
+    const mockData = {
+      success: true,
+      averageRent: 185000,
+      medianRent: 180000,
+      minRent: 120000,
+      maxRent: 280000,
+      rentPerSqm: 2800,
+      sampleCount: 42,
+      properties: [
+        {
+          id: '1',
+          name: 'サンプルマンションA',
+          rent: 185000,
+          area: 65.5,
+          age: 3,
+          distanceFromStation: 7,
+          address: '東京都渋谷区恵比寿',
+        },
+        {
+          id: '2',
+          name: 'サンプルマンションB',
+          rent: 175000,
+          area: 62.0,
+          age: 5,
+          distanceFromStation: 9,
+          address: '東京都渋谷区恵比寿',
+        },
+        {
+          id: '3',
+          name: 'サンプルマンションC',
+          rent: 195000,
+          area: 68.0,
+          age: 2,
+          distanceFromStation: 5,
+          address: '東京都渋谷区恵比寿',
+        },
+      ],
+      trend: [
+        { period: '2024-Q1', averageRent: 175000, change: 2.3 },
+        { period: '2024-Q2', averageRent: 178000, change: 1.7 },
+        { period: '2024-Q3', averageRent: 182000, change: 2.2 },
+        { period: '2024-Q4', averageRent: 185000, change: 1.6 },
+      ],
+      message: 'デモモード: サンプルデータを表示しています。実際の賃貸相場データを取得するには、イタンジBB APIキーを設定してください。',
+    };
+
+    return mockData;
+  }
+
+  /**
+   * 賃貸相場推移データ取得
+   * @param location 物件所在地
+   * @param period 期間（月数）
+   */
+  async getRentalTrend(params: {
+    location: string;
+    propertyType?: string;
+    period?: number; // months
+  }): Promise<{
+    success: boolean;
+    trend: {
+      month: string;
+      averageRent: number;
+      transactionCount: number;
+      changeRate: number;
+    }[];
+    message?: string;
+  }> {
+    console.log('Itandi BB rental trend:', params);
+    
+    const period = params.period || 12;
+    const currentDate = new Date();
+    const trend = [];
+    
+    // デモデータ生成
+    for (let i = period - 1; i >= 0; i--) {
+      const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const month = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+      const baseRent = 180000;
+      const variation = Math.sin(i / 3) * 5000 + (period - i) * 300;
+      const averageRent = Math.round(baseRent + variation);
+      const prevAverage = i === period - 1 ? baseRent : Math.round(baseRent + Math.sin((i + 1) / 3) * 5000 + (period - i - 1) * 300);
+      const changeRate = ((averageRent - prevAverage) / prevAverage) * 100;
+      
+      trend.push({
+        month,
+        averageRent,
+        transactionCount: Math.round(30 + Math.random() * 20),
+        changeRate: Number(changeRate.toFixed(2)),
+      });
+    }
+    
+    return {
+      success: true,
+      trend,
+      message: 'デモモード: サンプルデータを表示しています。',
+    };
+  }
 }
 
 /**
