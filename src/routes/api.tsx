@@ -3588,6 +3588,122 @@ api.post('/maps/generate', authMiddleware, async (c) => {
 });
 
 /**
+ * Batch Analysis Results Save Endpoint
+ * 一括分析結果保存エンドポイント
+ * POST /api/properties/:id/analysis-batch
+ */
+api.post('/properties/:id/analysis-batch', authMiddleware, async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    const propertyId = c.req.param('id');
+    const { analyses } = await c.req.json();
+
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    if (!analyses || !Array.isArray(analyses)) {
+      return c.json({ 
+        error: '分析結果が不正です',
+        errorCode: 'INVALID_ANALYSES_DATA'
+      }, 400);
+    }
+
+    // 各分析結果をデータベースに保存
+    const savedResults = [];
+    
+    for (const analysis of analyses) {
+      try {
+        const analysisId = crypto.randomUUID();
+        
+        // 分析タイプに応じて適切なテーブルに保存
+        switch (analysis.type) {
+          case 'stigma':
+            // 事故物件調査結果を保存
+            await env.DB.prepare(`
+              INSERT INTO accident_investigations (
+                id, property_id, user_id, risk_level, summary, 
+                incidents_found, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            `).bind(
+              analysisId,
+              propertyId,
+              user.id,
+              analysis.data?.riskLevel || 'unknown',
+              analysis.data?.summary || '',
+              JSON.stringify(analysis.data?.incidentsFound || [])
+            ).run();
+            break;
+            
+          case 'rental':
+            // 賃貸相場データを保存
+            await env.DB.prepare(`
+              INSERT INTO rental_market_data (
+                id, property_id, user_id, average_rent, median_rent,
+                min_rent, max_rent, sample_size, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            `).bind(
+              analysisId,
+              propertyId,
+              user.id,
+              analysis.data?.averageRent || 0,
+              analysis.data?.medianRent || 0,
+              analysis.data?.minRent || 0,
+              analysis.data?.maxRent || 0,
+              analysis.data?.sampleSize || 0
+            ).run();
+            break;
+            
+          case 'demographics':
+          case 'aiMarket':
+          case 'maps':
+            // その他の分析結果は汎用テーブルに保存
+            await env.DB.prepare(`
+              INSERT INTO analysis_results (
+                id, property_id, user_id, analysis_type, result_data, created_at
+              ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+            `).bind(
+              analysisId,
+              propertyId,
+              user.id,
+              analysis.type,
+              JSON.stringify(analysis.data || {})
+            ).run();
+            break;
+        }
+        
+        savedResults.push({
+          type: analysis.type,
+          id: analysisId,
+          success: true
+        });
+      } catch (error: any) {
+        console.error(`Failed to save ${analysis.type} analysis:`, error);
+        savedResults.push({
+          type: analysis.type,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    return c.json({
+      success: true,
+      saved: savedResults.filter(r => r.success).length,
+      total: analyses.length,
+      results: savedResults
+    });
+  } catch (error: any) {
+    console.error('Batch analysis save error:', error);
+    return c.json({
+      error: '分析結果の保存に失敗しました',
+      details: error.message,
+      errorCode: 'BATCH_SAVE_FAILED'
+    }, 500);
+  }
+});
+
+/**
  * Stigmatized Property Check Endpoint
  * 事故物件（心理的瑕疵）調査エンドポイント
  * POST /api/properties/stigma-check

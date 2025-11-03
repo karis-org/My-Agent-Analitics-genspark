@@ -278,6 +278,99 @@ properties.get('/new', (c) => {
                         </div>
                     </div>
 
+                    <!-- 実行する分析の選択 -->
+                    <div class="border-b pb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-tasks text-blue-600 mr-2"></i>実行する分析を選択
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            物件登録と同時に実行する分析にチェックを入れてください。登録したデータが自動的に各分析で使用されます。
+                        </p>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <!-- 基本分析 -->
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="analysis_financial" value="1" checked disabled
+                                           class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">財務分析 <span class="text-xs text-blue-600">(必須)</span></div>
+                                        <p class="text-xs text-gray-600 mt-1">NOI、利回り、DSCR、LTV等の投資指標を自動計算</p>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- 事故物件調査 -->
+                            <div class="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="analysis_stigma" value="1"
+                                           class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">事故物件調査</div>
+                                        <p class="text-xs text-gray-600 mt-1">AI搭載の心理的瑕疵調査システム</p>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- 賃貸相場分析 -->
+                            <div class="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="analysis_rental" value="1"
+                                           class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">イタンジBB 賃貸相場</div>
+                                        <p class="text-xs text-gray-600 mt-1">周辺賃貸物件の相場と推移を分析</p>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- 人口動態分析 -->
+                            <div class="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="analysis_demographics" value="1"
+                                           class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">人口動態分析</div>
+                                        <p class="text-xs text-gray-600 mt-1">e-Statによる地域人口統計データ</p>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- AI市場分析 -->
+                            <div class="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="analysis_ai_market" value="1"
+                                           class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">AI市場分析</div>
+                                        <p class="text-xs text-gray-600 mt-1">OpenAI GPT-4による市場動向分析</p>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- Googleマップ生成 -->
+                            <div class="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="checkbox" name="analysis_maps" value="1" checked
+                                           class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">周辺地図生成 <span class="text-xs text-blue-600">(推奨)</span></div>
+                                        <p class="text-xs text-gray-600 mt-1">1km/200mスケールの地図自動生成</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                            <div class="flex items-start space-x-2">
+                                <i class="fas fa-info-circle text-yellow-600 mt-0.5"></i>
+                                <p class="text-xs text-yellow-800">
+                                    選択した分析は並行で実行されます。APIキーが未設定の場合はサンプルデータが表示されます。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Submit buttons -->
                     <div class="flex items-center justify-end space-x-4">
                         <a href="/properties" 
@@ -286,7 +379,7 @@ properties.get('/new', (c) => {
                         </a>
                         <button type="submit"
                                 class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                            <i class="fas fa-save mr-2"></i>保存して分析へ
+                            <i class="fas fa-save mr-2"></i>保存して分析開始
                         </button>
                     </div>
                 </form>
@@ -444,13 +537,174 @@ properties.get('/new', (c) => {
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData.entries());
                 
+                // チェックされた分析オプションを取得
+                const selectedAnalyses = {
+                    financial: true, // 常に実行
+                    stigma: formData.get('analysis_stigma') === '1',
+                    rental: formData.get('analysis_rental') === '1',
+                    demographics: formData.get('analysis_demographics') === '1',
+                    aiMarket: formData.get('analysis_ai_market') === '1',
+                    maps: formData.get('analysis_maps') === '1'
+                };
+                
+                // ローディング表示
+                const submitButton = e.target.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>登録中...';
+                
                 try {
+                    // 1. 物件を登録
                     const response = await axios.post('/api/properties', data);
                     const propertyId = response.data.property.id;
-                    window.location.href = \`/properties/\${propertyId}/analyze\`;
+                    const property = response.data.property;
+                    
+                    // 2. 選択された分析を並行実行
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>分析実行中...';
+                    
+                    const analysisPromises = [];
+                    
+                    // 事故物件調査
+                    if (selectedAnalyses.stigma && property.location) {
+                        analysisPromises.push(
+                            axios.post('/api/properties/stigma-check', {
+                                address: property.location,
+                                propertyName: property.name
+                            }).then(result => ({
+                                type: 'stigma',
+                                success: true,
+                                data: result.data
+                            })).catch(error => ({
+                                type: 'stigma',
+                                success: false,
+                                error: error.message
+                            }))
+                        );
+                    }
+                    
+                    // 賃貸相場分析
+                    if (selectedAnalyses.rental && property.location) {
+                        // 住所から都道府県・市区町村を抽出（簡易版）
+                        const locationParts = property.location.match(/^(.+?[都道府県])(.+?[市区町村])/);
+                        if (locationParts) {
+                            analysisPromises.push(
+                                axios.post('/api/itandi/rental-analysis', {
+                                    prefecture: locationParts[1],
+                                    city: locationParts[2],
+                                    minArea: property.total_floor_area ? property.total_floor_area * 0.8 : undefined,
+                                    maxArea: property.total_floor_area ? property.total_floor_area * 1.2 : undefined
+                                }).then(result => ({
+                                    type: 'rental',
+                                    success: true,
+                                    data: result.data
+                                })).catch(error => ({
+                                    type: 'rental',
+                                    success: false,
+                                    error: error.message
+                                }))
+                            );
+                        }
+                    }
+                    
+                    // 人口動態分析
+                    if (selectedAnalyses.demographics && property.location) {
+                        // TODO: 都道府県コード・市区町村コードの取得ロジック実装
+                        // 現在は東京都を仮設定
+                        analysisPromises.push(
+                            axios.post('/api/estat/demographics', {
+                                prefCode: '13',
+                                cityCode: '13101'
+                            }).then(result => ({
+                                type: 'demographics',
+                                success: true,
+                                data: result.data
+                            })).catch(error => ({
+                                type: 'demographics',
+                                success: false,
+                                error: error.message
+                            }))
+                        );
+                    }
+                    
+                    // AI市場分析
+                    if (selectedAnalyses.aiMarket && property.location) {
+                        analysisPromises.push(
+                            axios.post('/api/ai/analyze-market', {
+                                area: property.location,
+                                propertyType: '中古マンション',
+                                priceRange: {
+                                    min: property.price * 0.8,
+                                    max: property.price * 1.2
+                                }
+                            }).then(result => ({
+                                type: 'aiMarket',
+                                success: true,
+                                data: result.data
+                            })).catch(error => ({
+                                type: 'aiMarket',
+                                success: false,
+                                error: error.message
+                            }))
+                        );
+                    }
+                    
+                    // Googleマップ生成
+                    if (selectedAnalyses.maps && property.location) {
+                        analysisPromises.push(
+                            axios.post('/api/maps/generate', {
+                                address: property.location
+                            }).then(result => ({
+                                type: 'maps',
+                                success: true,
+                                data: result.data
+                            })).catch(error => ({
+                                type: 'maps',
+                                success: false,
+                                error: error.message
+                            }))
+                        );
+                    }
+                    
+                    // すべての分析を並行実行
+                    let analysisResults = [];
+                    if (analysisPromises.length > 0) {
+                        analysisResults = await Promise.all(analysisPromises);
+                        
+                        // 結果をコンソールに出力（デバッグ用）
+                        console.log('Analysis results:', analysisResults);
+                        
+                        // 成功/失敗のカウント
+                        const successCount = analysisResults.filter(r => r.success).length;
+                        const totalCount = analysisResults.length;
+                        
+                        console.log(\`Completed \${successCount}/\${totalCount} analyses\`);
+                        
+                        // 3. 分析結果をデータベースに一括保存
+                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>結果を保存中...';
+                        
+                        try {
+                            const saveResponse = await axios.post(\`/api/properties/\${propertyId}/analysis-batch\`, {
+                                analyses: analysisResults.filter(r => r.success)
+                            });
+                            
+                            console.log('Save response:', saveResponse.data);
+                            console.log(\`Saved \${saveResponse.data.saved}/\${saveResponse.data.total} analysis results\`);
+                        } catch (saveError) {
+                            console.error('Failed to save analysis results:', saveError);
+                            // エラーが発生しても続行（結果は取得済み）
+                        }
+                    }
+                    
+                    // 統合レポートページへリダイレクト
+                    window.location.href = \`/properties/\${propertyId}/comprehensive-report\`;
+                    
                 } catch (error) {
                     console.error('Failed to create property:', error);
-                    alert('物件の登録に失敗しました');
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                    
+                    // エラーメッセージ表示
+                    alert('物件の登録に失敗しました: ' + (error.response?.data?.error || error.message));
                 }
             });
         </script>
