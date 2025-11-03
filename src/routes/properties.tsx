@@ -1944,4 +1944,592 @@ properties.get('/:id/comprehensive-report', async (c) => {
   `);
 });
 
+/**
+ * Comprehensive Report Page
+ * 統合レポート生成ページ
+ * GET /properties/:id/comprehensive-report
+ */
+properties.get('/:id/comprehensive-report', async (c) => {
+  const user = c.get('user');
+  const propertyId = c.req.param('id');
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>統合レポート - My Agent Analytics</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+            body { font-family: 'Noto Sans JP', sans-serif; }
+            
+            /* 印刷最適化 */
+            @media print {
+                body { background: white; }
+                .no-print { display: none !important; }
+                .page-break { page-break-after: always; }
+                .print-section { page-break-inside: avoid; }
+            }
+            
+            /* レポートセクションスタイル */
+            .report-section {
+                background: white;
+                border-radius: 0.5rem;
+                padding: 2rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            
+            .section-header {
+                border-bottom: 3px solid #2563eb;
+                padding-bottom: 0.75rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .data-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .data-item {
+                display: flex;
+                justify-content: space-between;
+                padding: 0.75rem;
+                background: #f9fafb;
+                border-radius: 0.375rem;
+            }
+            
+            .data-label {
+                color: #6b7280;
+                font-weight: 500;
+            }
+            
+            .data-value {
+                font-weight: 600;
+                color: #111827;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50">
+        <header class="bg-white shadow-sm no-print">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <a href="/dashboard">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                        </a>
+                        <h1 class="text-2xl font-bold text-gray-900">統合レポート</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-print mr-2"></i>印刷
+                        </button>
+                        <button onclick="downloadPDF()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-file-pdf mr-2"></i>PDF出力
+                        </button>
+                        <a href="/properties/${propertyId}" class="text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-arrow-left"></i> 戻る
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div id="loading" class="text-center py-12">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+                <p class="mt-4 text-gray-600">レポートを生成中...</p>
+            </div>
+            
+            <div id="report-content" class="hidden">
+                <!-- レポート内容がここに動的に挿入されます -->
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script>
+            const propertyId = '${propertyId}';
+            let reportData = null;
+            
+            async function loadReportData() {
+                try {
+                    const response = await axios.get(\`/api/properties/\${propertyId}/comprehensive-data\`);
+                    reportData = response.data.data;
+                    
+                    // レポートタイプを判定（実需用 vs 収益用）
+                    const isInvestment = reportData.property.property_type === 'investment';
+                    
+                    // ローディング非表示、コンテンツ表示
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('report-content').classList.remove('hidden');
+                    
+                    // レポート生成
+                    if (isInvestment) {
+                        renderInvestmentReport();
+                    } else {
+                        renderResidentialReport();
+                    }
+                } catch (error) {
+                    console.error('Failed to load report data:', error);
+                    document.getElementById('loading').innerHTML = \`
+                        <div class="text-center py-12">
+                            <i class="fas fa-exclamation-triangle text-4xl text-red-600"></i>
+                            <p class="mt-4 text-gray-600">レポートの読み込みに失敗しました</p>
+                            <p class="text-sm text-gray-500 mt-2">\${error.response?.data?.error || error.message}</p>
+                            <a href="/properties/\${propertyId}" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                物件ページに戻る
+                            </a>
+                        </div>
+                    \`;
+                }
+            }
+            
+            function renderResidentialReport() {
+                const property = reportData.property;
+                const stigma = reportData.stigma;
+                const rental = reportData.rental;
+                const demographics = reportData.demographics;
+                const aiMarket = reportData.aiMarket;
+                const maps = reportData.maps;
+                
+                document.getElementById('report-content').innerHTML = \`
+                    <!-- レポート表紙 -->
+                    <div class="report-section print-section">
+                        <div class="text-center">
+                            <h1 class="text-4xl font-bold text-gray-900 mb-4">不動産物件調査レポート</h1>
+                            <p class="text-xl text-gray-600 mb-2">（実需用不動産）</p>
+                            <h2 class="text-3xl font-semibold text-blue-600 mb-8">\${property.name}</h2>
+                            <div class="text-gray-500 mb-4">
+                                <p>調査日: \${new Date().toLocaleDateString('ja-JP')}</p>
+                                <p>レポートID: \${property.id.substring(0, 8)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="page-break"></div>
+                    
+                    <!-- 1. 物件基本情報 -->
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-home text-blue-600 mr-2"></i>1. 物件基本情報
+                            </h2>
+                        </div>
+                        
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <span class="data-label">物件名:</span>
+                                <span class="data-value">\${property.name}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">価格:</span>
+                                <span class="data-value text-lg">¥\${(property.price || 0).toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">所在地:</span>
+                                <span class="data-value">\${property.location || '未設定'}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">構造:</span>
+                                <span class="data-value">\${property.structure || '未設定'}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">延床面積:</span>
+                                <span class="data-value">\${property.total_floor_area || '未設定'}㎡</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">土地面積:</span>
+                                <span class="data-value">\${property.land_area || '未設定'}㎡</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">築年数:</span>
+                                <span class="data-value">\${property.building_age || '未設定'}年</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">登記日:</span>
+                                <span class="data-value">\${property.registration_date || '未設定'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. 事故物件調査結果 -->
+                    \${stigma ? \`
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-shield-alt text-blue-600 mr-2"></i>2. 事故物件調査結果
+                            </h2>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <div class="flex items-center mb-4">
+                                <span class="text-lg font-semibold mr-3">リスクレベル:</span>
+                                <span class="px-4 py-2 rounded-full text-white font-bold \${
+                                    stigma.risk_level === 'none' ? 'bg-green-500' :
+                                    stigma.risk_level === 'low' ? 'bg-yellow-500' :
+                                    stigma.risk_level === 'medium' ? 'bg-orange-500' : 'bg-red-500'
+                                }">
+                                    \${stigma.risk_level === 'none' ? '問題なし' :
+                                      stigma.risk_level === 'low' ? '低リスク' :
+                                      stigma.risk_level === 'medium' ? '中リスク' : '高リスク'}
+                                </span>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="font-semibold text-gray-900 mb-2">調査結果サマリー:</h3>
+                                <p class="text-gray-700">\${stigma.summary || '調査結果なし'}</p>
+                            </div>
+                            
+                            \${stigma.incidents_found && stigma.incidents_found.length > 0 ? \`
+                            <div class="mt-4">
+                                <h3 class="font-semibold text-gray-900 mb-2">発見された事例:</h3>
+                                <ul class="list-disc list-inside space-y-1 text-gray-700">
+                                    \${stigma.incidents_found.map(incident => \`<li>\${incident}</li>\`).join('')}
+                                </ul>
+                            </div>
+                            \` : ''}
+                        </div>
+                    </div>
+                    \` : ''}
+                    
+                    <!-- 3. 賃貸相場分析 -->
+                    \${rental ? \`
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-yen-sign text-blue-600 mr-2"></i>3. 賃貸相場分析（将来的賃貸活用の参考）
+                            </h2>
+                        </div>
+                        
+                        <div class="data-grid mb-6">
+                            <div class="data-item">
+                                <span class="data-label">平均家賃:</span>
+                                <span class="data-value text-lg">¥\${rental.average_rent.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">中央値家賃:</span>
+                                <span class="data-value text-lg">¥\${rental.median_rent.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">最低家賃:</span>
+                                <span class="data-value">¥\${rental.min_rent.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">最高家賃:</span>
+                                <span class="data-value">¥\${rental.max_rent.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">サンプル数:</span>
+                                <span class="data-value">\${rental.sample_size}件</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">想定利回り:</span>
+                                <span class="data-value text-lg">\${((rental.average_rent * 12 / property.price) * 100).toFixed(2)}%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-700">
+                                <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                                将来的に賃貸として活用する場合の想定データです。周辺の同規模物件の賃貸相場を基に算出しています。
+                            </p>
+                        </div>
+                    </div>
+                    \` : ''}
+                    
+                    <!-- 4. 人口動態分析 -->
+                    \${demographics ? \`
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-users text-blue-600 mr-2"></i>4. 人口動態分析
+                            </h2>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-gray-700">人口動態データが取得されています。</p>
+                            <pre class="text-xs mt-2 overflow-auto">\${JSON.stringify(demographics, null, 2)}</pre>
+                        </div>
+                    </div>
+                    \` : ''}
+                    
+                    <!-- 5. AI市場分析 -->
+                    \${aiMarket ? \`
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-robot text-blue-600 mr-2"></i>5. AI市場分析
+                            </h2>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-gray-700">AI市場分析データが取得されています。</p>
+                            <pre class="text-xs mt-2 overflow-auto">\${JSON.stringify(aiMarket, null, 2)}</pre>
+                        </div>
+                    </div>
+                    \` : ''}
+                    
+                    <!-- 6. 周辺地図 -->
+                    \${maps ? \`
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-map-marked-alt text-blue-600 mr-2"></i>6. 周辺地図
+                            </h2>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            \${maps.map1km ? \`
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-2">広域マップ（1km圏内）</h3>
+                                <img src="\${maps.map1km}" alt="1km Map" class="w-full border rounded-lg shadow-sm">
+                            </div>
+                            \` : ''}
+                            
+                            \${maps.map200m ? \`
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-2">詳細マップ（200m圏内）</h3>
+                                <img src="\${maps.map200m}" alt="200m Map" class="w-full border rounded-lg shadow-sm">
+                            </div>
+                            \` : ''}
+                        </div>
+                    </div>
+                    \` : ''}
+                    
+                    <!-- レポート末尾 -->
+                    <div class="report-section text-center text-gray-500 text-sm">
+                        <p>本レポートは My Agent Analytics により自動生成されました</p>
+                        <p class="mt-2">生成日時: \${new Date().toLocaleString('ja-JP')}</p>
+                    </div>
+                \`;
+            }
+            
+            function renderInvestmentReport() {
+                const property = reportData.property;
+                const stigma = reportData.stigma;
+                const rental = reportData.rental;
+                const aiMarket = reportData.aiMarket;
+                const maps = reportData.maps;
+                
+                // 投資指標計算
+                const annualIncome = (property.annual_income || 0);
+                const grossYield = property.price > 0 ? (annualIncome / property.price * 100) : 0;
+                const netYield = property.price > 0 ? ((annualIncome * 0.8) / property.price * 100) : 0;
+                
+                document.getElementById('report-content').innerHTML = \`
+                    <!-- レポート表紙 -->
+                    <div class="report-section print-section">
+                        <div class="text-center">
+                            <h1 class="text-4xl font-bold text-gray-900 mb-4">不動産投資分析レポート</h1>
+                            <p class="text-xl text-gray-600 mb-2">（収益用不動産）</p>
+                            <h2 class="text-3xl font-semibold text-blue-600 mb-8">\${property.name}</h2>
+                            <div class="text-gray-500 mb-4">
+                                <p>調査日: \${new Date().toLocaleDateString('ja-JP')}</p>
+                                <p>レポートID: \${property.id.substring(0, 8)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="page-break"></div>
+                    
+                    <!-- 1. 物件基本情報 -->
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-building text-blue-600 mr-2"></i>1. 物件基本情報
+                            </h2>
+                        </div>
+                        
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <span class="data-label">物件名:</span>
+                                <span class="data-value">\${property.name}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">価格:</span>
+                                <span class="data-value text-lg">¥\${(property.price || 0).toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">所在地:</span>
+                                <span class="data-value">\${property.location || '未設定'}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">構造:</span>
+                                <span class="data-value">\${property.structure || '未設定'}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">延床面積:</span>
+                                <span class="data-value">\${property.total_floor_area || '未設定'}㎡</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">土地面積:</span>
+                                <span class="data-value">\${property.land_area || '未設定'}㎡</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">築年数:</span>
+                                <span class="data-value">\${property.building_age || '未設定'}年</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">年間収入:</span>
+                                <span class="data-value text-lg">¥\${annualIncome.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. 投資指標 -->
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-chart-line text-blue-600 mr-2"></i>2. 投資指標
+                            </h2>
+                        </div>
+                        
+                        <div class="data-grid">
+                            <div class="data-item bg-blue-50">
+                                <span class="data-label">表面利回り:</span>
+                                <span class="data-value text-2xl text-blue-600">\${grossYield.toFixed(2)}%</span>
+                            </div>
+                            <div class="data-item bg-green-50">
+                                <span class="data-label">想定実質利回り:</span>
+                                <span class="data-value text-2xl text-green-600">\${netYield.toFixed(2)}%</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">年間収入:</span>
+                                <span class="data-value">¥\${annualIncome.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">想定年間費用:</span>
+                                <span class="data-value">¥\${(annualIncome * 0.2).toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">想定純収益:</span>
+                                <span class="data-value text-lg">¥\${(annualIncome * 0.8).toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">回収期間:</span>
+                                <span class="data-value">\${grossYield > 0 ? (100 / grossYield).toFixed(1) : '---'}年</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 3. 事故物件調査結果 -->
+                    \${stigma ? \`
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-shield-alt text-blue-600 mr-2"></i>3. 事故物件調査結果
+                            </h2>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <div class="flex items-center mb-4">
+                                <span class="text-lg font-semibold mr-3">リスクレベル:</span>
+                                <span class="px-4 py-2 rounded-full text-white font-bold \${
+                                    stigma.risk_level === 'none' ? 'bg-green-500' :
+                                    stigma.risk_level === 'low' ? 'bg-yellow-500' :
+                                    stigma.risk_level === 'medium' ? 'bg-orange-500' : 'bg-red-500'
+                                }">
+                                    \${stigma.risk_level === 'none' ? '問題なし' :
+                                      stigma.risk_level === 'low' ? '低リスク' :
+                                      stigma.risk_level === 'medium' ? '中リスク' : '高リスク'}
+                                </span>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="font-semibold text-gray-900 mb-2">調査結果サマリー:</h3>
+                                <p class="text-gray-700">\${stigma.summary || '調査結果なし'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    \` : ''}
+                    
+                    <!-- 4. 賃貸相場分析 -->
+                    \${rental ? \`
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-yen-sign text-blue-600 mr-2"></i>4. 賃貸相場分析
+                            </h2>
+                        </div>
+                        
+                        <div class="data-grid mb-6">
+                            <div class="data-item">
+                                <span class="data-label">平均家賃:</span>
+                                <span class="data-value text-lg">¥\${rental.average_rent.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">中央値家賃:</span>
+                                <span class="data-value text-lg">¥\${rental.median_rent.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">最低家賃:</span>
+                                <span class="data-value">¥\${rental.min_rent.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">最高家賃:</span>
+                                <span class="data-value">¥\${rental.max_rent.toLocaleString()}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">サンプル数:</span>
+                                <span class="data-value">\${rental.sample_size}件</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">市場利回り:</span>
+                                <span class="data-value text-lg">\${((rental.average_rent * 12 / property.price) * 100).toFixed(2)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    \` : ''}
+                    
+                    <!-- 5. 周辺地図 -->
+                    \${maps ? \`
+                    <div class="report-section print-section">
+                        <div class="section-header">
+                            <h2 class="text-2xl font-bold text-gray-900">
+                                <i class="fas fa-map-marked-alt text-blue-600 mr-2"></i>5. 周辺地図
+                            </h2>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            \${maps.map1km ? \`
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-2">広域マップ（1km圏内）</h3>
+                                <img src="\${maps.map1km}" alt="1km Map" class="w-full border rounded-lg shadow-sm">
+                            </div>
+                            \` : ''}
+                            
+                            \${maps.map200m ? \`
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-2">詳細マップ（200m圏内）</h3>
+                                <img src="\${maps.map200m}" alt="200m Map" class="w-full border rounded-lg shadow-sm">
+                            </div>
+                            \` : ''}
+                        </div>
+                    </div>
+                    \` : ''}
+                    
+                    <!-- レポート末尾 -->
+                    <div class="report-section text-center text-gray-500 text-sm">
+                        <p>本レポートは My Agent Analytics により自動生成されました</p>
+                        <p class="mt-2">生成日時: \${new Date().toLocaleString('ja-JP')}</p>
+                    </div>
+                \`;
+            }
+            
+            function downloadPDF() {
+                alert('PDF出力機能は今後実装予定です。現在は印刷機能（Ctrl+P / Cmd+P）をご利用ください。');
+            }
+            
+            // ページ読み込み時にレポートデータをロード
+            loadReportData();
+        </script>
+    </body>
+    </html>
+  `);
+});
+
 export default properties;

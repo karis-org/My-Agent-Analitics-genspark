@@ -3704,6 +3704,99 @@ api.post('/properties/:id/analysis-batch', authMiddleware, async (c) => {
 });
 
 /**
+ * Comprehensive Report Data Endpoint
+ * 統合レポートデータ取得エンドポイント
+ * GET /api/properties/:id/comprehensive-data
+ */
+api.get('/properties/:id/comprehensive-data', authMiddleware, async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    const propertyId = c.req.param('id');
+
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    // 1. 物件基本情報取得
+    const propertyResult = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (!propertyResult) {
+      return c.json({ 
+        error: '物件が見つかりません',
+        errorCode: 'PROPERTY_NOT_FOUND'
+      }, 404);
+    }
+
+    // 2. 事故物件調査結果取得
+    const stigmaResult = await env.DB.prepare(`
+      SELECT * FROM accident_investigations 
+      WHERE property_id = ? 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `).bind(propertyId).first();
+
+    // 3. 賃貸相場データ取得
+    const rentalResult = await env.DB.prepare(`
+      SELECT * FROM rental_market_data 
+      WHERE property_id = ? 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `).bind(propertyId).first();
+
+    // 4. 人口動態分析結果取得
+    const demographicsResult = await env.DB.prepare(`
+      SELECT * FROM analysis_results 
+      WHERE property_id = ? AND analysis_type = 'demographics'
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `).bind(propertyId).first();
+
+    // 5. AI市場分析結果取得
+    const aiMarketResult = await env.DB.prepare(`
+      SELECT * FROM analysis_results 
+      WHERE property_id = ? AND analysis_type = 'aiMarket'
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `).bind(propertyId).first();
+
+    // 6. 地図データ取得
+    const mapsResult = await env.DB.prepare(`
+      SELECT * FROM analysis_results 
+      WHERE property_id = ? AND analysis_type = 'maps'
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `).bind(propertyId).first();
+
+    // JSON文字列をパース
+    const parsedData = {
+      property: propertyResult,
+      stigma: stigmaResult ? {
+        ...stigmaResult,
+        incidents_found: stigmaResult.incidents_found ? JSON.parse(stigmaResult.incidents_found as string) : []
+      } : null,
+      rental: rentalResult,
+      demographics: demographicsResult ? JSON.parse(demographicsResult.result_data as string) : null,
+      aiMarket: aiMarketResult ? JSON.parse(aiMarketResult.result_data as string) : null,
+      maps: mapsResult ? JSON.parse(mapsResult.result_data as string) : null
+    };
+
+    return c.json({
+      success: true,
+      data: parsedData
+    });
+  } catch (error: any) {
+    console.error('Comprehensive report data fetch error:', error);
+    return c.json({
+      error: '統合レポートデータの取得に失敗しました',
+      details: error.message,
+      errorCode: 'COMPREHENSIVE_DATA_FETCH_FAILED'
+    }, 500);
+  }
+});
+
+/**
  * Stigmatized Property Check Endpoint
  * 事故物件（心理的瑕疵）調査エンドポイント
  * POST /api/properties/stigma-check
