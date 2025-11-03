@@ -69,6 +69,10 @@ app.route('/residential', residentialRoutes)
 import itandiRoutes from './routes/itandi'
 app.route('/itandi', itandiRoutes)
 
+// Stigmatized property check routes (requires authentication)
+import stigmaRoutes from './routes/stigma'
+app.route('/stigma', stigmaRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 

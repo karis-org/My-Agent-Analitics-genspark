@@ -170,6 +170,17 @@ dashboard.get('/', (c) => {
                         </div>
                     </a>
 
+                    <a href="/stigma/check" 
+                       class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors">
+                        <div class="text-3xl text-red-600 mr-4">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">事故物件調査<span class="ml-2 text-xs bg-red-500 text-white px-2 py-1 rounded">NEW</span></p>
+                            <p class="text-sm text-gray-500">心理的瑕疵・AI調査</p>
+                        </div>
+                    </a>
+
                     <a href="/agents" 
                        class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
                         <div class="text-3xl text-purple-600 mr-4">
