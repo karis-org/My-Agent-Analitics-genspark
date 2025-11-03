@@ -138,10 +138,10 @@ app.get('/', (c) => {
                     <span class="bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">My Agent Analytics</span>
                 </h1>
                 <h2 class="text-3xl font-bold text-gray-900 mb-4">
-                    AIを活用した不動産投資分析
+                    AIを活用した不動産投資分析プラットフォーム
                 </h2>
                 <p class="text-xl text-gray-700 mb-6">
-                    物件データを入力するだけで、包括的な市場分析レポートを自動生成
+                    13の先進機能で物件データを多角的に分析。OCR、市場データ取得、事故物件調査まで完全自動化。
                 </p>
                 <div class="flex justify-center space-x-4">
                     <a href="/auth/login" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105 inline-block">
@@ -153,9 +153,9 @@ app.get('/', (c) => {
                 </div>
             </div>
 
-            <!-- Features Grid -->
+            <!-- Features Grid - 13 Features -->
             <div class="grid md:grid-cols-3 gap-8 mb-12">
-                <!-- Feature 1 -->
+                <!-- Feature 1: 自動計算 -->
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                     <div class="text-blue-600 text-4xl mb-4">
                         <i class="fas fa-calculator"></i>
@@ -166,7 +166,7 @@ app.get('/', (c) => {
                     </p>
                 </div>
 
-                <!-- Feature 2 -->
+                <!-- Feature 2: データ可視化 -->
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                     <div class="text-green-600 text-4xl mb-4">
                         <i class="fas fa-chart-line"></i>
@@ -177,7 +177,7 @@ app.get('/', (c) => {
                     </p>
                 </div>
 
-                <!-- Feature 3 -->
+                <!-- Feature 3: PDFレポート -->
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                     <div class="text-purple-600 text-4xl mb-4">
                         <i class="fas fa-file-pdf"></i>
@@ -188,7 +188,7 @@ app.get('/', (c) => {
                     </p>
                 </div>
 
-                <!-- Feature 4 -->
+                <!-- Feature 4: 市場分析 -->
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                     <div class="text-orange-600 text-4xl mb-4">
                         <i class="fas fa-chart-area"></i>
@@ -199,18 +199,18 @@ app.get('/', (c) => {
                     </p>
                 </div>
 
-                <!-- Feature 5 -->
+                <!-- Feature 5: AI分析 -->
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                     <div class="text-red-600 text-4xl mb-4">
                         <i class="fas fa-robot"></i>
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-2">AI分析</h3>
                     <p class="text-gray-600">
-                        OpenAI GPT-4を活用した高度な市場分析と投資判断サポート。
+                        OpenAI GPT-4oを活用した高度な市場分析と投資判断サポート。
                     </p>
                 </div>
 
-                <!-- Feature 6 -->
+                <!-- Feature 6: PWA対応 -->
                 <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                     <div class="text-teal-600 text-4xl mb-4">
                         <i class="fas fa-mobile-alt"></i>
@@ -218,6 +218,83 @@ app.get('/', (c) => {
                     <h3 class="text-xl font-bold text-gray-900 mb-2">PWA対応</h3>
                     <p class="text-gray-600">
                         スマートフォンにインストール可能。オフラインでも基本機能を利用できます。
+                    </p>
+                </div>
+
+                <!-- Feature 7: OCR画像認識 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="text-indigo-600 text-4xl mb-4">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">OCR画像認識</h3>
+                    <p class="text-gray-600">
+                        物件マイソクや概要書の画像をアップロードして自動データ抽出。手入力の手間を大幅削減。
+                    </p>
+                </div>
+
+                <!-- Feature 8: 取引事例自動取得 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="text-cyan-600 text-4xl mb-4">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">取引事例自動取得</h3>
+                    <p class="text-gray-600">
+                        不動産情報ライブラリから周辺の取引事例を自動取得。市場価格の妥当性を即座に検証。
+                    </p>
+                </div>
+
+                <!-- Feature 9: 地価公示データ -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="text-yellow-600 text-4xl mb-4">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">地価公示データ</h3>
+                    <p class="text-gray-600">
+                        最大5年分の地価公示データを自動取得。土地価格の推移を視覚的に分析できます。
+                    </p>
+                </div>
+
+                <!-- Feature 10: 人口統計分析 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="text-pink-600 text-4xl mb-4">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">人口統計分析</h3>
+                    <p class="text-gray-600">
+                        e-Stat APIから人口動態・世帯数・年齢構成を取得。需要予測の精度を向上させます。
+                    </p>
+                </div>
+
+                <!-- Feature 11: 賃貸相場分析 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="text-emerald-600 text-4xl mb-4">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">賃貸相場分析</h3>
+                    <p class="text-gray-600">
+                        イタンジBB APIで周辺の賃貸相場と推移を分析。収益シミュレーションの精度を向上。
+                    </p>
+                </div>
+
+                <!-- Feature 12: 実需用評価 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="text-violet-600 text-4xl mb-4">
+                        <i class="fas fa-house-user"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">実需用評価</h3>
+                    <p class="text-gray-600">
+                        居住用不動産の適正価格を算出。立地・建物・市場の3要素から総合的に評価します。
+                    </p>
+                </div>
+
+                <!-- Feature 13: 事故物件調査 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                    <div class="text-red-700 text-4xl mb-4">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">事故物件調査</h3>
+                    <p class="text-gray-600">
+                        AIによる心理的瑕疵の調査。ニュース・警察・消防のデータから過去の事件事故を検索。
                     </p>
                 </div>
             </div>
