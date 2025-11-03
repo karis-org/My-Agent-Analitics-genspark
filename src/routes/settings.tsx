@@ -24,6 +24,7 @@ settings.get('/', (c) => {
     propertyManagement: true, // v5.0.0: Always available (CRUD operations)
     financialAnalysis: true, // v5.0.0: Always available (calculator)
     analysisHistory: true, // v5.0.0: Always available (DB storage)
+    residentialEvaluation: true, // v5.0.1: Always available (residential property evaluation)
     marketAnalysis: !!env.REINFOLIB_API_KEY,
     aiAnalysis: !!env.OPENAI_API_KEY,
     ocrFeature: !!env.OPENAI_API_KEY, // v5.0.0: OCR depends on OpenAI
@@ -204,6 +205,25 @@ settings.get('/', (c) => {
                         </div>
                         <div>
                             ${featuresStatus.analysisHistory ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm">利用不可</span>'
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Residential Property Evaluation (v5.0.1) -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.residentialEvaluation ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.residentialEvaluation ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-home text-2xl ${featuresStatus.residentialEvaluation ? 'text-green-600' : 'text-gray-400'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">実需用不動産評価 <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded ml-2">v5.0.1 NEW</span></p>
+                                <p class="text-sm text-gray-600">取引事例比較法・原価法・地価推移分析・総合スコアリング</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${featuresStatus.residentialEvaluation ? 
                                 '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
                                 '<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm">利用不可</span>'
                             }

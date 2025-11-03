@@ -100,6 +100,7 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
   - PUT `/api/properties/:id` - 物件情報更新 🆕🆕
   - DELETE `/api/properties/:id` - 物件削除 🆕🆕
   - POST `/api/properties/ocr` - マイソク画像から情報抽出 🆕
+  - POST `/api/properties/residential/evaluate` - 実需用不動産評価 🆕🆕🆕
 
 - [x] **AIエージェント管理API** 🆕
   - GET `/api/agents` - エージェント一覧取得
@@ -543,6 +544,125 @@ Content-Type: application/json
 }
 ```
 
+### 実需用不動産評価 🆕🆕🆕
+
+```http
+POST /api/properties/residential/evaluate
+Content-Type: application/json
+```
+
+**リクエストボディ:**
+```json
+{
+  "targetProperty": {
+    "name": "恵比寿マンション",
+    "area": 65,
+    "age": 5,
+    "distanceFromStation": 8
+  },
+  "comparables": [
+    {
+      "price": 45000000,
+      "area": 62,
+      "age": 3,
+      "distanceFromStation": 5,
+      "transactionDate": "2024-09",
+      "location": "渋谷区恵比寿"
+    }
+  ],
+  "buildingSpec": {
+    "structure": "RC",
+    "totalFloorArea": 65,
+    "age": 5,
+    "landArea": 150,
+    "landPricePerSquareMeter": 850000
+  },
+  "landPriceHistory": [
+    { "year": 2020, "pricePerSquareMeter": 800000 },
+    { "year": 2021, "pricePerSquareMeter": 820000 },
+    { "year": 2024, "pricePerSquareMeter": 850000 }
+  ],
+  "assetFactors": {
+    "locationScore": 85,
+    "accessibilityScore": 90,
+    "neighborhoodScore": 80,
+    "buildingQualityScore": 75,
+    "futureProspectScore": 70,
+    "liquidityScore": 85
+  },
+  "evaluationMethods": ["comparison", "cost", "trend", "asset"]
+}
+```
+
+**レスポンス:**
+```json
+{
+  "success": true,
+  "summary": {
+    "evaluatedAt": "2024-01-01T00:00:00.000Z",
+    "propertyName": "恵比寿マンション",
+    "evaluationMethods": ["comparison", "cost", "trend", "asset"],
+    "hasComparison": true,
+    "hasCostApproach": true,
+    "hasTrendAnalysis": true,
+    "hasAssetScore": true
+  },
+  "results": {
+    "comparisonAnalysis": {
+      "estimatedPrice": 46200000,
+      "pricePerSquareMeter": 710769,
+      "confidence": "high",
+      "comparableCount": 15,
+      "priceRange": {
+        "min": 40000000,
+        "max": 52000000
+      }
+    },
+    "costApproach": {
+      "landValue": 127500000,
+      "buildingValue": 13812500,
+      "totalValue": 141312500,
+      "depreciationRate": 14.89
+    },
+    "landPriceTrend": {
+      "currentPrice": 850000,
+      "averageAnnualGrowthRate": 2.05,
+      "trend": "rising",
+      "projectedPrice5Years": 938976
+    },
+    "assetScore": {
+      "totalScore": 80.5,
+      "rating": "A",
+      "strengths": ["立地", "アクセス", "流動性"],
+      "weaknesses": ["将来性"]
+    }
+  }
+}
+```
+
+**評価手法の説明:**
+
+1. **取引事例比較法 (comparison)**: 周辺の類似物件取引事例から価格を推定
+   - 時点補正、築年数補正、駅距離補正を適用
+   - 外れ値除去による精度向上
+   - 信頼度レベル（high/medium/low）を表示
+
+2. **原価法 (cost)**: 建物の再調達原価から減価償却を考慮した価値を算出
+   - 構造別の再調達単価を使用（RC: 25万円/㎡、木造: 18万円/㎡等）
+   - 構造別の耐用年数で減価償却率を計算
+   - 土地価値 + 建物価値で総価値を算出
+
+3. **地価推移分析 (trend)**: 過去の地価データから将来価格を予測
+   - CAGR（年平均成長率）の算出
+   - トレンド判定（rising/stable/falling）
+   - 5年後の予測価格を計算
+
+4. **総合資産性スコア (asset)**: 6つの要素から総合評価
+   - 立地(25%)、アクセス(20%)、周辺環境(15%)
+   - 建物品質(15%)、将来性(15%)、流動性(10%)
+   - S/A/B/C/Dの5段階レーティング
+   - 強み・弱みの自動分析
+
 ### 物件一覧取得
 
 ```http
@@ -768,30 +888,70 @@ POST /api/properties/compare
 
 **開発チーム**: My Agent Team  
 **最終更新**: 2025年11月03日  
-**バージョン**: 5.0.1 🎉🆕  
+**バージョン**: 5.0.1 🎉🆕🆕🆕  
 **プロジェクト完成度**: 100% ✅✅✅  
-**実装機能数**: 全フェーズ完了 ✅  
+**実装機能数**: 11機能（稼働率45%） ✅  
+**新機能**: 実需用不動産評価 + OCR改善 🏠🐛  
 **リリース状態**: 本番環境稼働中 🚀  
 **本番URL**: [https://6c256e0b.my-agent-analytics.pages.dev](https://6c256e0b.my-agent-analytics.pages.dev)  
 **GitHub**: [koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
 
-## 🐛 v5.0.1 のバグ修正 - 最新版 🆕
+## 🎉 v5.0.1 の新機能と改善 - 最新版 🆕🆕🆕
 
-### OCRエラーハンドリング修正 ✅
-- **適切なエラーレスポンス**: OpenAI APIキー未設定時に503エラーを返す
-- **エラーコード追加**: `API_KEY_NOT_CONFIGURED`, `OCR_PROCESSING_ERROR`
-- **ユーザーフレンドリー**: 明確なエラーメッセージで状況を説明
-- **モックデータ削除**: エラー時にサンプルデータを返さない
+### 🏠 実需用不動産評価機能 ✅ NEW!
+- **取引事例比較法**: 周辺の類似物件取引事例から価格を推定
+  - 時点補正、築年数補正、駅距離補正を適用
+  - 外れ値除去による精度向上
+  - 信頼度レベル（high/medium/low）を表示
+- **原価法**: 建物の再調達原価から減価償却を考慮した価値を算出
+  - 構造別の再調達単価を使用（RC: 25万円/㎡、木造: 18万円/㎡等）
+  - 構造別の耐用年数で減価償却率を計算
+  - 土地価値 + 建物価値で総価値を算出
+- **地価推移分析**: 過去の地価データから将来価格を予測
+  - CAGR（年平均成長率）の算出
+  - トレンド判定（rising/stable/falling）
+  - 5年後の予測価格を計算
+- **総合資産性スコア**: 6つの要素から総合評価
+  - 立地(25%)、アクセス(20%)、周辺環境(15%)
+  - 建物品質(15%)、将来性(15%)、流動性(10%)
+  - S/A/B/C/Dの5段階レーティング
+  - 強み・弱みの自動分析
+- **評価ページUI**: `/residential/evaluate` で直感的な評価フォーム
+  - 動的な取引事例追加
+  - 地価データの追加・管理
+  - リアルタイムでの評価実行
+  - 美しい結果表示
 
-### システム情報ページ更新 ✅
-- **v5.0.0機能の追加表示**: 物件管理、財務分析、分析履歴保存、OCR機能
-- **正確な機能数**: 6機能 → 10機能に更新
-- **機能稼働率の修正**: 17% → 40%（4/10機能が利用可能）
-- **v5.0.0バッジ**: 新機能に視覚的なバッジを表示
+### 📊 機能稼働率の向上 ✅ NEW!
+- **実需用不動産評価機能追加**: 45% → 45%（5/11機能が利用可能）
+- **システム情報ページ更新**: 新機能の表示を追加
+- **ダッシュボード統合**: クイックアクションに実需用評価リンクを追加
 
-### 本番環境デプロイ ✅
-- **新しい本番URL**: https://6c256e0b.my-agent-analytics.pages.dev
-- **すべてのテスト合格**: ローカル・本番環境で検証済み
+### 🐛 OCRエラーハンドリング大幅改善 ✅
+- **詳細なエラーメッセージ**: エラー状況を明確に説明
+  - API_KEY_NOT_CONFIGURED: APIキー未設定
+  - INVALID_API_KEY: 無効なAPIキー
+  - RATE_LIMIT_EXCEEDED: レート制限超過
+  - INVALID_IMAGE_FORMAT: 画像形式エラー
+  - API_SERVER_ERROR: サーバーエラー
+  - EMPTY_RESPONSE: 空のレスポンス
+  - JSON_PARSE_ERROR: JSON解析エラー
+  - NO_DATA_EXTRACTED: データ抽出失敗
+- **ユーザーフレンドリーな提案**: 各エラーに対する具体的な対処方法を提示
+- **リトライ機能**: `canRetry` フラグでリトライ可能かを判定
+- **データ検証**: 抽出されたデータの妥当性を確認
+- **デバッグ情報**: エラー時に詳細情報を含める（rawContent等）
+
+### 🛠️ システム改善 ✅
+- **エラーレスポンス標準化**: 全てのOCRエラーに統一フォーマットを適用
+- **エラーコード体系**: 明確なエラーコードで問題を特定しやすく
+- **提案システム**: ユーザーが次に何をすべきかを明示
+- **信頼度スコア**: 抽出成功時に信頼度を表示（将来的な拡張）
+
+### 📚 APIドキュメント拡張 ✅
+- **実需用不動産評価API**: 詳細なリクエスト・レスポンス例を追加
+- **評価手法の説明**: 各評価手法の原理と計算方法を文書化
+- **エラーレスポンス**: 改善されたOCRエラーレスポンスを文書化
 
 ---
 

@@ -61,6 +61,10 @@ app.route('/admin', adminRoutes)
 import helpRoutes from './routes/help'
 app.route('/help', helpRoutes)
 
+// Residential evaluation routes (requires authentication)
+import residentialRoutes from './routes/residential'
+app.route('/residential', residentialRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 

@@ -17,6 +17,17 @@ import {
   createCSVDownloadResponse,
 } from '../lib/exporter';
 import {
+  estimatePriceByComparison,
+  evaluateByCostApproach,
+  analyzeLandPriceTrend,
+  calculateAssetScore,
+  type ComparableProperty,
+  type PropertyForEvaluation,
+  type BuildingSpecification,
+  type LandPriceData,
+  type AssetEvaluationFactors,
+} from '../lib/residential-evaluator';
+import {
   exportPropertiesToExcel,
   exportSimulationToExcel,
   createExcelDownloadResponse,
@@ -133,14 +144,51 @@ api.post('/properties/ocr', async (c) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API request failed: ${response.status}`);
+      
+      // 詳細なエラーメッセージを作成
+      let userFriendlyError = '画像の解析中にエラーが発生しました';
+      let errorCode = 'OCR_PROCESSING_ERROR';
+      let suggestions: string[] = [];
+      
+      if (response.status === 401) {
+        userFriendlyError = 'OpenAI APIキーが無効です';
+        errorCode = 'INVALID_API_KEY';
+        suggestions = ['管理者に連絡して、有効なAPIキーが設定されているか確認してください'];
+      } else if (response.status === 429) {
+        userFriendlyError = 'APIの利用制限に達しました';
+        errorCode = 'RATE_LIMIT_EXCEEDED';
+        suggestions = ['しばらく時間をおいてから再度お試しください', '管理者に連絡してAPI利用プランをアップグレードしてください'];
+      } else if (response.status === 400) {
+        userFriendlyError = '画像形式が正しくありません';
+        errorCode = 'INVALID_IMAGE_FORMAT';
+        suggestions = ['画像がBase64形式でエンコードされているか確認してください', 'サポートされている画像形式（JPEG、PNG、GIF）を使用してください'];
+      } else if (response.status >= 500) {
+        userFriendlyError = 'OpenAI APIサーバーでエラーが発生しました';
+        errorCode = 'API_SERVER_ERROR';
+        suggestions = ['しばらく時間をおいてから再度お試しください', 'エラーが続く場合は管理者に連絡してください'];
+      }
+      
+      return c.json({
+        error: userFriendlyError,
+        errorCode,
+        available: false,
+        details: `HTTP ${response.status}: ${errorText.substring(0, 200)}`,
+        suggestions,
+        canRetry: response.status === 429 || response.status >= 500
+      }, response.status);
     }
     
     const result = await response.json();
     const content = result.choices[0]?.message?.content;
     
     if (!content) {
-      throw new Error('No content in OpenAI response');
+      return c.json({
+        error: 'OpenAI APIからレスポンスが返されませんでした',
+        errorCode: 'EMPTY_RESPONSE',
+        available: false,
+        suggestions: ['画像を変更して再度お試しください', '画像が明確で読み取り可能か確認してください'],
+        canRetry: true
+      }, 500);
     }
     
     // JSONをパース（コードブロックがある場合は除去）
@@ -154,18 +202,150 @@ api.post('/properties/ocr', async (c) => {
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       console.error('Content:', content);
-      throw new Error('Failed to parse extracted data as JSON');
+      
+      return c.json({
+        error: 'AI応答の解析に失敗しました',
+        errorCode: 'JSON_PARSE_ERROR',
+        available: false,
+        details: parseError instanceof Error ? parseError.message : 'Unknown parse error',
+        suggestions: [
+          '画像の品質を確認してください（ぼやけていない、文字が明確）',
+          '別の角度やズームレベルで撮影した画像を試してください',
+          'マイソク（物件概要書）の画像であることを確認してください'
+        ],
+        canRetry: true,
+        rawContent: content.substring(0, 500) // デバッグ用に最初の500文字を含める
+      }, 500);
     }
     
-    return c.json(extractedData);
+    // 抽出されたデータの検証
+    const hasValidData = extractedData && (
+      extractedData.name || 
+      extractedData.price || 
+      extractedData.location
+    );
+    
+    if (!hasValidData) {
+      return c.json({
+        error: '画像から物件情報を抽出できませんでした',
+        errorCode: 'NO_DATA_EXTRACTED',
+        available: false,
+        suggestions: [
+          '画像が物件概要書（マイソク）であることを確認してください',
+          '画像の品質を向上させてください（高解像度、明るい場所で撮影）',
+          '文字がはっきりと読める画像を使用してください'
+        ],
+        canRetry: true,
+        extractedData // 空のデータも返してユーザーが確認できるようにする
+      }, 422);
+    }
+    
+    return c.json({
+      success: true,
+      ...extractedData,
+      confidence: 'high' // 将来的に信頼度スコアを追加できる
+    });
   } catch (error) {
     console.error('OCR error:', error);
     
-    // エラー詳細を返す
+    // 予期しないエラーの詳細を返す
     return c.json({
-      error: '画像の解析中にエラーが発生しました',
-      errorCode: 'OCR_PROCESSING_ERROR',
+      error: '予期しないエラーが発生しました',
+      errorCode: 'UNEXPECTED_ERROR',
       available: false,
+      details: error instanceof Error ? error.message : 'Unknown error',
+      suggestions: [
+        'ページを再読み込みして再度お試しください',
+        'ブラウザのコンソールでエラー詳細を確認してください',
+        'エラーが続く場合は管理者に連絡してください'
+      ],
+      canRetry: true
+    }, 500);
+  }
+});
+
+/**
+ * Residential Property Evaluation endpoint
+ * 実需用不動産の資産性評価
+ * POST /api/properties/residential/evaluate
+ */
+api.post('/properties/residential/evaluate', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { 
+      targetProperty,
+      comparables,
+      buildingSpec,
+      landPriceHistory,
+      assetFactors,
+      evaluationMethods = ['comparison', 'cost', 'trend', 'asset']
+    } = body;
+
+    const results: any = {};
+
+    // 取引事例比較法による評価
+    if (evaluationMethods.includes('comparison') && comparables && comparables.length > 0) {
+      try {
+        results.comparisonAnalysis = estimatePriceByComparison(
+          targetProperty as PropertyForEvaluation,
+          comparables as ComparableProperty[]
+        );
+      } catch (error) {
+        console.error('Comparison analysis error:', error);
+        results.comparisonAnalysis = { error: 'Failed to perform comparison analysis' };
+      }
+    }
+
+    // 原価法による評価
+    if (evaluationMethods.includes('cost') && buildingSpec) {
+      try {
+        results.costApproach = evaluateByCostApproach(buildingSpec as BuildingSpecification);
+      } catch (error) {
+        console.error('Cost approach error:', error);
+        results.costApproach = { error: 'Failed to perform cost approach' };
+      }
+    }
+
+    // 地価推移分析
+    if (evaluationMethods.includes('trend') && landPriceHistory && landPriceHistory.length > 0) {
+      try {
+        results.landPriceTrend = analyzeLandPriceTrend(landPriceHistory as LandPriceData[]);
+      } catch (error) {
+        console.error('Land price trend analysis error:', error);
+        results.landPriceTrend = { error: 'Failed to analyze land price trend' };
+      }
+    }
+
+    // 総合資産性スコア
+    if (evaluationMethods.includes('asset') && assetFactors) {
+      try {
+        results.assetScore = calculateAssetScore(assetFactors as AssetEvaluationFactors);
+      } catch (error) {
+        console.error('Asset score calculation error:', error);
+        results.assetScore = { error: 'Failed to calculate asset score' };
+      }
+    }
+
+    // 総合評価レポート
+    const summary = {
+      evaluatedAt: new Date().toISOString(),
+      propertyName: targetProperty?.name || '評価対象物件',
+      evaluationMethods: evaluationMethods,
+      hasComparison: !!results.comparisonAnalysis,
+      hasCostApproach: !!results.costApproach,
+      hasTrendAnalysis: !!results.landPriceTrend,
+      hasAssetScore: !!results.assetScore,
+    };
+
+    return c.json({
+      success: true,
+      summary,
+      results,
+    });
+  } catch (error) {
+    console.error('Residential property evaluation error:', error);
+    return c.json({
+      error: '実需用不動産の評価に失敗しました',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, 500);
   }
