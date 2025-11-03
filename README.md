@@ -34,10 +34,13 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🚀 デモ
 
-**🆕 テスト環境（v6.4.0）**: [https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai](https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai)  
-✨ **全APIキー設定済み・全機能稼働中** - 実機テスト可能
+**🚀 本番環境（v6.4.0 最新）**: [https://c8bdea2d.my-agent-analytics.pages.dev](https://c8bdea2d.my-agent-analytics.pages.dev)  
+✨ **全APIキー設定完了・13機能完全稼働中** 🎉
 
-**本番環境（v6.2.1）**: [https://64db9cd6.my-agent-analytics.pages.dev](https://64db9cd6.my-agent-analytics.pages.dev)
+**🧪 テスト環境（v6.4.0）**: [https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai](https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai)  
+✨ **サンドボックス環境** - 開発・実機テスト用
+
+**本番環境（旧バージョン）**: [https://64db9cd6.my-agent-analytics.pages.dev](https://64db9cd6.my-agent-analytics.pages.dev) (v6.2.1)
 
 **本番環境（旧バージョン）**:
 - v6.2.0: [https://a57dded5.my-agent-analytics.pages.dev](https://a57dded5.my-agent-analytics.pages.dev)
@@ -914,6 +917,7 @@ POST /api/properties/compare
 **新機能**: **全APIキー設定完了** + **ファクトチェックUI完成** + **自動テスト実装** ✨✨✨  
 **リリース状態**: 本番環境稼働中 🚀  
 **テスト環境URL**: [https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai](https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai)  
+**本番URL（v6.4.0最新）**: [https://c8bdea2d.my-agent-analytics.pages.dev](https://c8bdea2d.my-agent-analytics.pages.dev)  
 **本番URL（v6.2.1）**: [https://64db9cd6.my-agent-analytics.pages.dev](https://64db9cd6.my-agent-analytics.pages.dev)  
 **本番URL（v6.2.0）**: [https://a57dded5.my-agent-analytics.pages.dev](https://a57dded5.my-agent-analytics.pages.dev)  
 **本番URL（v6.1.0）**: [https://18f19633.my-agent-analytics.pages.dev](https://18f19633.my-agent-analytics.pages.dev)  
