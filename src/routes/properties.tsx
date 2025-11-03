@@ -1235,6 +1235,52 @@ properties.get('/:id/comprehensive-report', async (c) => {
                 </div>
             </section>
 
+            <!-- 物件周辺地図 -->
+            <section class="glass-card rounded-2xl shadow-xl p-8 mb-8 fade-in">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-map-marked-alt text-red-600 mr-3"></i>物件周辺地図
+                </h2>
+                
+                <div id="maps-container" class="space-y-6">
+                    <div id="maps-loading" class="text-center py-12">
+                        <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                        <p class="text-gray-600">地図を生成中...</p>
+                    </div>
+                    
+                    <!-- 1kmスケール地図 -->
+                    <div id="map-1km-section" class="hidden">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                            周辺地図（1kmスケール）
+                        </h3>
+                        <div class="border border-gray-200 rounded-lg overflow-hidden">
+                            <img id="map-1km-image" src="" alt="1km周辺地図" class="w-full h-auto">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            ※ この地図は参考用です。正確な位置情報は現地でご確認ください。
+                        </p>
+                    </div>
+                    
+                    <!-- 200mスケール地図 -->
+                    <div id="map-200m-section" class="hidden">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                            周辺地図（200mスケール）
+                        </h3>
+                        <div class="border border-gray-200 rounded-lg overflow-hidden">
+                            <img id="map-200m-image" src="" alt="200m周辺地図" class="w-full h-auto">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            ※ この地図は参考用です。正確な位置情報は現地でご確認ください。
+                        </p>
+                    </div>
+                    
+                    <div id="maps-error" class="hidden text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
+                        <p class="text-gray-600">地図を生成できませんでした</p>
+                        <p class="text-sm text-gray-500 mt-2">Google Maps APIキーが設定されていない可能性があります</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- 投資推奨 -->
             <section class="glass-card rounded-2xl shadow-xl p-8 mb-8 fade-in">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">
@@ -1322,6 +1368,9 @@ properties.get('/:id/comprehensive-report', async (c) => {
                     
                     analysisData = analysisResponse.data.analysis;
                     
+                    // 地図を生成（並行処理）
+                    loadPropertyMaps(property.location, property.latitude, property.longitude);
+                    
                     // UIを更新
                     updateUI();
                     
@@ -1347,6 +1396,44 @@ properties.get('/:id/comprehensive-report', async (c) => {
                             </button>
                         </div>
                     \`;
+                }
+            }
+
+            // 地図生成関数
+            async function loadPropertyMaps(address, lat, lng) {
+                try {
+                    const response = await axios.post('/api/maps/generate', {
+                        address: address,
+                        lat: lat,
+                        lng: lng
+                    });
+
+                    if (response.data.success && response.data.maps) {
+                        const maps = response.data.maps;
+                        
+                        // ローディングを非表示
+                        document.getElementById('maps-loading').style.display = 'none';
+                        
+                        // 1km地図を表示
+                        const map1kmSection = document.getElementById('map-1km-section');
+                        const map1kmImage = document.getElementById('map-1km-image');
+                        map1kmImage.src = maps.map1km;
+                        map1kmSection.classList.remove('hidden');
+                        
+                        // 200m地図を表示
+                        const map200mSection = document.getElementById('map-200m-section');
+                        const map200mImage = document.getElementById('map-200m-image');
+                        map200mImage.src = maps.map200m;
+                        map200mSection.classList.remove('hidden');
+                    } else {
+                        throw new Error('Maps data not available');
+                    }
+                } catch (error) {
+                    console.error('Map generation error:', error);
+                    
+                    // エラー表示
+                    document.getElementById('maps-loading').style.display = 'none';
+                    document.getElementById('maps-error').classList.remove('hidden');
                 }
             }
 

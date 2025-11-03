@@ -3454,6 +3454,140 @@ api.post('/itandi/rental-trend', authMiddleware, async (c) => {
 });
 
 /**
+ * Itandi BB Rental Analysis Endpoint
+ * イタンジBB 賃貸相場分析エンドポイント
+ * POST /api/itandi/rental-analysis
+ */
+api.post('/itandi/rental-analysis', authMiddleware, async (c) => {
+  try {
+    const { prefecture, city, town, roomType, minArea, maxArea, minRent, maxRent } = await c.req.json();
+
+    if (!prefecture || !city) {
+      return c.json({ 
+        error: '都道府県と市区町村は必須です',
+        errorCode: 'MISSING_REQUIRED_PARAMS'
+      }, 400);
+    }
+
+    // Import Itandi Client
+    const { getItandiClient } = await import('../lib/itandi-client');
+    const itandiClient = getItandiClient();
+
+    // Execute rental analysis
+    const result = await itandiClient.getRentalAnalysis({
+      prefecture,
+      city,
+      town,
+      roomType,
+      minArea,
+      maxArea,
+      minRent,
+      maxRent
+    });
+
+    return c.json({
+      success: true,
+      ...result
+    });
+  } catch (error: any) {
+    console.error('Itandi rental analysis error:', error);
+    return c.json({
+      error: '賃貸相場の取得に失敗しました',
+      details: error.message,
+      errorCode: 'RENTAL_ANALYSIS_FAILED'
+    }, 500);
+  }
+});
+
+/**
+ * Itandi BB Rental Trend Endpoint
+ * イタンジBB 賃貸推移エンドポイント
+ * POST /api/itandi/rental-trend
+ */
+api.post('/itandi/rental-trend', authMiddleware, async (c) => {
+  try {
+    const { prefecture, city, town, roomType, minArea, maxArea, months } = await c.req.json();
+
+    if (!prefecture || !city) {
+      return c.json({ 
+        error: '都道府県と市区町村は必須です',
+        errorCode: 'MISSING_REQUIRED_PARAMS'
+      }, 400);
+    }
+
+    // Import Itandi Client
+    const { getItandiClient } = await import('../lib/itandi-client');
+    const itandiClient = getItandiClient();
+
+    // Execute rental trend analysis
+    const result = await itandiClient.getRentalTrend({
+      prefecture,
+      city,
+      town,
+      roomType,
+      minArea,
+      maxArea
+    }, months || 12);
+
+    return c.json({
+      success: true,
+      ...result
+    });
+  } catch (error: any) {
+    console.error('Itandi rental trend error:', error);
+    return c.json({
+      error: '賃貸推移の取得に失敗しました',
+      details: error.message,
+      errorCode: 'RENTAL_TREND_FAILED'
+    }, 500);
+  }
+});
+
+/**
+ * Generate Property Maps Endpoint
+ * 物件地図生成エンドポイント
+ * POST /api/maps/generate
+ */
+api.post('/maps/generate', authMiddleware, async (c) => {
+  try {
+    const { address, lat, lng } = await c.req.json();
+
+    if (!address && (!lat || !lng)) {
+      return c.json({
+        error: '住所または座標が必要です',
+        errorCode: 'MISSING_LOCATION_DATA'
+      }, 400);
+    }
+
+    // Import Google Maps Client
+    const { generateMapsForProperty } = await import('../lib/google-maps');
+
+    // Generate maps
+    const maps = await generateMapsForProperty(address, lat, lng);
+
+    if (!maps) {
+      return c.json({
+        error: 'Google Maps APIキーが設定されていません',
+        errorCode: 'MAPS_API_KEY_NOT_SET',
+        suggestion: '環境変数 GOOGLE_MAPS_API_KEY を設定してください'
+      }, 503);
+    }
+
+    return c.json({
+      success: true,
+      maps
+    });
+  } catch (error: any) {
+    console.error('Map generation error:', error);
+    return c.json({
+      error: '地図の生成に失敗しました',
+      details: error.message,
+      errorCode: 'MAP_GENERATION_FAILED'
+    }, 500);
+  }
+});
+
+/**
  * Stigmatized Property Check Endpoint
  * 事故物件（心理的瑕疵）調査エンドポイント
  * POST /api/properties/stigma-check

@@ -14,6 +14,14 @@
     }
   ],
   
+  // Environment variables (for local development, use .dev.vars file)
+  // For production, use: wrangler pages secret put <KEY>
+  // Example variables:
+  // - OPENAI_API_KEY: OpenAI API key for OCR and AI analysis
+  // - GOOGLE_MAPS_API_KEY: Google Maps API key for map generation
+  // - ITANDI_USERNAME: Itandi BB username (optional, hardcoded if not set)
+  // - ITANDI_PASSWORD: Itandi BB password (optional, hardcoded if not set)
+  
   // KV Namespace configuration (uncomment when needed)
   // "kv_namespaces": [
   //   {
