@@ -457,6 +457,21 @@ api.post('/properties/analyze', authMiddleware, async (c) => {
       downPayment: parseFloat(downPayment || 0),
     });
     
+    // Add input parameters to analysis result for display
+    const enhancedAnalysis = {
+      ...analysis,
+      grossIncome: parseFloat(grossIncome),
+      effectiveIncome: parseFloat(effectiveIncome),
+      operatingExpenses: parseFloat(operatingExpenses),
+      loanAmount: parseFloat(loanAmount || 0),
+      propertyPrice: parseFloat(propertyPrice),
+      interestRate: parseFloat(interestRate || 0),
+      loanTermYears: parseInt(loanTermYears || 0),
+      downPayment: parseFloat(downPayment || 0),
+      // Calculate monthly loan payment
+      monthlyPayment: analysis.annualDebtService / 12,
+    };
+    
     // Save analysis result if propertyId is provided
     if (propertyId && user) {
       const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -476,16 +491,16 @@ api.post('/properties/analyze', authMiddleware, async (c) => {
         analysis.dscr || null,
         analysis.ltv || null,
         analysis.monthlyCashFlow ? JSON.stringify(analysis.monthlyCashFlow) : null,
-        JSON.stringify(analysis),
+        JSON.stringify(enhancedAnalysis),
         now
       ).run();
       
-      analysis.id = analysisId;
+      enhancedAnalysis.id = analysisId;
     }
     
     return c.json({
       success: true,
-      analysis,
+      analysis: enhancedAnalysis,
     });
   } catch (error) {
     console.error('Analysis error:', error);

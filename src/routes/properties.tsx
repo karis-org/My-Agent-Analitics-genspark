@@ -779,15 +779,30 @@ properties.get('/:id/analyze', async (c) => {
                         
                         <div class="grid md:grid-cols-3 gap-6 mb-8">
                             <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
-                                <p class="text-sm text-gray-600 mb-2">表面利回り</p>
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-sm text-gray-600">表面利回り</p>
+                                    <button class="text-xs text-blue-600 hover:text-blue-800" onclick="alert('表面利回り（グロス利回り）\\n\\n計算式: 年間家賃収入 ÷ 物件価格 × 100\\n\\n経費を考慮せず、満室想定の年間家賃収入から算出する利回りです。物件の収益性を簡易的に比較する際に使用します。')">
+                                        <i class="fas fa-question-circle"></i>
+                                    </button>
+                                </div>
                                 <p class="text-3xl font-bold text-blue-600">\${(analysis.grossYield || 0).toFixed(2)}%</p>
                             </div>
                             <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
-                                <p class="text-sm text-gray-600 mb-2">実質利回り</p>
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-sm text-gray-600">実質利回り</p>
+                                    <button class="text-xs text-green-600 hover:text-green-800" onclick="alert('実質利回り（ネット利回り）\\n\\n計算式: NOI ÷ 物件価格 × 100\\n\\n運営費用（管理費、修繕費、固定資産税等）を差し引いた後の利回りです。実際の収益性をより正確に表します。')">
+                                        <i class="fas fa-question-circle"></i>
+                                    </button>
+                                </div>
                                 <p class="text-3xl font-bold text-green-600">\${(analysis.netYield || 0).toFixed(2)}%</p>
                             </div>
                             <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
-                                <p class="text-sm text-gray-600 mb-2">NOI</p>
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-sm text-gray-600">NOI (純収益)</p>
+                                    <button class="text-xs text-purple-600 hover:text-purple-800" onclick="alert('NOI (Net Operating Income / 純収益)\\n\\n計算式: 実効収入 - 運営費\\n\\n物件が生み出す純粋な営業利益です。ローン返済前の手取り収入を表します。物件の収益力を評価する重要な指標です。')">
+                                        <i class="fas fa-question-circle"></i>
+                                    </button>
+                                </div>
                                 <p class="text-3xl font-bold text-purple-600">¥\${Math.round(analysis.noi || 0).toLocaleString()}</p>
                             </div>
                         </div>
@@ -802,14 +817,23 @@ properties.get('/:id/analyze', async (c) => {
                                     </div>
                                     <div class="flex justify-between">
                                         <dt class="text-gray-600">年間実効収入:</dt>
+                                        <dd class="font-semibold text-sm">(稼働率考慮後)</dd>
                                         <dd class="font-semibold">¥\${Math.round(analysis.effectiveIncome || 0).toLocaleString()}</dd>
                                     </div>
                                     <div class="flex justify-between">
                                         <dt class="text-gray-600">年間運営費:</dt>
-                                        <dd class="font-semibold">¥\${Math.round(analysis.operatingExpenses || 0).toLocaleString()}</dd>
+                                        <dd class="font-semibold text-red-600">-¥\${Math.round(analysis.operatingExpenses || 0).toLocaleString()}</dd>
                                     </div>
-                                    <div class="flex justify-between border-t pt-3">
-                                        <dt class="text-gray-900 font-semibold">年間キャッシュフロー:</dt>
+                                    <div class="flex justify-between border-t pt-2">
+                                        <dt class="text-gray-800 font-medium">NOI (純収益):</dt>
+                                        <dd class="font-semibold">¥\${Math.round(analysis.noi || 0).toLocaleString()}</dd>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <dt class="text-gray-600">年間返済額:</dt>
+                                        <dd class="font-semibold text-red-600">-¥\${Math.round(analysis.annualDebtService || 0).toLocaleString()}</dd>
+                                    </div>
+                                    <div class="flex justify-between border-t pt-3 bg-blue-50 -mx-4 px-4 py-3 mt-3 rounded">
+                                        <dt class="text-gray-900 font-bold">年間キャッシュフロー:</dt>
                                         <dd class="font-bold text-lg \${(analysis.annualCashFlow || 0) >= 0 ? 'text-green-600' : 'text-red-600'}">
                                             ¥\${Math.round(analysis.annualCashFlow || 0).toLocaleString()}
                                         </dd>
@@ -828,17 +852,63 @@ properties.get('/:id/analyze', async (c) => {
                                         <dt class="text-gray-600">月々返済額:</dt>
                                         <dd class="font-semibold">¥\${Math.round(analysis.monthlyPayment || 0).toLocaleString()}</dd>
                                     </div>
-                                    <div class="flex justify-between">
-                                        <dt class="text-gray-600">LTV:</dt>
+                                    <div class="flex justify-between items-center">
+                                        <dt class="text-gray-600 flex items-center gap-2">
+                                            LTV:
+                                            <button class="text-xs text-blue-600 hover:text-blue-800" onclick="alert('LTV (Loan to Value / 融資比率)\\n\\n計算式: 借入額 ÷ 物件価格 × 100\\n\\n物件価格に対する借入金の割合です。一般的に80%以下が望ましいとされています。高すぎるとリスクが増加します。')">
+                                                <i class="fas fa-question-circle"></i>
+                                            </button>
+                                        </dt>
                                         <dd class="font-semibold">\${(analysis.ltv || 0).toFixed(1)}%</dd>
                                     </div>
-                                    <div class="flex justify-between">
-                                        <dt class="text-gray-600">DSCR:</dt>
-                                        <dd class="font-semibold">\${(analysis.dscr || 0).toFixed(2)}</dd>
+                                    <div class="flex justify-between items-center">
+                                        <dt class="text-gray-600 flex items-center gap-2">
+                                            DSCR:
+                                            <button class="text-xs text-blue-600 hover:text-blue-800" onclick="alert('DSCR (Debt Service Coverage Ratio / 債務償還カバー率)\\n\\n計算式: NOI ÷ 年間返済額\\n\\n収益で返済をカバーできるかを示す指標です。1.2以上が望ましく、1未満の場合は返済が困難になる可能性があります。')">
+                                                <i class="fas fa-question-circle"></i>
+                                            </button>
+                                        </dt>
+                                        <dd class="font-semibold \${(analysis.dscr || 0) >= 1.2 ? 'text-green-600' : 'text-red-600'}">\${(analysis.dscr || 0).toFixed(2)}</dd>
                                     </div>
                                 </dl>
                             </div>
                         </div>
+                        
+                        <!-- Risk Assessment -->
+                        \${analysis.riskFactors && analysis.riskFactors.length > 0 ? \`
+                            <div class="mt-8 p-6 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                                <h4 class="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    リスク要因
+                                </h4>
+                                <ul class="space-y-2">
+                                    \${analysis.riskFactors.map(factor => \`
+                                        <li class="text-sm text-yellow-900 flex items-start gap-2">
+                                            <i class="fas fa-circle text-xs mt-1.5"></i>
+                                            <span>\${factor}</span>
+                                        </li>
+                                    \`).join('')}
+                                </ul>
+                            </div>
+                        \` : ''}
+                        
+                        <!-- Recommendations -->
+                        \${analysis.recommendations && analysis.recommendations.length > 0 ? \`
+                            <div class="mt-6 p-6 bg-blue-50 border-l-4 border-blue-400 rounded">
+                                <h4 class="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-lightbulb"></i>
+                                    推奨事項
+                                </h4>
+                                <ul class="space-y-2">
+                                    \${analysis.recommendations.map(rec => \`
+                                        <li class="text-sm text-blue-900 flex items-start gap-2">
+                                            <i class="fas fa-check-circle text-xs mt-1.5"></i>
+                                            <span>\${rec}</span>
+                                        </li>
+                                    \`).join('')}
+                                </ul>
+                            </div>
+                        \` : ''}
                     </div>
                 \`;
                 
