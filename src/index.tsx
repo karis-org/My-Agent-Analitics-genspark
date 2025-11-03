@@ -226,7 +226,7 @@ app.get('/', (c) => {
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-2xl p-12 text-center text-white">
                 <h3 class="text-3xl font-bold mb-4">今すぐ無料で始めましょう</h3>
                 <p class="text-xl mb-8 opacity-90">
-                    アカウント作成は30秒。クレジットカード不要。
+                    アカウント作成は30秒。
                 </p>
                 <a href="/auth/login" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105 inline-block">
                     <i class="fas fa-user-plus mr-2"></i>無料アカウント作成
