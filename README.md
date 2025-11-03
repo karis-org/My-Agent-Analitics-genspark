@@ -13,7 +13,13 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 **🚀 面倒な設定は一切不要！ログインするだけですぐに使えます。**
 
-**✨ v6.7.1 更新情報** (NEW):
+**✨ v6.7.2 更新情報** (NEW):
+- ✅ **4件のバグ修正完了** - PDF読み込み、地域データ、ツールチップ、ロゴ
+- ✅ **東京23区全対応** - 不動産ライブラリで全地域データ取得可能
+- ✅ **ツールチップ修正** - LTV、DSCRの解説が正常に表示
+- ✅ **エラーメッセージ改善** - より明確な操作ガイド
+
+**✨ v6.7.1 更新情報**:
 - ✅ **インタラクティブダッシュボードUI** - 未来的なネオンブルーデザイン
 - ✅ **グラスモーフィズムカード** - 半透明背景 + ブラー効果
 - ✅ **パーティクルアニメーション** - 50個の動的パーティクル背景
@@ -56,8 +62,8 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🚀 デモ
 
-**🚀 本番環境（v6.4.0 最新）**: [https://de37f809.my-agent-analytics.pages.dev](https://de37f809.my-agent-analytics.pages.dev)  
-✨ **全APIキー設定完了・13機能完全稼働中・全テスト合格（6/6）** 🎉
+**🚀 本番環境（v6.7.2 最新）**: [https://95edbd46.my-agent-analytics.pages.dev](https://95edbd46.my-agent-analytics.pages.dev)  
+✨ **インタラクティブUI完成・バグ修正完了・リリース準備完了** 🎉
 
 **🧪 テスト環境（v6.4.0）**: [https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai](https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai)  
 ✨ **サンドボックス環境** - 開発・実機テスト用
@@ -1580,3 +1586,32 @@ GET    /templates/:id/edit               # テンプレート編集ページ
 10. ⏳ GitHubプッシュ - 次のステップ
 11. ⏳ プロジェクトバックアップ - 次のステップ
 12. ⏳ ユーザー/プロフェッショナルテスト - 次のステップ
+
+## 📝 ロゴアイコン背景透過化の手順
+
+現在のロゴアイコン（`public/icons/app-icon.png`）は黒背景があります。以下の手順で透過PNGに差し替えてください：
+
+### 方法1: 画像編集ソフトを使用
+1. Photoshop、GIMP、または オンラインツール（remove.bg等）を使用
+2. `public/icons/app-icon.png` を開く
+3. 黒背景を削除して透過にする
+4. PNG形式で保存（透過情報を保持）
+5. 同じファイル名で上書き
+
+### 方法2: SVGを使用（推奨）
+1. `public/icons/icon.svg` を編集
+2. `fill="#000000"` を `fill="transparent"` または削除
+3. SVGファイルをPNGに変換（複数サイズ）
+4. すべてのアイコンファイルを更新：
+   - `public/icons/app-icon.png`
+   - `public/icons/apple-touch-icon.png`
+   - `public/icons/icon-192x192.png`
+   - `public/icons/icon-384x384.png`
+   - `public/icons/icon-512x512.png`
+
+### 更新後
+```bash
+# ビルドとデプロイ
+npm run build
+npx wrangler pages deploy dist --project-name my-agent-analytics
+```
