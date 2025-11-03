@@ -65,6 +65,10 @@ app.route('/help', helpRoutes)
 import residentialRoutes from './routes/residential'
 app.route('/residential', residentialRoutes)
 
+// Itandi BB routes (requires authentication)
+import itandiRoutes from './routes/itandi'
+app.route('/itandi', itandiRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 

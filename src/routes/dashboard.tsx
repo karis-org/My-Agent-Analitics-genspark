@@ -154,8 +154,19 @@ dashboard.get('/', (c) => {
                             <i class="fas fa-home"></i>
                         </div>
                         <div>
-                            <p class="font-semibold text-gray-900">実需用不動産評価<span class="ml-2 text-xs bg-orange-500 text-white px-2 py-1 rounded">NEW</span></p>
+                            <p class="font-semibold text-gray-900">実需用不動産評価</p>
                             <p class="text-sm text-gray-500">取引事例比較・原価法</p>
+                        </div>
+                    </a>
+
+                    <a href="/itandi/rental-market" 
+                       class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
+                        <div class="text-3xl text-indigo-600 mr-4">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">イタンジBB 賃貸相場<span class="ml-2 text-xs bg-indigo-500 text-white px-2 py-1 rounded">NEW</span></p>
+                            <p class="text-sm text-gray-500">賃貸市場分析・推移グラフ</p>
                         </div>
                     </a>
 
