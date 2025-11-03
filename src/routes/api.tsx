@@ -968,7 +968,7 @@ api.delete('/properties/:id', authMiddleware, async (c) => {
  * Property detail endpoint
  * GET /api/properties/:id
  */
-api.get('/properties/:id', async (c) => {
+api.get('/properties/:id', authMiddleware, async (c) => {
   try {
     const { env, var: { user } } = c;
     const propertyId = c.req.param('id');
