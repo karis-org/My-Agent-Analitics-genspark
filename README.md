@@ -268,7 +268,7 @@ npm install
 
 ```bash
 # .dev.vars ファイルを作成・編集
-# 詳細な設定方法は API_KEY_SETUP.md を参照
+# 詳細な設定方法は docs/API_KEY_SETUP.md を参照
 ```
 
 **✅ v6.4.0: 全APIキー設定完了（9/9 = 100%）**
@@ -285,7 +285,7 @@ npm install
 - ✅ `REINS_LOGIN_ID` / `REINS_PASSWORD` - 不動産流通情報（レインズ連携）
 
 **📖 詳細ガイド**: 
-- [API_KEY_SETUP_COMPLETE.md](./API_KEY_SETUP_COMPLETE.md) - ✨ v6.4.0 APIキー設定完了レポート
+- [API_KEY_SETUP_COMPLETE.md](./releases/API_KEY_SETUP_COMPLETE.md) - ✨ v6.4.0 APIキー設定完了レポート
 - [API_KEY_SETUP_GUIDE.md](./docs/API_KEY_SETUP_GUIDE.md) - APIキー取得と設定の完全ガイド
 - [CLOUDFLARE_DEPLOYMENT.md](./docs/CLOUDFLARE_DEPLOYMENT.md) - Cloudflare本番環境へのデプロイ手順
 
@@ -895,17 +895,33 @@ POST /api/properties/compare
 
 ## 📚 ドキュメント
 
-### Google OAuth設定（重要！）
-- **[OAUTH_QUICK_FIX.md](OAUTH_QUICK_FIX.md)** - 404エラー5分で解決 🔥
-- **[OAUTH_TROUBLESHOOTING_GUIDE.md](OAUTH_TROUBLESHOOTING_GUIDE.md)** - 完全トラブルシューティングガイド
-- **[GOOGLE_CLOUD_CONSOLE_SETUP.md](GOOGLE_CLOUD_CONSOLE_SETUP.md)** - 基本的なOAuth設定
+### 📖 セットアップガイド
+- **[QUICK_START.md](./docs/QUICK_START.md)** - 5分で起動する最短手順 ⚡
+- **[STARTUP_GUIDE.md](./docs/STARTUP_GUIDE.md)** - 詳細な起動手順書
+- **[USER_MANUAL.md](./docs/USER_MANUAL.md)** - ユーザーマニュアル
 
-### その他のドキュメント
-- **[RELEASE_NOTES_v2.0.0.md](RELEASE_NOTES_v2.0.0.md)** - リリースノート
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - デプロイメントガイド
-- **[USER_MANUAL.md](USER_MANUAL.md)** - ユーザーマニュアル
-- **[STARTUP_GUIDE.md](STARTUP_GUIDE.md)** - 起動手順書
-- **[TEST_RESULTS.md](TEST_RESULTS.md)** - テスト結果
+### 🔐 認証設定（重要！）
+- **[GOOGLE_OAUTH_SETUP.md](./docs/GOOGLE_OAUTH_SETUP.md)** - Google OAuth設定ガイド
+- **[OAUTH_TROUBLESHOOTING_GUIDE.md](./docs/OAUTH_TROUBLESHOOTING_GUIDE.md)** - トラブルシューティング
+- **[GOOGLE_CLOUD_CONSOLE_SETUP.md](./docs/GOOGLE_CLOUD_CONSOLE_SETUP.md)** - Google Cloud Console設定
+
+### 🔑 APIキー設定
+- **[API_KEY_SETUP.md](./docs/API_KEY_SETUP.md)** - APIキー設定ガイド
+- **[API_KEY_SETUP_GUIDE.md](./docs/API_KEY_SETUP_GUIDE.md)** - 詳細な取得手順
+- **[API_KEY_SETUP_COMPLETE.md](./releases/API_KEY_SETUP_COMPLETE.md)** - v6.4.0 設定完了レポート ✅
+
+### 🚀 デプロイメント
+- **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - デプロイメント概要
+- **[DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md)** - 詳細なデプロイ手順
+- **[CLOUDFLARE_DEPLOYMENT.md](./docs/CLOUDFLARE_DEPLOYMENT.md)** - Cloudflare Pages デプロイ
+
+### 🗄️ データベース
+- **[DATABASE_SETUP_GUIDE.md](./docs/DATABASE_SETUP_GUIDE.md)** - D1データベースセットアップ
+
+### 📝 リリースノート
+- **[V6.4.0_RELEASE_COMPLETE.md](./releases/V6.4.0_RELEASE_COMPLETE.md)** - v6.4.0 完全リリースレポート ✨
+- **[FACT_CHECK_UI_COMPLETE.md](./releases/FACT_CHECK_UI_COMPLETE.md)** - ファクトチェックUI実装
+- **[FUNCTION_TEST_REPORT.md](./releases/FUNCTION_TEST_REPORT.md)** - 機能テスト結果
 
 ---
 
@@ -942,7 +958,7 @@ POST /api/properties/compare
 - 本番環境: `wrangler pages secret put` で全11シークレット設定完了
 - 検証スクリプト: `check-api-keys.sh` で設定確認（100%）
 
-**詳細ドキュメント**: [API_KEY_SETUP_COMPLETE.md](./API_KEY_SETUP_COMPLETE.md)
+**詳細ドキュメント**: [API_KEY_SETUP_COMPLETE.md](./releases/API_KEY_SETUP_COMPLETE.md)
 
 ### ✅ ファクトチェックUI完全実装
 API実装のみだったファクトチェック機能に、完全なWebインターフェースを追加しました。
@@ -963,7 +979,7 @@ API実装のみだったファクトチェック機能に、完全なWebイン�
 - `src/routes/fact-check.tsx` - ファクトチェックUIページ（19,356バイト）
 - ダッシュボードに「ファクトチェック」カードを追加（tealカラーテーマ）
 
-**詳細ドキュメント**: [FACT_CHECK_UI_COMPLETE.md](./FACT_CHECK_UI_COMPLETE.md)
+**詳細ドキュメント**: [FACT_CHECK_UI_COMPLETE.md](./releases/FACT_CHECK_UI_COMPLETE.md)
 
 ### 🏠 イタンジBB 賃貸相場分析UI完成
 イタンジBB APIを活用した賃貸市場分析ページに、Chart.jsによるビジュアライゼーションを実装しました。
@@ -1002,7 +1018,7 @@ API実装のみだったファクトチェック機能に、完全なWebイン�
 - カラーコード付き出力（緑=成功、赤=失敗）
 - 各テストの実行時間計測
 
-**詳細ドキュメント**: [FUNCTION_TEST_REPORT.md](./FUNCTION_TEST_REPORT.md)
+**詳細ドキュメント**: [FUNCTION_TEST_REPORT.md](./releases/FUNCTION_TEST_REPORT.md)
 
 ### 🌐 サンドボックステスト環境
 機能確認用の公開URLを提供しています。
@@ -1018,9 +1034,9 @@ API実装のみだったファクトチェック機能に、完全なWebイン�
 開発者向けの詳細ドキュメントを追加しました。
 
 **新規ドキュメント**:
-- `API_KEY_SETUP_COMPLETE.md` - APIキー設定完了レポート（6,271バイト）
-- `FACT_CHECK_UI_COMPLETE.md` - ファクトチェックUI実装ドキュメント（4,871バイト）
-- `FUNCTION_TEST_REPORT.md` - 機能テスト結果レポート（5,708バイト）
+- `releases/API_KEY_SETUP_COMPLETE.md` - APIキー設定完了レポート（6,271バイト）
+- `releases/FACT_CHECK_UI_COMPLETE.md` - ファクトチェックUI実装ドキュメント（4,871バイト）
+- `releases/FUNCTION_TEST_REPORT.md` - 機能テスト結果レポート（5,708バイト）
 
 ### 🎯 v6.4.0 達成状況まとめ
 
