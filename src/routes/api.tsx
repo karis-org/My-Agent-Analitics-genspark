@@ -3375,4 +3375,40 @@ api.post('/itandi/rental-trend', authMiddleware, async (c) => {
   }
 });
 
+/**
+ * Stigmatized Property Check Endpoint
+ * 事故物件（心理的瑕疵）調査エンドポイント
+ * POST /api/properties/stigma-check
+ */
+api.post('/properties/stigma-check', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { address, propertyName } = body;
+
+    if (!address) {
+      return c.json({ error: 'Address is required' }, 400);
+    }
+
+    // Initialize Stigma Checker
+    const { StigmatizedPropertyChecker } = await import('../lib/stigma-checker');
+    const checker = new StigmatizedPropertyChecker(env.OPENAI_API_KEY || 'demo');
+
+    // Execute stigma check
+    const result = await checker.checkProperty(address, propertyName);
+
+    return c.json({
+      success: true,
+      mode: (!env.OPENAI_API_KEY || env.OPENAI_API_KEY === 'demo') ? 'demonstration' : 'full',
+      ...result,
+    });
+  } catch (error: any) {
+    console.error('Stigma check error:', error);
+    return c.json({
+      error: '事故物件調査に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
 export default api;

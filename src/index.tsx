@@ -242,7 +242,7 @@ app.get('/', (c) => {
                         <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">My Agent Analytics</span>
                     </h4>
                     <p class="text-gray-400 text-sm mb-6">
-                        不動産投資をスマートに。AIを活用した次世代の分析プラットフォーム。
+                        不動産投資をスマートに。AIを活用した次世代の分析システム。
                     </p>
                     <div class="border-t border-gray-800 pt-8">
                         <p class="text-sm text-gray-400">&copy; 2025 My Agent Analytics. All rights reserved.</p>
