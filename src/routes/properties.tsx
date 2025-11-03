@@ -762,4 +762,684 @@ properties.get('/:id/analyze', async (c) => {
   `);
 });
 
+/**
+ * Comprehensive Analysis Report Page
+ * 統合分析レポートページ - すべてのデータを統合した高品質な分析結果表示
+ * GET /properties/:id/comprehensive-report
+ */
+properties.get('/:id/comprehensive-report', async (c) => {
+  const user = c.get('user');
+  const propertyId = c.req.param('id');
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>統合分析レポート - My Agent Analytics</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap');
+            body { 
+                font-family: 'Noto Sans JP', sans-serif;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            }
+            
+            .glass-card {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }
+            
+            .chart-container {
+                position: relative;
+                height: 300px;
+                margin-bottom: 2rem;
+            }
+            
+            .score-ring {
+                stroke-dasharray: 282.6;
+                transition: stroke-dashoffset 1s ease-in-out;
+            }
+            
+            .rating-S { color: #FFD700; }
+            .rating-A { color: #4CAF50; }
+            .rating-B { color: #2196F3; }
+            .rating-C { color: #FF9800; }
+            .rating-D { color: #F44336; }
+            
+            .metric-card {
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            
+            .metric-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            .fade-in {
+                animation: fadeIn 0.6s ease-out forwards;
+            }
+            
+            .loading-spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #3498db;
+                border-radius: 50%;
+                width: 60px;
+                height: 60px;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .progress-bar {
+                transition: width 1s ease-in-out;
+            }
+        </style>
+    </head>
+    <body class="min-h-screen">
+        <!-- ヘッダー -->
+        <header class="glass-card shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <a href="/dashboard">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-12 w-12">
+                        </a>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">統合分析レポート</h1>
+                            <p class="text-sm text-gray-600">Comprehensive Property Analysis</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-print mr-2"></i>印刷
+                        </button>
+                        <button onclick="downloadPDF()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-file-pdf mr-2"></i>PDF
+                        </button>
+                        <a href="/properties/\${propertyId}" class="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100">
+                            <i class="fas fa-arrow-left mr-2"></i>戻る
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ローディング画面 -->
+        <div id="loading" class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+            <div class="text-center">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-xl font-semibold text-gray-700">分析を実行中...</p>
+                <p class="text-sm text-gray-500 mt-2">データを収集して統合分析を行っています</p>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <main id="main-content" class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8" style="display: none;">
+            
+            <!-- エグゼクティブサマリー -->
+            <section id="executive-summary" class="glass-card rounded-2xl shadow-2xl p-8 mb-8 fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-bold text-gray-900">
+                        <i class="fas fa-star text-yellow-500 mr-3"></i>エグゼクティブサマリー
+                    </h2>
+                    <div id="overall-rating" class="text-6xl font-black"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h3 id="property-name" class="text-2xl font-bold text-gray-800 mb-2"></h3>
+                        <p id="property-location" class="text-gray-600 mb-4"></p>
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-semibold">
+                                <span id="property-type"></span>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-900">
+                                ¥<span id="property-price"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl p-6">
+                            <div class="text-sm font-medium mb-2">総合スコア</div>
+                            <div class="flex items-end justify-between">
+                                <div class="text-5xl font-black" id="total-score"></div>
+                                <div class="text-xl opacity-90">/ 100</div>
+                            </div>
+                            <div class="mt-3 text-sm opacity-90" id="recommendation-badge"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <h4 class="font-semibold text-gray-900 mb-3">AIによる総合評価</h4>
+                    <p id="ai-summary" class="text-gray-700 leading-relaxed"></p>
+                </div>
+            </section>
+
+            <!-- スコアカードダッシュボード -->
+            <section id="scorecard" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+                <div class="metric-card glass-card rounded-xl shadow-lg p-6">
+                    <div class="text-sm font-medium text-gray-600 mb-2">財務指標</div>
+                    <div class="text-3xl font-bold text-gray-900 mb-2" id="financial-score"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="financial-progress" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card glass-card rounded-xl shadow-lg p-6">
+                    <div class="text-sm font-medium text-gray-600 mb-2">市場ポジション</div>
+                    <div class="text-3xl font-bold text-gray-900 mb-2" id="market-score"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="market-progress" class="progress-bar bg-green-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card glass-card rounded-xl shadow-lg p-6">
+                    <div class="text-sm font-medium text-gray-600 mb-2">立地品質</div>
+                    <div class="text-3xl font-bold text-gray-900 mb-2" id="location-score"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="location-progress" class="progress-bar bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card glass-card rounded-xl shadow-lg p-6">
+                    <div class="text-sm font-medium text-gray-600 mb-2">需要予測</div>
+                    <div class="text-3xl font-bold text-gray-900 mb-2" id="demand-score"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="demand-progress" class="progress-bar bg-orange-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="metric-card glass-card rounded-xl shadow-lg p-6">
+                    <div class="text-sm font-medium text-gray-600 mb-2">リスク評価</div>
+                    <div class="text-3xl font-bold text-gray-900 mb-2" id="risk-score"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="risk-progress" class="progress-bar bg-red-600 h-2 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- チャートセクション -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- レーダーチャート -->
+                <section class="glass-card rounded-2xl shadow-xl p-6 fade-in">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-chart-area text-indigo-600 mr-2"></i>総合評価レーダー
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="radar-chart"></canvas>
+                    </div>
+                </section>
+
+                <!-- スコアブレイクダウンバーチャート -->
+                <section class="glass-card rounded-2xl shadow-xl p-6 fade-in">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">
+                        <i class="fas fa-chart-bar text-green-600 mr-2"></i>スコア内訳
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="breakdown-chart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 市場分析 -->
+            <section class="glass-card rounded-2xl shadow-xl p-8 mb-8 fade-in">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-chart-line text-blue-600 mr-3"></i>市場分析
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-blue-50 rounded-xl p-6">
+                        <div class="text-sm text-blue-600 font-medium mb-2">市場平均価格</div>
+                        <div class="text-2xl font-bold text-blue-900" id="market-avg-price"></div>
+                        <div class="text-sm text-blue-700 mt-2" id="price-vs-market"></div>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-xl p-6">
+                        <div class="text-sm text-green-600 font-medium mb-2">価格ポジション</div>
+                        <div class="text-2xl font-bold text-green-900" id="price-position"></div>
+                        <div class="text-sm text-green-700 mt-2" id="price-percentile"></div>
+                    </div>
+                    
+                    <div class="bg-purple-50 rounded-xl p-6">
+                        <div class="text-sm text-purple-600 font-medium mb-2">市場競争力</div>
+                        <div class="text-2xl font-bold text-purple-900" id="competitiveness"></div>
+                        <div class="text-sm text-purple-700 mt-2" id="market-trend"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="market-trend-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- 需要予測 -->
+            <section class="glass-card rounded-2xl shadow-xl p-8 mb-8 fade-in">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-users text-orange-600 mr-3"></i>需要予測
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-4">賃貸需要</h4>
+                        <div class="flex items-center mb-4">
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">需要スコア</span>
+                                    <span class="text-sm font-bold text-gray-900" id="rental-demand-score"></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div id="rental-demand-bar" class="bg-orange-500 h-3 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-orange-50 rounded-lg p-4">
+                            <div class="font-medium text-orange-900 mb-2">プラス要因</div>
+                            <ul id="rental-positive-factors" class="text-sm text-orange-800 space-y-1"></ul>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-4">購入需要</h4>
+                        <div class="flex items-center mb-4">
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-700">需要スコア</span>
+                                    <span class="text-sm font-bold text-gray-900" id="buyer-demand-score"></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div id="buyer-demand-bar" class="bg-blue-500 h-3 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <div class="font-medium text-blue-900 mb-2">プラス要因</div>
+                            <ul id="buyer-positive-factors" class="text-sm text-blue-800 space-y-1"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 投資推奨 -->
+            <section class="glass-card rounded-2xl shadow-xl p-8 mb-8 fade-in">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-lightbulb text-yellow-600 mr-3"></i>投資推奨
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-semibold text-gray-900">最終判断</h4>
+                            <div id="final-action-badge" class="px-4 py-2 rounded-full font-bold"></div>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-6 mb-4">
+                            <h5 class="font-medium text-gray-700 mb-3">判断理由</h5>
+                            <ul id="recommendation-reasoning" class="space-y-2"></ul>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-4">AIによる投資推奨</h4>
+                        <div class="bg-indigo-50 rounded-xl p-6">
+                            <p id="ai-recommendation" class="text-gray-700 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-green-50 rounded-xl p-6">
+                        <h5 class="font-semibold text-green-900 mb-3">
+                            <i class="fas fa-check-circle mr-2"></i>主な投資機会
+                        </h5>
+                        <ul id="key-opportunities" class="space-y-2 text-sm text-green-800"></ul>
+                    </div>
+                    
+                    <div class="bg-red-50 rounded-xl p-6">
+                        <h5 class="font-semibold text-red-900 mb-3">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>主なリスク
+                        </h5>
+                        <ul id="key-risks" class="space-y-2 text-sm text-red-800"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 詳細データ -->
+            <section class="glass-card rounded-2xl shadow-xl p-8 mb-8 fade-in">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-database text-gray-600 mr-3"></i>詳細データ
+                </h2>
+                <div id="detailed-data" class="space-y-4"></div>
+            </section>
+
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script>
+            let analysisData = null;
+            let charts = {};
+
+            // ページロード時に分析を実行
+            async function loadComprehensiveAnalysis() {
+                try {
+                    // 物件データを取得
+                    const propertyResponse = await axios.get('/api/properties/\${propertyId}');
+                    const property = propertyResponse.data.property;
+                    
+                    if (!property) {
+                        throw new Error('物件が見つかりません');
+                    }
+                    
+                    // 統合分析を実行
+                    const analysisResponse = await axios.post('/api/properties/comprehensive-analysis', {
+                        name: property.name,
+                        propertyType: 'investment', // TODO: 物件タイプを適切に設定
+                        price: property.price,
+                        location: property.location || '東京都',
+                        area: property.total_floor_area || 65,
+                        age: property.age || 5,
+                        distanceFromStation: property.distance_from_station || 10,
+                        prefCode: '13', // TODO: 都道府県コードを適切に設定
+                        cityCode: '13101',
+                        structure: property.structure,
+                        // 収益物件の場合の追加データ
+                        // monthlyRent, grossIncome, etc.
+                    });
+                    
+                    analysisData = analysisResponse.data.analysis;
+                    
+                    // UIを更新
+                    updateUI();
+                    
+                    // ローディングを非表示、コンテンツを表示
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('main-content').style.display = 'block';
+                    
+                    // アニメーション開始
+                    setTimeout(() => {
+                        animateProgressBars();
+                        initializeCharts();
+                    }, 100);
+                    
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    document.getElementById('loading').innerHTML = \`
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-6xl mb-4"></i>
+                            <p class="text-xl font-semibold text-gray-700">分析に失敗しました</p>
+                            <p class="text-sm text-gray-500 mt-2">\${error.response?.data?.error || error.message}</p>
+                            <button onclick="window.location.reload()" class="mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                                再試行
+                            </button>
+                        </div>
+                    \`;
+                }
+            }
+
+            function updateUI() {
+                if (!analysisData) return;
+                
+                // エグゼクティブサマリー
+                document.getElementById('property-name').textContent = analysisData.propertyName;
+                document.getElementById('property-location').textContent = analysisData.marketContext.area || 'N/A';
+                document.getElementById('property-type').textContent = analysisData.propertyType === 'investment' ? '収益物件' : '実需物件';
+                document.getElementById('property-price').textContent = (analysisData.marketContext.averagePrice || 0).toLocaleString();
+                
+                // 総合スコアとレーティング
+                const rating = analysisData.investmentQuality.rating;
+                const totalScore = analysisData.investmentQuality.totalScore;
+                document.getElementById('overall-rating').textContent = rating;
+                document.getElementById('overall-rating').className = 'text-6xl font-black rating-' + rating;
+                document.getElementById('total-score').textContent = totalScore;
+                
+                // 推奨バッジ
+                const action = analysisData.finalRecommendation.action;
+                let badgeClass = 'bg-green-100 text-green-800';
+                let badgeText = '購入推奨';
+                if (action === 'consider') {
+                    badgeClass = 'bg-yellow-100 text-yellow-800';
+                    badgeText = '検討推奨';
+                } else if (action === 'avoid') {
+                    badgeClass = 'bg-red-100 text-red-800';
+                    badgeText = '回避推奨';
+                }
+                document.getElementById('recommendation-badge').innerHTML = \`<span class="px-3 py-1 rounded-full \${badgeClass}">\${badgeText}</span>\`;
+                
+                // AIサマリー
+                document.getElementById('ai-summary').textContent = analysisData.aiAnalysis.summary;
+                
+                // スコアカード
+                document.getElementById('financial-score').textContent = analysisData.investmentQuality.financialScore;
+                document.getElementById('market-score').textContent = analysisData.investmentQuality.marketScore;
+                document.getElementById('location-score').textContent = analysisData.investmentQuality.locationScore;
+                document.getElementById('demand-score').textContent = analysisData.investmentQuality.demandScore;
+                document.getElementById('risk-score').textContent = analysisData.investmentQuality.riskScore;
+                
+                // 市場分析
+                document.getElementById('market-avg-price').textContent = '¥' + (analysisData.marketContext.averagePrice || 0).toLocaleString();
+                document.getElementById('price-vs-market').textContent = \`市場比 \${analysisData.marketPosition.priceVsMarketAverage > 0 ? '+' : ''}\${analysisData.marketPosition.priceVsMarketAverage.toFixed(1)}%\`;
+                document.getElementById('price-position').textContent = analysisData.marketPosition.pricePosition === 'low' ? '割安' : 
+                    analysisData.marketPosition.pricePosition === 'high' ? '割高' : '平均的';
+                document.getElementById('price-percentile').textContent = \`上位\${(100 - analysisData.marketPosition.pricePercentile).toFixed(0)}%\`;
+                document.getElementById('competitiveness').textContent = analysisData.marketPosition.competitiveness === 'strong' ? '強い' :
+                    analysisData.marketPosition.competitiveness === 'weak' ? '弱い' : '普通';
+                document.getElementById('market-trend').textContent = \`変化率 \${analysisData.marketContext.priceTrend.changeRate.toFixed(1)}%\`;
+                
+                // 需要予測
+                document.getElementById('rental-demand-score').textContent = analysisData.demandForecast.rentalDemandScore;
+                document.getElementById('buyer-demand-score').textContent = analysisData.demandForecast.buyerDemandScore;
+                
+                // プラス要因
+                const rentalFactors = document.getElementById('rental-positive-factors');
+                rentalFactors.innerHTML = analysisData.demandForecast.factors.positive
+                    .map(f => \`<li><i class="fas fa-check text-green-600 mr-2"></i>\${f}</li>\`)
+                    .join('');
+                
+                const buyerFactors = document.getElementById('buyer-positive-factors');
+                buyerFactors.innerHTML = analysisData.demandForecast.factors.positive
+                    .map(f => \`<li><i class="fas fa-check text-blue-600 mr-2"></i>\${f}</li>\`)
+                    .join('');
+                
+                // 投資推奨
+                const actionBadge = document.getElementById('final-action-badge');
+                actionBadge.textContent = badgeText;
+                actionBadge.className = 'px-4 py-2 rounded-full font-bold ' + badgeClass;
+                
+                document.getElementById('recommendation-reasoning').innerHTML = analysisData.finalRecommendation.reasoning
+                    .map(r => \`<li class="flex items-start"><i class="fas fa-circle text-xs text-gray-400 mr-3 mt-2"></i><span class="text-gray-700">\${r}</span></li>\`)
+                    .join('');
+                
+                document.getElementById('ai-recommendation').textContent = analysisData.aiAnalysis.investmentRecommendation;
+                
+                document.getElementById('key-opportunities').innerHTML = analysisData.finalRecommendation.keyOpportunities
+                    .map(o => \`<li class="flex items-start"><i class="fas fa-plus-circle mr-2 mt-1"></i><span>\${o}</span></li>\`)
+                    .join('');
+                
+                document.getElementById('key-risks').innerHTML = analysisData.finalRecommendation.keyRisks
+                    .map(r => \`<li class="flex items-start"><i class="fas fa-minus-circle mr-2 mt-1"></i><span>\${r}</span></li>\`)
+                    .join('');
+                
+                // 詳細データ
+                const detailedData = document.getElementById('detailed-data');
+                detailedData.innerHTML = \`
+                    <div class="border-t border-gray-200 pt-4">
+                        <h4 class="font-semibold mb-2">分析完了時刻</h4>
+                        <p class="text-gray-700">\${new Date(analysisData.analyzedAt).toLocaleString('ja-JP')}</p>
+                    </div>
+                    <div class="border-t border-gray-200 pt-4">
+                        <h4 class="font-semibold mb-2">物件タイプ</h4>
+                        <p class="text-gray-700">\${analysisData.propertyType === 'investment' ? '収益用物件' : '実需用物件'}</p>
+                    </div>
+                \`;
+            }
+
+            function animateProgressBars() {
+                if (!analysisData) return;
+                
+                setTimeout(() => {
+                    document.getElementById('financial-progress').style.width = analysisData.investmentQuality.financialScore + '%';
+                    document.getElementById('market-progress').style.width = analysisData.investmentQuality.marketScore + '%';
+                    document.getElementById('location-progress').style.width = analysisData.investmentQuality.locationScore + '%';
+                    document.getElementById('demand-progress').style.width = analysisData.investmentQuality.demandScore + '%';
+                    document.getElementById('risk-progress').style.width = analysisData.investmentQuality.riskScore + '%';
+                    document.getElementById('rental-demand-bar').style.width = analysisData.demandForecast.rentalDemandScore + '%';
+                    document.getElementById('buyer-demand-bar').style.width = analysisData.demandForecast.buyerDemandScore + '%';
+                }, 300);
+            }
+
+            function initializeCharts() {
+                if (!analysisData) return;
+                
+                // レーダーチャート
+                const radarCtx = document.getElementById('radar-chart').getContext('2d');
+                charts.radar = new Chart(radarCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['財務指標', '市場ポジション', '立地品質', '需要予測', 'リスク'],
+                        datasets: [{
+                            label: '総合評価',
+                            data: [
+                                analysisData.investmentQuality.financialScore,
+                                analysisData.investmentQuality.marketScore,
+                                analysisData.investmentQuality.locationScore,
+                                analysisData.investmentQuality.demandScore,
+                                analysisData.investmentQuality.riskScore
+                            ],
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgb(54, 162, 235)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgb(54, 162, 235)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgb(54, 162, 235)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    stepSize: 20
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+                
+                // スコアブレイクダウンバーチャート
+                const breakdownCtx = document.getElementById('breakdown-chart').getContext('2d');
+                charts.breakdown = new Chart(breakdownCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: analysisData.investmentQuality.breakdown.map(b => b.category),
+                        datasets: [{
+                            label: 'スコア',
+                            data: analysisData.investmentQuality.breakdown.map(b => b.score),
+                            backgroundColor: [
+                                'rgba(54, 162, 235, 0.8)',
+                                'rgba(75, 192, 192, 0.8)',
+                                'rgba(153, 102, 255, 0.8)',
+                                'rgba(255, 159, 64, 0.8)',
+                                'rgba(255, 99, 132, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgb(54, 162, 235)',
+                                'rgb(75, 192, 192)',
+                                'rgb(153, 102, 255)',
+                                'rgb(255, 159, 64)',
+                                'rgb(255, 99, 132)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+                
+                // 市場トレンドチャート
+                const trendCtx = document.getElementById('market-trend-chart').getContext('2d');
+                charts.trend = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['前々四半期', '前四半期', '当四半期'],
+                        datasets: [{
+                            label: '市場平均価格',
+                            data: [
+                                analysisData.marketContext.priceTrend.previousQuarter * 0.97,
+                                analysisData.marketContext.priceTrend.previousQuarter,
+                                analysisData.marketContext.priceTrend.currentQuarter
+                            ],
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    callback: function(value) {
+                                        return '¥' + (value / 10000).toFixed(0) + '万';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function downloadPDF() {
+                alert('PDF出力機能は開発中です');
+            }
+
+            // ページ読み込み時に実行
+            loadComprehensiveAnalysis();
+        </script>
+    </body>
+    </html>
+  `);
+});
+
 export default properties;

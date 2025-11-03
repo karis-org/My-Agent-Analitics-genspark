@@ -3174,4 +3174,124 @@ api.delete('/sections/:id', authMiddleware, async (c) => {
   }
 });
 
+/**
+ * Comprehensive Property Analysis Endpoint
+ * 統合分析エンドポイント - すべてのデータソースを統合した質の高い分析
+ * POST /api/properties/comprehensive-analysis
+ */
+api.post('/properties/comprehensive-analysis', authMiddleware, async (c) => {
+  try {
+    const { env, var: { user } } = c;
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const body = await c.req.json();
+    
+    // 必須フィールドの検証
+    const {
+      name,
+      propertyType,
+      price,
+      location,
+      area,
+      age,
+      distanceFromStation,
+      prefCode,
+      cityCode,
+      // 収益物件用の任意フィールド
+      monthlyRent,
+      occupancyRate,
+      grossIncome,
+      effectiveIncome,
+      operatingExpenses,
+      loanAmount,
+      interestRate,
+      loanTermYears,
+      downPayment,
+      // 建物情報の任意フィールド
+      structure,
+      totalFloorArea,
+      landArea,
+    } = body;
+    
+    if (!name || !propertyType || !price || !location || !area || age === undefined || 
+        distanceFromStation === undefined || !prefCode) {
+      return c.json({ 
+        error: 'Missing required fields',
+        required: ['name', 'propertyType', 'price', 'location', 'area', 'age', 'distanceFromStation', 'prefCode']
+      }, 400);
+    }
+    
+    // APIキーの確認（モックデータモードの判定）
+    const hasReinfolib = env.REINFOLIB_API_KEY && env.REINFOLIB_API_KEY.trim() !== '';
+    const hasEStat = env.ESTAT_API_KEY && env.ESTAT_API_KEY.trim() !== '';
+    const hasOpenAI = env.OPENAI_API_KEY && env.OPENAI_API_KEY.trim() !== '';
+    
+    const mode = (!hasReinfolib || !hasEStat || !hasOpenAI) ? 'demonstration' : 'full';
+    
+    if (mode === 'demonstration') {
+      console.warn('[ComprehensiveAnalysis] Running in demonstration mode - some APIs not configured');
+    }
+    
+    // ComprehensivePropertyAnalyzerのインポート
+    const { ComprehensivePropertyAnalyzer } = await import('../lib/comprehensive-analyzer');
+    
+    // アナライザーの初期化
+    const analyzer = new ComprehensivePropertyAnalyzer(
+      env.REINFOLIB_API_KEY || 'demo',
+      env.ESTAT_API_KEY || 'demo',
+      env.OPENAI_API_KEY || 'demo'
+    );
+    
+    // 分析の実行
+    const propertyInput = {
+      name,
+      propertyType,
+      price: parseFloat(price),
+      location,
+      area: parseFloat(area),
+      age: parseInt(age),
+      distanceFromStation: parseFloat(distanceFromStation),
+      prefCode,
+      cityCode,
+      monthlyRent: monthlyRent ? parseFloat(monthlyRent) : undefined,
+      occupancyRate: occupancyRate ? parseFloat(occupancyRate) : undefined,
+      grossIncome: grossIncome ? parseFloat(grossIncome) : undefined,
+      effectiveIncome: effectiveIncome ? parseFloat(effectiveIncome) : undefined,
+      operatingExpenses: operatingExpenses ? parseFloat(operatingExpenses) : undefined,
+      loanAmount: loanAmount ? parseFloat(loanAmount) : undefined,
+      interestRate: interestRate ? parseFloat(interestRate) : undefined,
+      loanTermYears: loanTermYears ? parseInt(loanTermYears) : undefined,
+      downPayment: downPayment ? parseFloat(downPayment) : undefined,
+      structure,
+      totalFloorArea: totalFloorArea ? parseFloat(totalFloorArea) : undefined,
+      landArea: landArea ? parseFloat(landArea) : undefined,
+    };
+    
+    console.log('[ComprehensiveAnalysis] Starting analysis:', propertyInput.name);
+    
+    const result = await analyzer.analyze(propertyInput);
+    
+    console.log('[ComprehensiveAnalysis] Analysis completed');
+    
+    return c.json({
+      success: true,
+      mode,
+      analysis: result,
+      message: mode === 'demonstration' 
+        ? 'デモンストレーションモードで動作しています。完全な分析には、すべてのAPIキーを設定してください。'
+        : '完全な統合分析が完了しました。',
+    });
+  } catch (error: any) {
+    console.error('[ComprehensiveAnalysis] Error:', error);
+    return c.json({
+      error: '統合分析に失敗しました',
+      details: error.message,
+      stack: error.stack,
+    }, 500);
+  }
+});
+
 export default api;
