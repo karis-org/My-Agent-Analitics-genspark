@@ -87,17 +87,26 @@ api.post('/properties/ocr', async (c) => {
     
     const { env } = c;
     
-    // OpenAI API Keyが設定されていない場合はエラーを返す
+    // OpenAI API Keyが設定されていない場合はモックデータを返す (v5.1.0)
     if (!env.OPENAI_API_KEY || 
         env.OPENAI_API_KEY === 'your-openai-api-key-here' || 
         env.OPENAI_API_KEY === 'your-openai-api-key' ||
         env.OPENAI_API_KEY.trim() === '') {
-      console.warn('OPENAI_API_KEY not configured');
+      console.warn('OPENAI_API_KEY not configured, using mock data');
+      // モックデータを返す（デモンストレーションモード）
       return c.json({
-        error: 'OCR機能を利用するにはOpenAI APIキーの設定が必要です',
-        errorCode: 'API_KEY_NOT_CONFIGURED',
-        available: false
-      }, 503);
+        success: true,
+        name: 'サンプルマンション',
+        price: 45000000,
+        location: '東京都渋谷区恵比寿1-1-1',
+        structure: 'RC造',
+        total_floor_area: 65.5,
+        age: 5,
+        distance_from_station: 8,
+        confidence: 'demo',
+        mode: 'demonstration',
+        message: 'デモンストレーションモードで動作しています。実際のOCR機能を利用するには、OpenAI APIキーを設定してください。'
+      });
     }
     
     // OpenAI Vision APIを使用して画像から情報を抽出
@@ -451,6 +460,38 @@ api.post('/market/analyze', async (c) => {
     
     if (!area && !city) {
       return c.json({ error: 'Either area or city is required' }, 400);
+    }
+    
+    // v5.1.0: モックデータフォールバック
+    if (!env.REINFOLIB_API_KEY || env.REINFOLIB_API_KEY.trim() === '') {
+      console.warn('REINFOLIB_API_KEY not configured, using mock data');
+      return c.json({
+        success: true,
+        mode: 'demonstration',
+        analysis: {
+          area: city || area,
+          year: parseInt(year),
+          averagePrice: 45000000,
+          averagePricePerSquareMeter: 850000,
+          transactionCount: 156,
+          priceRange: {
+            min: 20000000,
+            max: 120000000,
+            median: 42000000
+          },
+          priceTrend: {
+            currentQuarter: 45000000,
+            previousQuarter: 43500000,
+            changeRate: 3.45
+          },
+          popularPropertyTypes: [
+            { type: 'マンション', count: 98, percentage: 62.8 },
+            { type: '戸建て', count: 38, percentage: 24.4 },
+            { type: '土地', count: 20, percentage: 12.8 }
+          ]
+        },
+        message: 'デモンストレーションモードで動作しています。実際の市場データを利用するには、REINFOLIB APIキーを設定してください。'
+      });
     }
     
     const client = new ReinfolibClient(env.REINFOLIB_API_KEY);
@@ -1740,12 +1781,28 @@ api.post('/estat/population', async (c) => {
       return c.json({ error: 'Prefecture code is required' }, 400);
     }
 
-    // Check if e-Stat API key is configured
+    // v5.1.0: Check if e-Stat API key is configured, use mock data if not
     if (!env.ESTAT_API_KEY || env.ESTAT_API_KEY.trim() === '') {
+      console.warn('ESTAT_API_KEY not configured, using mock data');
       return c.json({
-        error: 'e-Stat API key not configured',
-        message: 'e-Stat APIキーが設定されていません。管理者に連絡してください。',
-      }, 503);
+        success: true,
+        mode: 'demonstration',
+        data: {
+          prefCode,
+          cityCode: cityCode || null,
+          totalPopulation: 350000,
+          populationChange: 2.3,
+          households: 145000,
+          averageHouseholdSize: 2.4,
+          ageDistribution: {
+            '0-14': 12.5,
+            '15-64': 62.8,
+            '65+': 24.7
+          },
+          populationDensity: 8500,
+          message: 'デモンストレーションモードで動作しています。実際の政府統計データを利用するには、e-Stat APIキーを設定してください。'
+        }
+      });
     }
 
     const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
@@ -1926,11 +1983,29 @@ api.post('/ai/analyze-market', async (c) => {
       return c.json({ error: 'Market data is required' }, 400);
     }
 
+    // v5.1.0: モックデータフォールバック
     if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === '') {
+      console.warn('OPENAI_API_KEY not configured, using mock analysis');
       return c.json({
-        error: 'OpenAI API key not configured',
-        message: 'OpenAI APIキーが設定されていません。管理者に連絡してください。',
-      }, 503);
+        success: true,
+        mode: 'demonstration',
+        analysis: {
+          summary: 'この地域は安定した需要があり、中長期的な投資に適しています。',
+          marketTrends: '過去3年間で価格が平均8%上昇しており、今後も緩やかな上昇が見込まれます。',
+          opportunities: [
+            '駅近物件の需要が高く、賃貸需要も安定している',
+            '再開発計画により将来的な資産価値向上が期待できる',
+            '周辺施設が充実しており、居住環境が良好'
+          ],
+          risks: [
+            '供給過多のリスクがある地域も一部存在',
+            '金利上昇局面での影響に注意が必要'
+          ],
+          recommendation: '総合的に見て、この地域への投資は「推奨」と判断されます。',
+          investmentScore: 78,
+          message: 'デモンストレーションモードで動作しています。実際のAI分析を利用するには、OpenAI APIキーを設定してください。'
+        }
+      });
     }
 
     const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);
@@ -1963,11 +2038,33 @@ api.post('/ai/analyze-property', async (c) => {
       return c.json({ error: 'Property data is required' }, 400);
     }
 
+    // v5.1.0: モックデータフォールバック
     if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === '') {
+      console.warn('OPENAI_API_KEY not configured, using mock analysis');
       return c.json({
-        error: 'OpenAI API key not configured',
-        message: 'OpenAI APIキーが設定されていません。管理者に連絡してください。',
-      }, 503);
+        success: true,
+        mode: 'demonstration',
+        analysis: {
+          summary: 'この物件は立地条件が良好で、投資対象として魅力的です。',
+          strengths: [
+            '駅徒歩圏内で利便性が高い',
+            '周辺環境が良好で居住需要が安定',
+            '建物の管理状態が良好'
+          ],
+          weaknesses: [
+            '築年数がやや経過している',
+            '設備の更新が必要な時期が近い'
+          ],
+          financialMetrics: {
+            estimatedYield: 5.2,
+            riskLevel: 'medium',
+            marketLiquidity: 'high'
+          },
+          recommendation: 'この物件への投資は「やや推奨」と判断されます。',
+          investmentScore: 72,
+          message: 'デモンストレーションモードで動作しています。実際のAI分析を利用するには、OpenAI APIキーを設定してください。'
+        }
+      });
     }
 
     const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);

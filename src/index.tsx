@@ -134,15 +134,23 @@ app.get('/', (c) => {
         <!-- Hero Section -->
         <main class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                <h1 class="text-5xl font-extrabold text-gray-900 mb-4">
+                    <span class="bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">My Agent Analytics</span>
+                </h1>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">
                     AIを活用した不動産投資分析
                 </h2>
-                <p class="text-xl text-gray-700 mb-8">
+                <p class="text-xl text-gray-700 mb-6">
                     物件データを入力するだけで、包括的な市場分析レポートを自動生成
                 </p>
-                <a href="/auth/login" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105 inline-block">
-                    <i class="fas fa-rocket mr-2"></i>今すぐ始める
-                </a>
+                <div class="flex justify-center space-x-4">
+                    <a href="/auth/login" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105 inline-block">
+                        <i class="fas fa-rocket mr-2"></i>今すぐ始める
+                    </a>
+                    <a href="/help" class="bg-white hover:bg-gray-50 text-indigo-600 border-2 border-indigo-600 px-8 py-4 rounded-lg text-lg font-semibold shadow-lg transition-all transform hover:scale-105 inline-block">
+                        <i class="fas fa-book-open mr-2"></i>使い方ガイド
+                    </a>
+                </div>
             </div>
 
             <!-- Features Grid -->
@@ -214,29 +222,6 @@ app.get('/', (c) => {
                 </div>
             </div>
 
-            <!-- Stats Section -->
-            <div class="bg-white rounded-xl shadow-lg p-8 mb-12">
-                <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">システムステータス</h3>
-                <div class="grid md:grid-cols-4 gap-6 text-center">
-                    <div>
-                        <div class="text-4xl font-bold text-blue-600 mb-2">99.9%</div>
-                        <div class="text-gray-600">稼働率</div>
-                    </div>
-                    <div>
-                        <div class="text-4xl font-bold text-green-600 mb-2">&lt;500ms</div>
-                        <div class="text-gray-600">API応答時間</div>
-                    </div>
-                    <div>
-                        <div class="text-4xl font-bold text-purple-600 mb-2">1,000+</div>
-                        <div class="text-gray-600">分析済み物件</div>
-                    </div>
-                    <div>
-                        <div class="text-4xl font-bold text-orange-600 mb-2">24/7</div>
-                        <div class="text-gray-600">サポート</div>
-                    </div>
-                </div>
-            </div>
-
             <!-- CTA Section -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-2xl p-12 text-center text-white">
                 <h3 class="text-3xl font-bold mb-4">今すぐ無料で始めましょう</h3>
@@ -270,9 +255,9 @@ app.get('/', (c) => {
                     <div>
                         <h4 class="text-lg font-bold mb-4">サポート</h4>
                         <ul class="space-y-2 text-sm text-gray-400">
-                            <li><a href="#" class="hover:text-white">ヘルプセンター</a></li>
-                            <li><a href="#" class="hover:text-white">ドキュメント</a></li>
-                            <li><a href="#" class="hover:text-white">お問い合わせ</a></li>
+                            <li><a href="/help" class="hover:text-white">ヘルプセンター</a></li>
+                            <li><a href="/help" class="hover:text-white">ドキュメント</a></li>
+                            <li><a href="/help" class="hover:text-white">お問い合わせ</a></li>
                         </ul>
                     </div>
                     <div>
