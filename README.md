@@ -890,15 +890,40 @@ POST /api/properties/compare
 
 **開発チーム**: My Agent Team  
 **最終更新**: 2025年11月03日  
-**バージョン**: 6.2.0 🎯🚀✨🎉  
+**バージョン**: 6.2.1 🎯🚀✨🎉  
 **プロジェクト完成度**: 100% ✅✅✅  
-**実装機能数**: 15機能（**稼働率100%**） 🚀🚀🚀  
-**新機能**: **事故物件調査** + **ファクトチェック** + UI改善 ✨✨✨  
+**実装機能数**: 13機能（**稼働率100%**） 🚀🚀🚀  
+**新機能**: **機能カード更新** + **事故物件調査** + **ファクトチェック** ✨✨✨  
 **リリース状態**: 本番環境稼働中 🚀  
-**本番URL（v6.2.0最新）**: [https://a57dded5.my-agent-analytics.pages.dev](https://a57dded5.my-agent-analytics.pages.dev)  
+**本番URL（v6.2.1最新）**: [https://64db9cd6.my-agent-analytics.pages.dev](https://64db9cd6.my-agent-analytics.pages.dev)  
+**本番URL（v6.2.0）**: [https://a57dded5.my-agent-analytics.pages.dev](https://a57dded5.my-agent-analytics.pages.dev)  
 **本番URL（v6.1.0）**: [https://18f19633.my-agent-analytics.pages.dev](https://18f19633.my-agent-analytics.pages.dev)  
-**本番URL（v6.0.0）**: [https://4752cd89.my-agent-analytics.pages.dev](https://4752cd89.my-agent-analytics.pages.dev)  
 **GitHub**: [koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
+
+## 🎉 v6.2.1 の新機能 - 機能カード完全更新 🚀✨
+
+### 🎨 ランディングページ機能カード更新
+- **13機能の完全表示**: すべての実装済み機能をカードで表示
+- **新機能追加**: 事故物件調査カードを追加
+- **機能説明の更新**: 各機能の説明を最新の実装内容に更新
+- **視覚的改善**: アイコンと色分けで各機能を識別しやすく
+
+**表示される13機能**:
+1. 自動計算 - NOI、利回り、DSCR、LTV等の自動算出
+2. データ可視化 - Chart.jsによるインタラクティブグラフ
+3. PDFレポート - プロフェッショナルなレポート生成
+4. 市場分析 - 国土交通省データによる市場動向分析
+5. AI分析 - OpenAI GPT-4oによる高度な分析
+6. PWA対応 - スマートフォンインストール可能
+7. OCR画像認識 - マイソク・概要書の自動データ抽出
+8. 取引事例自動取得 - 不動産情報ライブラリから自動取得
+9. 地価公示データ - 最大5年分の地価データ自動取得
+10. 人口統計分析 - e-Stat APIによる人口動態分析
+11. 賃貸相場分析 - イタンジBB APIによる賃貸市場分析
+12. 実需用評価 - 居住用不動産の適正価格算出
+13. 事故物件調査 - AI搭載の心理的瑕疵調査システム
+
+---
 
 ## 🎉 v6.2.0 の新機能 - 事故物件調査とファクトチェック 🚀✨🔍
 

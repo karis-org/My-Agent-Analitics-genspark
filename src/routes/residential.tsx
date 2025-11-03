@@ -275,14 +275,31 @@ residential.get('/evaluate', async (c) => {
                             });
                             
                             const data = response.data;
+                            console.log('OCR Response Data (Residential):', data);
                             
                             // Populate form fields
-                            if (data.name) document.getElementById('propertyName').value = data.name;
-                            if (data.location) document.getElementById('propertyLocation').value = data.location;
-                            if (data.total_floor_area) document.getElementById('propertyArea').value = data.total_floor_area;
-                            if (data.age) document.getElementById('propertyAge').value = data.age;
-                            if (data.distance_from_station) document.getElementById('propertyDistance').value = data.distance_from_station;
+                            if (data.name) {
+                                console.log('Setting name:', data.name);
+                                document.getElementById('propertyName').value = data.name;
+                            }
+                            if (data.location) {
+                                console.log('Setting location:', data.location);
+                                document.getElementById('propertyLocation').value = data.location;
+                            }
+                            if (data.total_floor_area) {
+                                console.log('Setting total_floor_area:', data.total_floor_area);
+                                document.getElementById('propertyArea').value = data.total_floor_area;
+                            }
+                            if (data.age) {
+                                console.log('Setting age:', data.age);
+                                document.getElementById('propertyAge').value = data.age;
+                            }
+                            if (data.distance_from_station) {
+                                console.log('Setting distance_from_station:', data.distance_from_station);
+                                document.getElementById('propertyDistance').value = data.distance_from_station;
+                            }
                             if (data.structure) {
+                                console.log('Setting structure:', data.structure);
                                 const structureMap = {
                                     'RC造': 'RC',
                                     'SRC造': 'SRC',
@@ -292,10 +309,23 @@ residential.get('/evaluate', async (c) => {
                                 document.getElementById('propertyStructure').value = structureMap[data.structure] || 'RC';
                             }
                             
-                            statusDiv.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-4"><i class="fas fa-check-circle text-green-600 mr-2"></i><span class="text-sm text-green-800">物件情報を自動入力しました</span></div>';
+                            // 抽出情報の一覧を作成
+                            const extractedFields = [];
+                            if (data.name) extractedFields.push(\`物件名: \${data.name}\`);
+                            if (data.location) extractedFields.push(\`所在地: \${data.location}\`);
+                            if (data.total_floor_area) extractedFields.push(\`延床面積: \${data.total_floor_area}㎡\`);
+                            if (data.age) extractedFields.push(\`築年数: \${data.age}年\`);
+                            if (data.distance_from_station) extractedFields.push(\`駅距離: 徒歩\${data.distance_from_station}分\`);
+                            if (data.structure) extractedFields.push(\`構造: \${data.structure}\`);
+                            
+                            const fieldsSummary = extractedFields.length > 0 
+                                ? \`<ul class="mt-2 text-xs text-gray-600 space-y-1">\${extractedFields.map(f => \`<li>✓ \${f}</li>\`).join('')}</ul>\`
+                                : '';
                             
                             if (data.mode === 'demonstration') {
-                                statusDiv.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"><i class="fas fa-info-circle text-yellow-600 mr-2"></i><span class="text-sm text-yellow-800">デモモード: サンプルデータを表示しています</span></div>';
+                                statusDiv.innerHTML = \`<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"><i class="fas fa-info-circle text-yellow-600 mr-2"></i><span class="text-sm text-yellow-800 font-medium">デモモード: サンプルデータを表示しています</span><p class="text-xs text-yellow-700 mt-2">実際のOCR機能を利用するには、OpenAI APIキーを設定してください。</p>\${fieldsSummary}</div>\`;
+                            } else {
+                                statusDiv.innerHTML = \`<div class="bg-green-50 border border-green-200 rounded-lg p-4"><i class="fas fa-check-circle text-green-600 mr-2"></i><span class="text-sm text-green-800 font-medium">物件情報を自動入力しました</span>\${fieldsSummary}</div>\`;
                             }
                         } catch (error) {
                             console.error('OCR failed:', error);
