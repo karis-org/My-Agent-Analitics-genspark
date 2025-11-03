@@ -25,7 +25,9 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🚀 デモ
 
-**本番環境**: [https://6c256e0b.my-agent-analytics.pages.dev](https://6c256e0b.my-agent-analytics.pages.dev)
+**本番環境（最新）**: [https://4752cd89.my-agent-analytics.pages.dev](https://4752cd89.my-agent-analytics.pages.dev)
+
+**本番環境（旧）**: [https://6c256e0b.my-agent-analytics.pages.dev](https://6c256e0b.my-agent-analytics.pages.dev)
 
 **GitHub リポジトリ**: [https://github.com/koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
 
@@ -893,7 +895,8 @@ POST /api/properties/compare
 **実装機能数**: 12機能（**稼働率100%**） 🚀🚀🚀  
 **新機能**: **統合分析エンジン** + インタラクティブ可視化UI ✨✨✨  
 **リリース状態**: 本番環境稼働中 🚀  
-**本番URL**: [https://6c256e0b.my-agent-analytics.pages.dev](https://6c256e0b.my-agent-analytics.pages.dev)  
+**本番URL（最新）**: [https://4752cd89.my-agent-analytics.pages.dev](https://4752cd89.my-agent-analytics.pages.dev)  
+**本番URL（旧）**: [https://6c256e0b.my-agent-analytics.pages.dev](https://6c256e0b.my-agent-analytics.pages.dev)  
 **GitHub**: [koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
 
 ## 🎉 v5.1.0 の新機能 - 機能稼働率100%達成！ 🚀🚀🚀
