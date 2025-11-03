@@ -16,10 +16,18 @@
   --primary-800: #1e40af;
   --primary-900: #1e3a8a;
 
+  /* Brand Colors - My Agent Analytics */
+  --brand-navy: #1e3a8a;        /* "My Agent" ネイビー */
+  --brand-navy-dark: #1e40af;
+  --brand-navy-light: #3b82f6;
+  --brand-gold: #f59e0b;        /* "Analytics" ゴールド */
+  --brand-gold-dark: #d97706;
+  --brand-gold-light: #fbbf24;
+
   /* Accent Colors */
   --accent-purple: #8b5cf6;
   --accent-green: #10b981;
-  --accent-yellow: #f59e0b;
+  --accent-yellow: var(--brand-gold);  /* Use brand gold */
   --accent-red: #ef4444;
 
   /* Neutral Colors */
@@ -640,4 +648,66 @@ p {
     box-shadow: none;
     border: 1px solid #ccc;
   }
+}
+
+/* ===================================
+   Brand Color Utilities
+   =================================== */
+.text-brand-navy {
+  color: var(--brand-navy);
+}
+
+.text-brand-gold {
+  color: var(--brand-gold);
+}
+
+.bg-brand-navy {
+  background-color: var(--brand-navy);
+}
+
+.bg-brand-gold {
+  background-color: var(--brand-gold);
+}
+
+.border-brand-navy {
+  border-color: var(--brand-navy);
+}
+
+.border-brand-gold {
+  border-color: var(--brand-gold);
+}
+
+.hover\:bg-brand-navy:hover {
+  background-color: var(--brand-navy-dark);
+}
+
+.hover\:bg-brand-gold:hover {
+  background-color: var(--brand-gold-dark);
+}
+
+.hover\:text-brand-gold:hover {
+  color: var(--brand-gold);
+}
+
+/* Gradient utilities for brand colors */
+.gradient-brand {
+  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-light) 50%, var(--brand-gold) 100%);
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Brand logo text styling */
+.logo-my-agent {
+  color: var(--brand-navy);
+  font-weight: 700;
+}
+
+.logo-analytics {
+  color: var(--brand-gold);
+  font-weight: 700;
 }

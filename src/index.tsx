@@ -134,7 +134,7 @@ app.get('/', (c) => {
             <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <img src="/static/icons/header-logo.png" alt="My Agent Analytics" class="h-16" style="height: auto; max-height: 64px;">
+                        <img src="/static/icons/my-agent-logo-new.png" alt="My Agent Analytics" class="h-16" style="height: auto; max-height: 64px;">
                     </div>
                     <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-block">
                         <i class="fas fa-sign-in-alt mr-2"></i>ログイン
@@ -147,7 +147,7 @@ app.get('/', (c) => {
         <main class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h1 class="text-5xl font-extrabold text-gray-900 mb-4">
-                    <span class="bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">My Agent Analytics</span>
+                    <span class="logo-my-agent">My Agent </span><span class="logo-analytics">Analytics</span>
                 </h1>
                 <h2 class="text-3xl font-bold text-gray-900 mb-4">
                     AIを活用した不動産投資分析プラットフォーム
@@ -328,7 +328,7 @@ app.get('/', (c) => {
             <div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
                 <div class="text-center">
                     <h4 class="text-2xl font-bold mb-4">
-                        <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">My Agent Analytics</span>
+                        <span class="logo-my-agent text-gray-300">My Agent </span><span class="logo-analytics">Analytics</span>
                     </h4>
                     <p class="text-gray-400 text-sm mb-6">
                         不動産投資をスマートに。AIを活用した次世代の分析システム。
