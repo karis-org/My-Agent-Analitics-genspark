@@ -890,15 +890,82 @@ POST /api/properties/compare
 
 **開発チーム**: My Agent Team  
 **最終更新**: 2025年11月03日  
-**バージョン**: 6.1.0 🎯🚀✨🎉  
+**バージョン**: 6.2.0 🎯🚀✨🎉  
 **プロジェクト完成度**: 100% ✅✅✅  
-**実装機能数**: 13機能（**稼働率100%**） 🚀🚀🚀  
-**新機能**: **イタンジBB賃貸相場統合** + 実需用評価自動取得 + UI/UX改善 ✨✨✨  
+**実装機能数**: 15機能（**稼働率100%**） 🚀🚀🚀  
+**新機能**: **事故物件調査** + **ファクトチェック** + UI改善 ✨✨✨  
 **リリース状態**: 本番環境稼働中 🚀  
-**本番URL（v6.1.0最新）**: [https://18f19633.my-agent-analytics.pages.dev](https://18f19633.my-agent-analytics.pages.dev)  
+**本番URL（v6.2.0最新）**: [https://a57dded5.my-agent-analytics.pages.dev](https://a57dded5.my-agent-analytics.pages.dev)  
+**本番URL（v6.1.0）**: [https://18f19633.my-agent-analytics.pages.dev](https://18f19633.my-agent-analytics.pages.dev)  
 **本番URL（v6.0.0）**: [https://4752cd89.my-agent-analytics.pages.dev](https://4752cd89.my-agent-analytics.pages.dev)  
-**本番URL（旧）**: [https://6c256e0b.my-agent-analytics.pages.dev](https://6c256e0b.my-agent-analytics.pages.dev)  
 **GitHub**: [koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
+
+## 🎉 v6.2.0 の新機能 - 事故物件調査とファクトチェック 🚀✨🔍
+
+### 📝 ランディングページUIテキスト改善
+- **「クレジットカード不要」削除**: CTAセクションから不要なテキストを削除
+- **フッター説明文更新**: 「プラットフォーム」→「システム」に変更
+- よりシンプルで分かりやすいUI表現
+
+### 🔍 事故物件（心理的瑕疵）調査機能 NEW!
+- **AIを活用した包括的調査**: OpenAI GPT-4oで自動調査
+- **複数情報源の確認**:
+  - Google News（国内外ニュース）
+  - Yahoo!ニュース（国内ニュース）
+  - 事故物件公示サイト（大島てる等）
+  - 警察庁統計（犯罪データ）
+  - 消防庁統計（火災データ）
+- **リスクレベル評価**: none/low/medium/highの4段階
+- **詳細な調査結果**:
+  - 発見された事件・事故の詳細
+  - 情報源URL
+  - 関連性スコア（0-100）
+  - カテゴリー分類（death/crime/fire/disaster/other）
+- **デモモード対応**: APIキーなしでも動作確認可能
+- **APIエンドポイント**: `POST /api/properties/stigma-check`
+
+**調査項目**:
+- 過去の死亡事故（自殺、他殺、孤独死等）
+- 重大な犯罪事件（殺人、強盗等）
+- 火災事故
+- その他の心理的瑕疵に該当する事象
+
+### ✅ レポートファクトチェック機能 NEW!
+- **AI搭載検証システム**: OpenAI GPT-4oによる高度な検証
+- **5つの検証観点**:
+  1. **数値の妥当性**: 価格、面積、利回り等が現実的か
+  2. **論理の一貫性**: 結論が根拠と矛盾していないか
+  3. **情報の完全性**: 必要な情報が欠けていないか
+  4. **リスク評価の適切性**: 過大/過小評価されていないか
+  5. **表現の正確性**: 誤解を招く表現がないか
+- **信頼度スコア**: 0-100点で信頼性を評価
+- **警告システム**: 
+  - 重要度レベル（info/warning/error）
+  - 問題点の指摘
+  - 改善提案
+- **検証済み主張リスト**:
+  - 各主張の検証結果
+  - 信頼度
+  - 情報源
+  - 注記
+- **推奨事項**: 改善アクションの提示
+- **デモモード対応**: APIキーなしでもサンプル検証
+
+**信頼度評価基準**:
+- 90点以上: 非常に高い（十分に検証済み）
+- 75-89点: 高い（概ね検証済み）
+- 60-74点: 中程度（一部要確認）
+- 45-59点: 低い（複数の問題あり）
+- 44点以下: 非常に低い（大幅な見直し必要）
+
+### 📚 参考情報
+- **事故物件調査**: [参考資料](https://wakearifudosan.com/column_post/813)
+- **実装ファイル**:
+  - `src/lib/stigma-checker.ts` - 事故物件調査エンジン
+  - `src/lib/fact-checker.ts` - ファクトチェックエンジン
+  - `src/routes/api.tsx` - APIエンドポイント追加
+
+---
 
 ## 🎉 v6.1.0 の新機能 - UI/UX改善とイタンジBB統合 🚀✨
 
