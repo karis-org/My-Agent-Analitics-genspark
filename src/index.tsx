@@ -73,6 +73,10 @@ app.route('/itandi', itandiRoutes)
 import stigmaRoutes from './routes/stigma'
 app.route('/stigma', stigmaRoutes)
 
+// Fact check routes (requires authentication)
+import factCheckRoutes from './routes/fact-check'
+app.route('/fact-check', factCheckRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 
