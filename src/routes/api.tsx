@@ -76,21 +76,17 @@ api.post('/properties/ocr', async (c) => {
     
     const { env } = c;
     
-    // OpenAI API Keyが設定されていない場合は仮データを返す
+    // OpenAI API Keyが設定されていない場合はエラーを返す
     if (!env.OPENAI_API_KEY || 
         env.OPENAI_API_KEY === 'your-openai-api-key-here' || 
         env.OPENAI_API_KEY === 'your-openai-api-key' ||
         env.OPENAI_API_KEY.trim() === '') {
-      console.warn('OPENAI_API_KEY not configured, returning mock data');
+      console.warn('OPENAI_API_KEY not configured');
       return c.json({
-        name: 'サンプル物件',
-        price: 50000000,
-        location: '東京都渋谷区神宮前',
-        structure: 'RC造',
-        total_floor_area: 120.5,
-        age: 10,
-        distance_from_station: 5
-      });
+        error: 'OCR機能を利用するにはOpenAI APIキーの設定が必要です',
+        errorCode: 'API_KEY_NOT_CONFIGURED',
+        available: false
+      }, 503);
     }
     
     // OpenAI Vision APIを使用して画像から情報を抽出
@@ -164,19 +160,14 @@ api.post('/properties/ocr', async (c) => {
     return c.json(extractedData);
   } catch (error) {
     console.error('OCR error:', error);
-    console.warn('Falling back to mock data due to error');
     
-    // エラー時はモックデータを返す（APIキー未設定や通信エラーなど）
+    // エラー詳細を返す
     return c.json({
-      name: 'サンプル物件',
-      price: 50000000,
-      location: '東京都渋谷区神宮前',
-      structure: 'RC造',
-      total_floor_area: 120.5,
-      age: 10,
-      distance_from_station: 5,
-      _note: 'OpenAI API未設定のため、サンプルデータを表示しています'
-    });
+      error: '画像の解析中にエラーが発生しました',
+      errorCode: 'OCR_PROCESSING_ERROR',
+      available: false,
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
   }
 });
 

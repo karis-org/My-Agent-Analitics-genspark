@@ -21,8 +21,12 @@ settings.get('/', (c) => {
   // Check which features are available (based on admin-configured API keys)
   const featuresStatus = {
     authentication: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
+    propertyManagement: true, // v5.0.0: Always available (CRUD operations)
+    financialAnalysis: true, // v5.0.0: Always available (calculator)
+    analysisHistory: true, // v5.0.0: Always available (DB storage)
     marketAnalysis: !!env.REINFOLIB_API_KEY,
     aiAnalysis: !!env.OPENAI_API_KEY,
+    ocrFeature: !!env.OPENAI_API_KEY, // v5.0.0: OCR depends on OpenAI
     governmentStats: !!env.ESTAT_API_KEY,
     rentalInfo: !!env.ITANDI_API_KEY,
     reinsData: !!(env.REINS_LOGIN_ID && env.REINS_PASSWORD),
@@ -149,6 +153,63 @@ settings.get('/', (c) => {
                         </div>
                     </div>
 
+                    <!-- Property Management (v5.0.0) -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.propertyManagement ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.propertyManagement ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-building text-2xl ${featuresStatus.propertyManagement ? 'text-green-600' : 'text-gray-400'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">物件管理 <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">v5.0.0</span></p>
+                                <p class="text-sm text-gray-600">物件の登録・更新・削除（CRUD操作）</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${featuresStatus.propertyManagement ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm">利用不可</span>'
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Financial Analysis (v5.0.0) -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.financialAnalysis ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.financialAnalysis ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-calculator text-2xl ${featuresStatus.financialAnalysis ? 'text-green-600' : 'text-gray-400'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">財務分析 <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">v5.0.0</span></p>
+                                <p class="text-sm text-gray-600">投資指標計算（NOI、利回り、DSCR、LTV等）</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${featuresStatus.financialAnalysis ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm">利用不可</span>'
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Analysis History (v5.0.0) -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.analysisHistory ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.analysisHistory ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-history text-2xl ${featuresStatus.analysisHistory ? 'text-green-600' : 'text-gray-400'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">分析履歴保存 <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">v5.0.0</span></p>
+                                <p class="text-sm text-gray-600">分析結果の自動保存と履歴管理</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${featuresStatus.analysisHistory ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm">利用不可</span>'
+                            }
+                        </div>
+                    </div>
+
                     <!-- Market Analysis -->
                     <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.marketAnalysis ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
                         <div class="flex items-center">
@@ -164,6 +225,25 @@ settings.get('/', (c) => {
                             ${featuresStatus.marketAnalysis ? 
                                 '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
                                 '<span class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm">利用不可</span>'
+                            }
+                        </div>
+                    </div>
+
+                    <!-- OCR Feature (v5.0.0) -->
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${featuresStatus.ocrFeature ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-4 ${featuresStatus.ocrFeature ? 'bg-green-100' : 'bg-gray-100'}">
+                                <i class="fas fa-file-image text-2xl ${featuresStatus.ocrFeature ? 'text-green-600' : 'text-gray-400'}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">マイソク読み取り <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">v5.0.0</span></p>
+                                <p class="text-sm text-gray-600">物件概要書から物件情報を自動抽出（AI OCR）</p>
+                            </div>
+                        </div>
+                        <div>
+                            ${featuresStatus.ocrFeature ? 
+                                '<span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold"><i class="fas fa-check mr-1"></i>利用可能</span>' : 
+                                '<span class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm">準備中</span>'
                             }
                         </div>
                     </div>
