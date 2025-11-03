@@ -13,7 +13,14 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 **🚀 面倒な設定は一切不要！ログインするだけですぐに使えます。**
 
-**✨ v6.7.2 更新情報** (NEW):
+**✨ v6.7.3 更新情報** (NEW):
+- ✅ **4件の新規バグ修正完了** - ヘッダー画像、事故物件調査、統合分析、編集機能
+- ✅ **物件編集機能実装** - 物件情報の編集フォーム追加
+- ✅ **事故物件調査デモモード表示改善** - APIキー未設定時の明確な案内
+- ✅ **統合分析レポートエラー修正** - Property not found エラー解決
+- ✅ **ヘッダーロゴ表示改善** - アスペクト比維持のCSS修正
+
+**✨ v6.7.2 更新情報**:
 - ✅ **4件のバグ修正完了** - PDF読み込み、地域データ、ツールチップ、ロゴ
 - ✅ **東京23区全対応** - 不動産ライブラリで全地域データ取得可能
 - ✅ **ツールチップ修正** - LTV、DSCRの解説が正常に表示
@@ -62,8 +69,8 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🚀 デモ
 
-**🚀 本番環境（v6.7.2 最新）**: [https://95edbd46.my-agent-analytics.pages.dev](https://95edbd46.my-agent-analytics.pages.dev)  
-✨ **インタラクティブUI完成・バグ修正完了・リリース準備完了** 🎉
+**🚀 本番環境（v6.7.3 最新）**: [https://95edbd46.my-agent-analytics.pages.dev](https://95edbd46.my-agent-analytics.pages.dev)  
+✨ **物件編集機能追加・バグ修正完了・リリース準備完了** 🎉
 
 **🧪 テスト環境（v6.4.0）**: [https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai](https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai)  
 ✨ **サンドボックス環境** - 開発・実機テスト用
@@ -955,10 +962,10 @@ POST /api/properties/compare
 
 **開発チーム**: My Agent Team  
 **最終更新**: 2025年11月03日  
-**バージョン**: 6.4.0 🎯🚀✨🎉🔥  
+**バージョン**: 6.7.3 🎯🚀✨🎉🔥  
 **プロジェクト完成度**: 100% ✅✅✅  
 **実装機能数**: 13機能（**稼働率100%**） 🚀🚀🚀  
-**新機能**: **全APIキー設定完了** + **ファクトチェックUI完成** + **自動テスト実装** ✨✨✨  
+**新機能**: **物件編集機能追加** + **バグ修正完了** + **UI/UX改善** ✨✨✨  
 **リリース状態**: 本番環境稼働中 🚀  
 **テスト環境URL**: [https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai](https://3000-id06269oyl43pzkrdcpw8-82b888ba.sandbox.novita.ai)  
 **本番URL（v6.4.0最新）**: [https://de37f809.my-agent-analytics.pages.dev](https://de37f809.my-agent-analytics.pages.dev) ✅ 全テスト合格  

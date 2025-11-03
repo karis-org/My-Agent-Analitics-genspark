@@ -36,7 +36,7 @@ properties.get('/', (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10 object-contain">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">物件一覧</h1>
                     </div>
@@ -185,7 +185,7 @@ properties.get('/new', (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10 object-contain">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">新規物件登録</h1>
                     </div>
@@ -714,6 +714,199 @@ properties.get('/new', (c) => {
 });
 
 /**
+ * Property edit page
+ * GET /properties/:id/edit
+ */
+properties.get('/:id/edit', async (c) => {
+  const user = c.get('user');
+  const propertyId = c.req.param('id');
+  const { env } = c;
+  
+  // Fetch property data
+  const property = await env.DB.prepare(`
+    SELECT * FROM properties WHERE id = ? AND user_id = ?
+  `).bind(propertyId, user.id).first();
+  
+  if (!property) {
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="ja">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>物件が見つかりません - My Agent Analytics</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-50">
+          <div class="max-w-md mx-auto mt-20 text-center">
+              <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+              <h1 class="text-2xl font-bold text-gray-900 mb-4">物件が見つかりません</h1>
+              <p class="text-gray-600 mb-6">指定された物件は存在しないか、アクセス権限がありません。</p>
+              <a href="/properties" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                  物件一覧に戻る
+              </a>
+          </div>
+      </body>
+      </html>
+    `);
+  }
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>物件編集 - ${property.name} - My Agent Analytics</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <a href="/dashboard">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10 object-contain">
+                        </a>
+                        <h1 class="text-2xl font-bold text-gray-900">物件編集</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="/properties/${propertyId}" class="text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-times mr-2"></i>キャンセル
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">${property.name}を編集</h2>
+                
+                <form id="edit-form" class="space-y-6">
+                    <!-- 物件名 -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">物件名 *</label>
+                        <input type="text" id="name" name="name" value="${property.name}" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- 価格 -->
+                    <div>
+                        <label for="price" class="block text-sm font-medium text-gray-700 mb-2">価格（円） *</label>
+                        <input type="number" id="price" name="price" value="${property.price}" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- 所在地 -->
+                    <div>
+                        <label for="location" class="block text-sm font-medium text-gray-700 mb-2">所在地</label>
+                        <input type="text" id="location" name="location" value="${property.location || ''}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- 構造 -->
+                    <div>
+                        <label for="structure" class="block text-sm font-medium text-gray-700 mb-2">構造</label>
+                        <select id="structure" name="structure" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">選択してください</option>
+                            <option value="RC造" ${property.structure === 'RC造' ? 'selected' : ''}>RC造（鉄筋コンクリート造）</option>
+                            <option value="SRC造" ${property.structure === 'SRC造' ? 'selected' : ''}>SRC造（鉄骨鉄筋コンクリート造）</option>
+                            <option value="鉄骨造" ${property.structure === '鉄骨造' ? 'selected' : ''}>鉄骨造</option>
+                            <option value="木造" ${property.structure === '木造' ? 'selected' : ''}>木造</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 延床面積 -->
+                    <div>
+                        <label for="total_floor_area" class="block text-sm font-medium text-gray-700 mb-2">延床面積（㎡）</label>
+                        <input type="number" id="total_floor_area" name="total_floor_area" step="0.01" value="${property.total_floor_area || ''}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- 築年数 -->
+                    <div>
+                        <label for="age" class="block text-sm font-medium text-gray-700 mb-2">築年数（年）</label>
+                        <input type="number" id="age" name="age" value="${property.age || ''}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- 駅徒歩 -->
+                    <div>
+                        <label for="distance_from_station" class="block text-sm font-medium text-gray-700 mb-2">最寄駅からの徒歩時間（分）</label>
+                        <input type="number" id="distance_from_station" name="distance_from_station" value="${property.distance_from_station || ''}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- エレベーター -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="has_elevator" name="has_elevator" ${property.has_elevator ? 'checked' : ''}
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="has_elevator" class="ml-2 block text-sm text-gray-700">
+                            エレベーター有り
+                        </label>
+                    </div>
+                    
+                    <!-- 送信ボタン -->
+                    <div class="flex items-center space-x-4 pt-4">
+                        <button type="submit" id="submit-btn"
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors">
+                            <i class="fas fa-save mr-2"></i>保存
+                        </button>
+                        <a href="/properties/${propertyId}" 
+                           class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-6 rounded-lg text-center transition-colors">
+                            キャンセル
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script>
+            document.getElementById('edit-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById('submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>保存中...';
+                
+                try {
+                    const formData = {
+                        name: document.getElementById('name').value,
+                        price: parseFloat(document.getElementById('price').value),
+                        location: document.getElementById('location').value || null,
+                        structure: document.getElementById('structure').value || null,
+                        total_floor_area: document.getElementById('total_floor_area').value ? parseFloat(document.getElementById('total_floor_area').value) : null,
+                        age: document.getElementById('age').value ? parseInt(document.getElementById('age').value) : null,
+                        distance_from_station: document.getElementById('distance_from_station').value ? parseFloat(document.getElementById('distance_from_station').value) : null,
+                        has_elevator: document.getElementById('has_elevator').checked
+                    };
+                    
+                    const response = await axios.put('/api/properties/${propertyId}', formData);
+                    
+                    if (response.data.success) {
+                        alert('物件情報を更新しました');
+                        window.location.href = '/properties/${propertyId}';
+                    }
+                } catch (error) {
+                    console.error('Update error:', error);
+                    alert('更新に失敗しました: ' + (error.response?.data?.error || error.message));
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>保存';
+                }
+            });
+        </script>
+    </body>
+    </html>
+  `);
+});
+
+/**
  * Property detail page
  * GET /properties/:id
  */
@@ -741,11 +934,14 @@ properties.get('/:id', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10 object-contain">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">物件詳細</h1>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <a href="/properties/\${propertyId}/edit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-edit mr-2"></i>編集
+                        </a>
                         <a href="/properties/\${propertyId}/analyze" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                             <i class="fas fa-chart-line mr-2"></i>分析実行
                         </a>
@@ -906,7 +1102,7 @@ properties.get('/:id/analyze', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10 object-contain">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">物件分析</h1>
                     </div>
@@ -1270,7 +1466,7 @@ properties.get('/:id/comprehensive-report', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-12 w-12">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-12 w-12 object-contain">
                         </a>
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">統合分析レポート</h1>
@@ -1596,13 +1792,21 @@ properties.get('/:id/comprehensive-report', async (c) => {
             // ページロード時に分析を実行
             async function loadComprehensiveAnalysis() {
                 try {
+                    // Extract property ID from URL
+                    const pathParts = window.location.pathname.split('/');
+                    const propertyId = pathParts[pathParts.length - 2]; // /properties/123/comprehensive-report
+                    
+                    console.log('Loading property:', propertyId);
+                    
                     // 物件データを取得
-                    const propertyResponse = await axios.get('/api/properties/\${propertyId}');
+                    const propertyResponse = await axios.get(\`/api/properties/\${propertyId}\`);
                     const property = propertyResponse.data.property;
                     
                     if (!property) {
                         throw new Error('物件が見つかりません');
                     }
+                    
+                    console.log('Property loaded:', property.name);
                     
                     // 統合分析を実行
                     const analysisResponse = await axios.post('/api/properties/comprehensive-analysis', {
@@ -1620,6 +1824,7 @@ properties.get('/:id/comprehensive-report', async (c) => {
                         // monthlyRent, grossIncome, etc.
                     });
                     
+                    console.log('Analysis completed:', analysisResponse.data);
                     analysisData = analysisResponse.data.analysis;
                     
                     // 地図を生成（並行処理）
@@ -1640,14 +1845,40 @@ properties.get('/:id/comprehensive-report', async (c) => {
                     
                 } catch (error) {
                     console.error('Analysis error:', error);
+                    
+                    // エラーの詳細情報を取得
+                    const errorDetails = error.response?.data || {};
+                    const errorMessage = errorDetails.error || error.message || '不明なエラーが発生しました';
+                    const errorCode = errorDetails.errorCode || 'UNKNOWN_ERROR';
+                    
+                    console.error('Error details:', { errorMessage, errorCode, errorDetails });
+                    
                     document.getElementById('loading').innerHTML = \`
-                        <div class="text-center">
+                        <div class="text-center max-w-lg mx-auto">
                             <i class="fas fa-exclamation-triangle text-red-500 text-6xl mb-4"></i>
                             <p class="text-xl font-semibold text-gray-700">分析に失敗しました</p>
-                            <p class="text-sm text-gray-500 mt-2">\${error.response?.data?.error || error.message}</p>
-                            <button onclick="window.location.reload()" class="mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-                                再試行
-                            </button>
+                            <p class="text-sm text-gray-600 mt-2">\${errorMessage}</p>
+                            \${errorCode === 'PROPERTY_NOT_FOUND' ? \`
+                                <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
+                                    <p class="text-sm text-yellow-800">
+                                        <i class="fas fa-info-circle mr-2"></i>
+                                        物件が見つかりませんでした。以下の原因が考えられます：
+                                    </p>
+                                    <ul class="list-disc list-inside mt-2 text-xs text-yellow-700 space-y-1">
+                                        <li>物件が削除された</li>
+                                        <li>アクセス権限がない</li>
+                                        <li>URLが正しくない</li>
+                                    </ul>
+                                </div>
+                            \` : ''}
+                            <div class="mt-6 space-x-3">
+                                <button onclick="window.location.reload()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                                    再試行
+                                </button>
+                                <a href="/properties" class="inline-block bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300">
+                                    物件一覧に戻る
+                                </a>
+                            </div>
                         </div>
                     \`;
                 }
@@ -2159,7 +2390,7 @@ properties.get('/:id/comprehensive-report', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10 object-contain">
                         </a>
                         <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
                             統合分析ダッシュボード
@@ -2323,6 +2554,18 @@ properties.get('/:id/comprehensive-report', async (c) => {
                     \${stigma ? \`
                     <div class="dashboard-card">
                         <h3 class="section-header"><i class="fas fa-shield-alt mr-2"></i>事故物件調査結果</h3>
+                        
+                        \${stigma.mode === 'demonstration' ? \`
+                        <div class="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-yellow-400 mr-3 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="text-yellow-300 font-medium text-sm">デモモード</p>
+                                    <p class="text-yellow-200/80 text-xs mt-1">実際の調査を行うには、OpenAI APIキーを設定してください。現在はサンプルデータを表示しています。</p>
+                                </div>
+                            </div>
+                        </div>
+                        \` : ''}
                         
                         <div class="flex items-center justify-between mb-6 p-4 bg-slate-800/50 rounded-lg border border-blue-500/20">
                             <span class="text-slate-300 font-medium">リスクレベル</span>
