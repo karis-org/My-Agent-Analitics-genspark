@@ -890,14 +890,41 @@ POST /api/properties/compare
 
 **開発チーム**: My Agent Team  
 **最終更新**: 2025年11月03日  
-**バージョン**: 6.0.0 🎯🚀✨🎉  
+**バージョン**: 6.1.0 🎯🚀✨🎉  
 **プロジェクト完成度**: 100% ✅✅✅  
-**実装機能数**: 12機能（**稼働率100%**） 🚀🚀🚀  
-**新機能**: **統合分析エンジン** + インタラクティブ可視化UI ✨✨✨  
+**実装機能数**: 13機能（**稼働率100%**） 🚀🚀🚀  
+**新機能**: **イタンジBB賃貸相場統合** + 実需用評価自動取得 + UI/UX改善 ✨✨✨  
 **リリース状態**: 本番環境稼働中 🚀  
-**本番URL（最新）**: [https://4752cd89.my-agent-analytics.pages.dev](https://4752cd89.my-agent-analytics.pages.dev)  
+**本番URL（v6.1.0最新）**: [https://18f19633.my-agent-analytics.pages.dev](https://18f19633.my-agent-analytics.pages.dev)  
+**本番URL（v6.0.0）**: [https://4752cd89.my-agent-analytics.pages.dev](https://4752cd89.my-agent-analytics.pages.dev)  
 **本番URL（旧）**: [https://6c256e0b.my-agent-analytics.pages.dev](https://6c256e0b.my-agent-analytics.pages.dev)  
 **GitHub**: [koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
+
+## 🎉 v6.1.0 の新機能 - UI/UX改善とイタンジBB統合 🚀✨
+
+### 🔧 OCR読み取りエラーハンドリング強化
+- 詳細なエラーメッセージとユーザーフレンドリーな提案システム
+- デモモードインジケーター表示
+- エラー種類別の対処方法ガイド
+
+### 🏠 実需用不動産評価ページ大幅改善
+- **マイソク/概要書OCR機能追加** - 画像アップロードで物件情報を自動入力
+- **取引事例自動取得** - 不動産情報ライブラリAPIから周辺取引事例を自動取得
+- **地価推移自動取得** - 過去5年分の地価データを自動取得・表示
+- 手動追加とAPI自動取得の両方に対応
+
+### 🎨 ブランディング統一
+- ロゴタイトル「My Agent Analytics」にグラデーションスタイル適用
+- すべてのページで一貫したビジュアルデザイン
+- フッターセクション簡素化（製品/サポート/企業情報削除）
+
+### 🏘️ イタンジBB API統合 NEW!
+- **賃貸相場調査機能** - 周辺賃貸物件の平均賃料、中央値、範囲を取得
+- **賃貸相場推移分析** - 最大12ヶ月の賃料推移データを取得
+- 新APIエンドポイント:
+  - `POST /api/itandi/rental-analysis` - 賃貸相場調査
+  - `POST /api/itandi/rental-trend` - 賃貸相場推移取得
+- デモモード完全対応（APIキー不要でサンプルデータ表示）
 
 ## 🎉 v5.1.0 の新機能 - 機能稼働率100%達成！ 🚀🚀🚀
 
