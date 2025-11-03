@@ -289,6 +289,52 @@ export class ReinfolibClient {
   }
 
   /**
+   * 市区町村名から市区町村コードを取得するヘルパー関数
+   * 主要な市区町村のみサポート（東京23区と主要都市）
+   */
+  private getCityCode(cityName: string): string | null {
+    // 東京23区のコードマッピング
+    const tokyoWards: Record<string, string> = {
+      '千代田区': '13101',
+      '中央区': '13102',
+      '港区': '13103',
+      '新宿区': '13104',
+      '文京区': '13105',
+      '台東区': '13106',
+      '墨田区': '13107',
+      '江東区': '13108',
+      '品川区': '13109',
+      '目黒区': '13110',
+      '大田区': '13111',
+      '世田谷区': '13112',
+      '渋谷区': '13113',
+      '中野区': '13114',
+      '杉並区': '13115',
+      '豊島区': '13116',
+      '北区': '13117',
+      '荒川区': '13118',
+      '板橋区': '13119',
+      '練馬区': '13120',
+      '足立区': '13121',
+      '葛飾区': '13122',
+      '江戸川区': '13123',
+    };
+    
+    // 主要都市のコードマッピング
+    const majorCities: Record<string, string> = {
+      '横浜市': '14100',
+      '川崎市': '14130',
+      '大阪市': '27100',
+      '名古屋市': '23100',
+      '札幌市': '01100',
+      '福岡市': '40130',
+    };
+    
+    // 市区町村名からコードを検索
+    return tokyoWards[cityName] || majorCities[cityName] || null;
+  }
+
+  /**
    * 周辺相場を取得
    * 指定した地域の最近の取引事例を取得
    */
@@ -300,9 +346,21 @@ export class ReinfolibClient {
     limit?: number;
   }): Promise<TradePrice[]> {
     const currentYear = new Date().getFullYear();
+    
+    // 市区町村名からコードに変換（5桁コードの場合はそのまま使用）
+    let cityCode = params.city;
+    if (params.city.length !== 5) {
+      const code = this.getCityCode(params.city);
+      if (!code) {
+        console.warn(`City code not found for: ${params.city}, trying as-is`);
+      } else {
+        cityCode = code;
+      }
+    }
+    
     const result = await this.getTradePrices({
       year: currentYear,
-      city: params.city,
+      city: cityCode,
     });
 
     let filtered = result.data;

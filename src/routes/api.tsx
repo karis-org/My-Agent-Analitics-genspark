@@ -89,11 +89,26 @@ api.post('/properties/ocr', async (c) => {
     const isPDF = image.startsWith('data:application/pdf');
     const isImage = image.startsWith('data:image/');
     
-    if (!isPDF && !isImage) {
+    // PDFファイルは現在サポートされていない
+    if (isPDF) {
+      return c.json({ 
+        error: 'PDF形式は現在サポートされていません',
+        errorCode: 'PDF_NOT_SUPPORTED',
+        suggestions: [
+          'PDFを画像形式（JPG、PNG）に変換してください',
+          'スクリーンショットを撮影してアップロードしてください',
+          '手動で入力することもできます'
+        ],
+        available: false,
+        canRetry: true
+      }, 400);
+    }
+    
+    if (!isImage) {
       return c.json({ 
         error: '対応していないファイル形式です',
         errorCode: 'UNSUPPORTED_FORMAT',
-        suggestions: ['JPG、PNG、またはPDF形式のファイルをアップロードしてください'],
+        suggestions: ['JPG、PNG形式の画像ファイルをアップロードしてください'],
         available: false,
         canRetry: false
       }, 400);

@@ -204,12 +204,12 @@ properties.get('/new', (c) => {
                     <i class="fas fa-file-image text-5xl text-blue-600 mb-4"></i>
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">マイソク・物件概要書を読み取り</h3>
                     <p class="text-sm text-gray-600 mb-4">画像をアップロードすると自動で物件情報を入力します</p>
-                    <input type="file" id="mysoku-upload" accept="image/*,.pdf" class="hidden">
+                    <input type="file" id="mysoku-upload" accept="image/jpeg,image/jpg,image/png" class="hidden">
                     <button type="button" onclick="document.getElementById('mysoku-upload').click()"
                             class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                         <i class="fas fa-upload mr-2"></i>画像をアップロード
                     </button>
-                    <p class="text-xs text-gray-500 mt-2">対応形式: JPG, PNG, PDF</p>
+                    <p class="text-xs text-gray-500 mt-2">対応形式: JPG, PNG（PDFは画像に変換してからアップロードしてください）</p>
                 </div>
                 <div id="upload-status" class="mt-4 hidden">
                     <div class="flex items-center justify-center space-x-2">
@@ -1109,7 +1109,7 @@ properties.get('/:id/analyze', async (c) => {
                                     <div class="flex justify-between items-center">
                                         <dt class="text-gray-600 flex items-center gap-2">
                                             LTV:
-                                            <button class="text-xs text-blue-600 hover:text-blue-800" onclick="alert('LTV (Loan to Value / 融資比率)\\n\\n計算式: 借入額 ÷ 物件価格 × 100\\n\\n物件価格に対する借入金の割合です。一般的に80%以下が望ましいとされています。高すぎるとリスクが増加します。')">
+                                            <button type="button" class="text-xs text-blue-600 hover:text-blue-800 info-tooltip" data-message="LTV (Loan to Value / 融資比率)\n\n計算式: 借入額 ÷ 物件価格 × 100\n\n物件価格に対する借入金の割合です。一般的に80%以下が望ましいとされています。高すぎるとリスクが増加します。">
                                                 <i class="fas fa-question-circle"></i>
                                             </button>
                                         </dt>
@@ -1118,7 +1118,7 @@ properties.get('/:id/analyze', async (c) => {
                                     <div class="flex justify-between items-center">
                                         <dt class="text-gray-600 flex items-center gap-2">
                                             DSCR:
-                                            <button class="text-xs text-blue-600 hover:text-blue-800" onclick="alert('DSCR (Debt Service Coverage Ratio / 債務償還カバー率)\\n\\n計算式: NOI ÷ 年間返済額\\n\\n収益で返済をカバーできるかを示す指標です。1.2以上が望ましく、1未満の場合は返済が困難になる可能性があります。')">
+                                            <button type="button" class="text-xs text-blue-600 hover:text-blue-800 info-tooltip" data-message="DSCR (Debt Service Coverage Ratio / 債務償還カバー率)\n\n計算式: NOI ÷ 年間返済額\n\n収益で返済をカバーできるかを示す指標です。1.2以上が望ましく、1未満の場合は返済が困難になる可能性があります。">
                                                 <i class="fas fa-question-circle"></i>
                                             </button>
                                         </dt>
@@ -1935,9 +1935,25 @@ properties.get('/:id/comprehensive-report', async (c) => {
             function downloadPDF() {
                 alert('PDF出力機能は開発中です');
             }
+            
+            // ツールチップイベントリスナーを追加
+            function setupTooltips() {
+                document.querySelectorAll('.info-tooltip').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const message = this.getAttribute('data-message');
+                        if (message) {
+                            alert(message);
+                        }
+                    });
+                });
+            }
 
             // ページ読み込み時に実行
-            loadComprehensiveAnalysis();
+            loadComprehensiveAnalysis().then(() => {
+                // 分析結果が表示された後、ツールチップを設定
+                setTimeout(setupTooltips, 500);
+            });
         </script>
     </body>
     </html>
