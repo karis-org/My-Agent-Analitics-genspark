@@ -8,20 +8,28 @@ import { getSessionWithUser } from '../lib/db';
 /**
  * Authentication middleware
  * Requires a valid session
+ * For API routes, returns JSON 401 instead of redirect
  */
 export async function authMiddleware(
   c: Context<{ Bindings: Bindings; Variables: Variables }>,
   next: Next
 ) {
   const sessionId = getCookie(c, 'session_id');
+  const isApiRequest = c.req.path.startsWith('/api/');
   
   if (!sessionId) {
+    if (isApiRequest) {
+      return c.json({ error: 'Authentication required', errorCode: 'NO_SESSION' }, 401);
+    }
     return c.redirect('/auth/login');
   }
   
   const result = await getSessionWithUser(c.env.DB, sessionId);
   
   if (!result) {
+    if (isApiRequest) {
+      return c.json({ error: 'Invalid or expired session', errorCode: 'INVALID_SESSION' }, 401);
+    }
     return c.redirect('/auth/login');
   }
   
@@ -57,25 +65,36 @@ export async function optionalAuthMiddleware(
 /**
  * Admin-only middleware
  * Requires a valid session with admin privileges (is_admin = 1)
+ * For API routes, returns JSON 401/403 instead of redirect
  */
 export async function adminMiddleware(
   c: Context<{ Bindings: Bindings; Variables: Variables }>,
   next: Next
 ) {
   const sessionId = getCookie(c, 'session_id');
+  const isApiRequest = c.req.path.startsWith('/api/');
   
   if (!sessionId) {
+    if (isApiRequest) {
+      return c.json({ error: 'Authentication required', errorCode: 'NO_SESSION' }, 401);
+    }
     return c.redirect('/auth/login');
   }
   
   const result = await getSessionWithUser(c.env.DB, sessionId);
   
   if (!result) {
+    if (isApiRequest) {
+      return c.json({ error: 'Invalid or expired session', errorCode: 'INVALID_SESSION' }, 401);
+    }
     return c.redirect('/auth/login');
   }
   
   // Check if user has admin privileges
   if (!result.user.is_admin) {
+    if (isApiRequest) {
+      return c.json({ error: 'Admin privileges required', errorCode: 'FORBIDDEN' }, 403);
+    }
     return c.html(`
       <!DOCTYPE html>
       <html lang="ja">

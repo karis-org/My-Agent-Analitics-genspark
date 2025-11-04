@@ -189,47 +189,75 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
                 document.getElementById('results').classList.add('hidden');
                 
                 try {
+                    console.log('[DEBUG] Sending request with formData:', formData);
+                    
                     // Fetch rental analysis
                     const analysisResponse = await axios.post('/api/itandi/rental-analysis', formData);
+                    console.log('[DEBUG] Analysis response received:', analysisResponse);
                     const analysis = analysisResponse.data;
+                    console.log('[DEBUG] Analysis data:', analysis);
                     
                     // Fetch rental trend
                     const trendResponse = await axios.post('/api/itandi/rental-trend', {
                         ...formData,
                         months: 12
                     });
+                    console.log('[DEBUG] Trend response received:', trendResponse);
                     const trend = trendResponse.data;
+                    console.log('[DEBUG] Trend data:', trend);
                     
+                    console.log('[DEBUG] Calling displayResults...');
                     displayResults(analysis, trend);
+                    console.log('[DEBUG] displayResults completed');
                 } catch (error) {
-                    console.error('Analysis failed:', error);
-                    alert('賃貸相場の取得に失敗しました');
+                    console.error('[ERROR] Analysis failed:', error);
+                    console.error('[ERROR] Error details:', error.response ? error.response.data : error.message);
+                    
+                    // Handle authentication errors
+                    if (error.response?.status === 401) {
+                        alert('セッションが切れました。ログインページに移動します。');
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    
+                    alert('賃貸相場の取得に失敗しました: ' + (error.response?.data?.error || error.message));
                 } finally {
                     document.getElementById('loading').classList.add('hidden');
                 }
             });
             
             function displayResults(analysis, trend) {
+                console.log('[DEBUG] displayResults called with:', { analysis, trend });
+                
                 // Show results section
-                document.getElementById('results').classList.remove('hidden');
+                const resultsElement = document.getElementById('results');
+                console.log('[DEBUG] Results element:', resultsElement);
+                resultsElement.classList.remove('hidden');
                 
                 // Update summary cards
+                console.log('[DEBUG] Updating summary cards...');
                 document.getElementById('avgRent').textContent = \`¥\${Math.round(analysis.averageRent || 0).toLocaleString()}\`;
                 document.getElementById('medianRent').textContent = \`¥\${Math.round(analysis.medianRent || 0).toLocaleString()}\`;
                 document.getElementById('minRent').textContent = \`¥\${Math.round(analysis.minRent || 0).toLocaleString()}\`;
                 document.getElementById('maxRent').textContent = \`¥\${Math.round(analysis.maxRent || 0).toLocaleString()}\`;
+                console.log('[DEBUG] Summary cards updated');
                 
                 // Render trend chart
+                console.log('[DEBUG] Rendering trend chart...');
                 renderTrendChart(trend.trendData || []);
                 
                 // Render distribution chart
+                console.log('[DEBUG] Rendering distribution chart...');
                 renderDistributionChart(analysis.rentDistribution || []);
                 
                 // Render property list
+                console.log('[DEBUG] Rendering property list...');
                 renderPropertyList(analysis.properties || []);
                 
                 // Scroll to results
+                console.log('[DEBUG] Scrolling to results...');
                 document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                console.log('[DEBUG] displayResults completed successfully');
             }
             
             function renderTrendChart(trendData) {

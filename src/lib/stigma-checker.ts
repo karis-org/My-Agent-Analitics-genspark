@@ -47,9 +47,19 @@ export class StigmatizedPropertyChecker {
     const checkedAt = new Date().toISOString();
 
     // デモモードチェック
+    console.log('[Stigma Checker] OpenAI API Key status:', {
+      exists: !!this.openaiApiKey,
+      value: this.openaiApiKey ? `${this.openaiApiKey.substring(0, 10)}...` : 'null',
+      isDemo: this.openaiApiKey === 'demo',
+      isEmpty: this.openaiApiKey ? this.openaiApiKey.trim() === '' : true
+    });
+    
     if (!this.openaiApiKey || this.openaiApiKey === 'demo' || this.openaiApiKey.trim() === '') {
+      console.warn('[Stigma Checker] Running in demo mode due to missing/invalid API key');
       return this.generateDemoResult(address, propertyName, checkedAt);
     }
+    
+    console.log('[Stigma Checker] Running in full mode with valid API key');
 
     try {
       // 調査対象ソースリスト
@@ -131,15 +141,21 @@ ${propertyName ? `- 物件名: ${propertyName}` : ''}
       const data = await response.json();
       const content = data.choices[0]?.message?.content;
 
+      console.log('[Stigma Checker] OpenAI API response content:', content);
+
       if (!content) {
+        console.error('[Stigma Checker] No content in OpenAI response:', data);
         throw new Error('No content in OpenAI response');
       }
 
       // JSONをパース
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error('[Stigma Checker] No JSON found in response. Content:', content);
         throw new Error('No JSON found in response');
       }
+      
+      console.log('[Stigma Checker] Extracted JSON:', jsonMatch[0]);
 
       const result = JSON.parse(jsonMatch[0]);
 

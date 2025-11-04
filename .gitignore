@@ -59,3 +59,8 @@ nextjs-backup/
 # その他
 .DS_Store
 Thumbs.db
+
+# Temporary test files
+test-*.js
+*.backup
+/tmp/

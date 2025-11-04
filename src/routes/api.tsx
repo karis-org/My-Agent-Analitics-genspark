@@ -3766,4 +3766,248 @@ api.post('/properties/stigma-check', authMiddleware, async (c) => {
   }
 });
 
+/**
+ * Agents Management API Endpoints
+ * AIエージェント管理APIエンドポイント
+ */
+
+/**
+ * Get all agents for current user
+ * GET /api/agents
+ */
+api.get('/agents', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+
+    const agents = await env.DB.prepare(`
+      SELECT * FROM agents
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `).bind(user.id).all();
+
+    return c.json({
+      success: true,
+      agents: agents.results || []
+    });
+  } catch (error: any) {
+    console.error('Get agents error:', error);
+    return c.json({
+      error: 'エージェント一覧の取得に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get agent by ID
+ * GET /api/agents/:id
+ */
+api.get('/agents/:id', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const agentId = c.req.param('id');
+
+    const agent = await env.DB.prepare(`
+      SELECT * FROM agents
+      WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).first();
+
+    if (!agent) {
+      return c.json({ error: 'エージェントが見つかりません' }, 404);
+    }
+
+    return c.json({
+      success: true,
+      agent
+    });
+  } catch (error: any) {
+    console.error('Get agent error:', error);
+    return c.json({
+      error: 'エージェント情報の取得に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Create new agent
+ * POST /api/agents
+ */
+api.post('/agents', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const { name, description, agent_type, status, config } = await c.req.json();
+
+    if (!name) {
+      return c.json({ error: 'エージェント名は必須です' }, 400);
+    }
+
+    const agentId = `agent-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const now = new Date().toISOString();
+
+    await env.DB.prepare(`
+      INSERT INTO agents (id, user_id, name, description, agent_type, status, config, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      agentId,
+      user.id,
+      name,
+      description || null,
+      agent_type || 'analysis',
+      status || 'active',
+      config ? JSON.stringify(config) : null,
+      now,
+      now
+    ).run();
+
+    const agent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ?
+    `).bind(agentId).first();
+
+    return c.json({
+      success: true,
+      agent
+    });
+  } catch (error: any) {
+    console.error('Create agent error:', error);
+    return c.json({
+      error: 'エージェントの作成に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Update agent
+ * PUT /api/agents/:id
+ */
+api.put('/agents/:id', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const agentId = c.req.param('id');
+    const { name, description, agent_type, status, config } = await c.req.json();
+
+    // Verify agent exists and belongs to user
+    const existingAgent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).first();
+
+    if (!existingAgent) {
+      return c.json({ error: 'エージェントが見つかりません' }, 404);
+    }
+
+    const now = new Date().toISOString();
+
+    await env.DB.prepare(`
+      UPDATE agents
+      SET name = ?, description = ?, agent_type = ?, status = ?, config = ?, updated_at = ?
+      WHERE id = ? AND user_id = ?
+    `).bind(
+      name || existingAgent.name,
+      description !== undefined ? description : existingAgent.description,
+      agent_type || existingAgent.agent_type,
+      status || existingAgent.status,
+      config ? JSON.stringify(config) : existingAgent.config,
+      now,
+      agentId,
+      user.id
+    ).run();
+
+    const agent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ?
+    `).bind(agentId).first();
+
+    return c.json({
+      success: true,
+      agent
+    });
+  } catch (error: any) {
+    console.error('Update agent error:', error);
+    return c.json({
+      error: 'エージェントの更新に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Delete agent
+ * DELETE /api/agents/:id
+ */
+api.delete('/agents/:id', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const agentId = c.req.param('id');
+
+    // Verify agent exists and belongs to user
+    const existingAgent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).first();
+
+    if (!existingAgent) {
+      return c.json({ error: 'エージェントが見つかりません' }, 404);
+    }
+
+    // Delete agent (executions will be cascade deleted)
+    await env.DB.prepare(`
+      DELETE FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).run();
+
+    return c.json({
+      success: true,
+      message: 'エージェントを削除しました'
+    });
+  } catch (error: any) {
+    console.error('Delete agent error:', error);
+    return c.json({
+      error: 'エージェントの削除に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Get agent executions
+ * GET /api/agents/:id/executions
+ */
+api.get('/agents/:id/executions', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const agentId = c.req.param('id');
+
+    // Verify agent exists and belongs to user
+    const agent = await env.DB.prepare(`
+      SELECT * FROM agents WHERE id = ? AND user_id = ?
+    `).bind(agentId, user.id).first();
+
+    if (!agent) {
+      return c.json({ error: 'エージェントが見つかりません' }, 404);
+    }
+
+    const executions = await env.DB.prepare(`
+      SELECT * FROM agent_executions
+      WHERE agent_id = ?
+      ORDER BY created_at DESC
+      LIMIT 100
+    `).bind(agentId).all();
+
+    return c.json({
+      success: true,
+      executions: executions.results || []
+    });
+  } catch (error: any) {
+    console.error('Get executions error:', error);
+    return c.json({
+      error: '実行履歴の取得に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
 export default api;
