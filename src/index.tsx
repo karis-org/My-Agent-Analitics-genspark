@@ -214,6 +214,13 @@ app.get('/', (c) => {
             body {
                 font-family: 'Noto Sans JP', sans-serif;
             }
+            /* Logo styling to match official design */
+            .logo-my-agent {
+                color: #2c5f7f; /* Navy blue */
+            }
+            .logo-analytics {
+                color: #d4af37; /* Gold */
+            }
         </style>
     </head>
     <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
@@ -222,7 +229,7 @@ app.get('/', (c) => {
             <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-16 w-16" style="object-fit: contain;">
+                        <img src="/static/icons/my-agent-analytics-full-logo.png" alt="My Agent Analytics" style="height: 80px; width: auto; object-fit: contain;">
                     </div>
                     <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-block">
                         <i class="fas fa-sign-in-alt mr-2"></i>ログイン
@@ -416,7 +423,7 @@ app.get('/', (c) => {
             <div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
                 <div class="text-center">
                     <h4 class="text-2xl font-bold mb-4">
-                        <span class="logo-my-agent text-gray-300">My Agent </span><span class="logo-analytics">Analytics</span>
+                        <span class="logo-my-agent">My Agent </span><span class="logo-analytics">Analytics</span>
                     </h4>
                     <p class="text-gray-400 text-sm mb-6">
                         不動産投資をスマートに。AIを活用した次世代の分析システム。
