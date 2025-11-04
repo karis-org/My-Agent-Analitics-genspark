@@ -86,6 +86,98 @@ app.get('/api/hello', (c) => {
   return c.json({ message: 'Hello from My Agent Analytics!' })
 })
 
+// Add redirects for alternative paths
+app.get('/stigma-check', (c) => c.redirect('/stigma/check'))
+app.get('/itandi-bb', (c) => c.redirect('/itandi/rental-market'))
+app.get('/fact-check', (c) => c.redirect('/help'))
+app.get('/login', (c) => c.redirect('/auth/login'))
+
+// Custom 404 handler (must be defined before routes)
+app.notFound((c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>404 - ページが見つかりません</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        <div class="min-h-screen flex items-center justify-center px-4">
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-6"></i>
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">404 - ページが見つかりません</h1>
+                <p class="text-gray-600 mb-8">お探しのページは存在しないか、移動した可能性があります。</p>
+                <div class="space-x-4">
+                    <a href="/" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-home mr-2"></i>ホームに戻る
+                    </a>
+                    <a href="/dashboard" class="inline-block bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-tachometer-alt mr-2"></i>ダッシュボード
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+  `, 404)
+})
+
+// Custom error handler for 405 Method Not Allowed
+app.onError((err, c) => {
+  console.error('Application error:', err)
+  
+  if (err.message && err.message.includes('Method Not Allowed')) {
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="ja">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>405 - メソッドが許可されていません</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-50">
+          <div class="min-h-screen flex items-center justify-center px-4">
+              <div class="text-center">
+                  <h1 class="text-4xl font-bold text-gray-900 mb-4">405 - メソッドが許可されていません</h1>
+                  <p class="text-gray-600 mb-8">このリクエストメソッドは許可されていません。</p>
+                  <a href="/" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                      ホームに戻る
+                  </a>
+              </div>
+          </div>
+      </body>
+      </html>
+    `, 405)
+  }
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>500 - サーバーエラー</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50">
+        <div class="min-h-screen flex items-center justify-center px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">500 - サーバーエラー</h1>
+                <p class="text-gray-600 mb-8">申し訳ございません。サーバーでエラーが発生しました。</p>
+                <a href="/" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                    ホームに戻る
+                </a>
+            </div>
+        </div>
+    </body>
+    </html>
+  `, 500)
+})
+
 // Home page
 app.get('/', (c) => {
   return c.html(`
@@ -130,7 +222,7 @@ app.get('/', (c) => {
             <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <img src="/static/icons/my-agent-logo-new.png" alt="My Agent Analytics" class="h-16" style="height: auto; max-height: 64px;">
+                        <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-16 w-16" style="object-fit: contain;">
                     </div>
                     <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-block">
                         <i class="fas fa-sign-in-alt mr-2"></i>ログイン
@@ -146,7 +238,7 @@ app.get('/', (c) => {
                     <span class="logo-my-agent">My Agent </span><span class="logo-analytics">Analytics</span>
                 </h1>
                 <h2 class="text-3xl font-bold text-gray-900 mb-4">
-                    AIを活用した不動産投資分析プラットフォーム
+                    AIを活用した不動産投資分析システム
                 </h2>
                 <p class="text-xl text-gray-700 mb-6">
                     13の先進機能で物件データを多角的に分析。OCR、市場データ取得、事故物件調査まで完全自動化。
@@ -357,6 +449,39 @@ app.get('/', (c) => {
     </body>
     </html>
   `)
+})
+
+// Place 404 handler at the end of all routes
+app.all('*', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>404 - ページが見つかりません</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        <div class="min-h-screen flex items-center justify-center px-4">
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-6"></i>
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">404 - ページが見つかりません</h1>
+                <p class="text-gray-600 mb-8">お探しのページは存在しないか、移動した可能性があります。</p>
+                <div class="space-x-4">
+                    <a href="/" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-home mr-2"></i>ホームに戻る
+                    </a>
+                    <a href="/dashboard" class="inline-block bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-tachometer-alt mr-2"></i>ダッシュボード
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+  `, 404)
 })
 
 export default app
