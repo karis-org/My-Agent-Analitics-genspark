@@ -35,7 +35,7 @@
   ],
   "screenshots": [
     {
-      "src": "/static/icons/app-icon.png",
+      "src": "/static/icons/app-icon-1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "form_factor": "wide"

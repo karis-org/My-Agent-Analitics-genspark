@@ -1466,7 +1466,7 @@ properties.get('/:id/comprehensive-report', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-12 w-12 object-contain">
+                            <img src="/static/icons/app-icon.svg" alt="Logo" class="h-12 w-12">
                         </a>
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">統合分析レポート</h1>
