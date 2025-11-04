@@ -176,6 +176,27 @@ admin.get('/', async (c) => {
                 </div>
             </div>
 
+            <!-- Quick Access: Documentation -->
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 mb-8">
+                <div class="flex items-center justify-between text-white">
+                    <div>
+                        <h3 class="text-lg font-bold mb-2">
+                            <i class="fas fa-book mr-2"></i>ドキュメントセンター
+                        </h3>
+                        <p class="text-blue-100 text-sm mb-4">
+                            システムマニュアル、運用ガイド、トラブルシューティングをご覧いただけます
+                        </p>
+                        <a href="/admin/docs" 
+                           class="inline-block bg-white text-blue-600 px-6 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors">
+                            <i class="fas fa-arrow-right mr-2"></i>ドキュメントを開く
+                        </a>
+                    </div>
+                    <div class="hidden md:block text-6xl opacity-50">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                </div>
+            </div>
+
             <!-- Search and Filter -->
             <div class="bg-white rounded-lg shadow p-6 mb-8">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -820,6 +841,368 @@ admin.get('/api/activity-logs', async (c) => {
   return c.json({ 
     success: true, 
     logs: logsResult.results || [] 
+  });
+});
+
+/**
+ * Documentation Page
+ */
+admin.get('/docs', async (c) => {
+  const user = c.get('user');
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ドキュメント - 運営管理画面</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/marked@9.0.0/marked.min.js"></script>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+            body { font-family: 'Noto Sans JP', sans-serif; }
+            
+            .markdown-content h1 {
+                font-size: 2em;
+                font-weight: bold;
+                margin-top: 1em;
+                margin-bottom: 0.5em;
+                padding-bottom: 0.3em;
+                border-bottom: 2px solid #e5e7eb;
+            }
+            .markdown-content h2 {
+                font-size: 1.5em;
+                font-weight: bold;
+                margin-top: 1.5em;
+                margin-bottom: 0.5em;
+                padding-bottom: 0.2em;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .markdown-content h3 {
+                font-size: 1.25em;
+                font-weight: bold;
+                margin-top: 1em;
+                margin-bottom: 0.5em;
+            }
+            .markdown-content pre {
+                background-color: #1f2937;
+                color: #f3f4f6;
+                padding: 1em;
+                border-radius: 0.5em;
+                overflow-x: auto;
+                margin: 1em 0;
+            }
+            .markdown-content code {
+                background-color: #f3f4f6;
+                padding: 0.2em 0.4em;
+                border-radius: 0.25em;
+                font-family: 'Courier New', monospace;
+                font-size: 0.9em;
+            }
+            .markdown-content pre code {
+                background-color: transparent;
+                padding: 0;
+            }
+            .markdown-content table {
+                border-collapse: collapse;
+                width: 100%;
+                margin: 1em 0;
+            }
+            .markdown-content th, .markdown-content td {
+                border: 1px solid #e5e7eb;
+                padding: 0.5em;
+                text-align: left;
+            }
+            .markdown-content th {
+                background-color: #f9fafb;
+                font-weight: bold;
+            }
+            .markdown-content ul, .markdown-content ol {
+                margin: 0.5em 0;
+                padding-left: 2em;
+            }
+            .markdown-content li {
+                margin: 0.25em 0;
+            }
+            .markdown-content blockquote {
+                border-left: 4px solid #3b82f6;
+                padding-left: 1em;
+                margin: 1em 0;
+                color: #6b7280;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b-4 border-red-500">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-red-500 text-white px-3 py-1 rounded font-bold text-sm">
+                            <i class="fas fa-shield-alt mr-1"></i>運営管理
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-900">ドキュメント</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="/admin" 
+                           class="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded hover:bg-gray-100">
+                            <i class="fas fa-arrow-left mr-1"></i>管理画面に戻る
+                        </a>
+                        <a href="/dashboard" 
+                           class="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded hover:bg-gray-100">
+                            <i class="fas fa-home mr-1"></i>ダッシュボード
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow p-6 sticky top-8">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">
+                            <i class="fas fa-book mr-2"></i>ドキュメント一覧
+                        </h3>
+                        <nav class="space-y-2">
+                            <button onclick="loadDoc('USER_MANUAL_V6.7.4')" 
+                                    class="doc-nav-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-user-guide mr-2"></i>ユーザーマニュアル
+                            </button>
+                            <button onclick="loadDoc('OPERATIONS_MANUAL_SPECIFICATIONS')" 
+                                    class="doc-nav-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-file-code mr-2"></i>システム仕様書
+                            </button>
+                            <button onclick="loadDoc('OPERATIONS_MANUAL_ERROR_HANDLING')" 
+                                    class="doc-nav-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>エラー対処法
+                            </button>
+                            <button onclick="loadDoc('OPERATIONS_MANUAL_GUIDE')" 
+                                    class="doc-nav-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-tasks mr-2"></i>運用ガイド
+                            </button>
+                            <button onclick="loadDoc('MONITORING_SETUP')" 
+                                    class="doc-nav-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-chart-line mr-2"></i>監視設定ガイド
+                            </button>
+                            <button onclick="loadDoc('PRE_RELEASE_CHECKLIST')" 
+                                    class="doc-nav-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-check-circle mr-2"></i>リリースチェックリスト
+                            </button>
+                        </nav>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-sm text-gray-600">
+                            <p class="mb-2"><strong>バージョン:</strong> v6.7.4</p>
+                            <p><strong>最終更新:</strong> 2025年11月4日</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div class="lg:col-span-3">
+                    <div class="bg-white rounded-lg shadow">
+                        <!-- Loading State -->
+                        <div id="loading" class="p-12 text-center hidden">
+                            <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                            <p class="text-gray-600">読み込み中...</p>
+                        </div>
+                        
+                        <!-- Welcome State -->
+                        <div id="welcome" class="p-12 text-center">
+                            <i class="fas fa-book-open text-6xl text-blue-500 mb-6"></i>
+                            <h2 class="text-2xl font-bold text-gray-900 mb-4">ドキュメントセンター</h2>
+                            <p class="text-gray-600 mb-6">
+                                左のメニューからドキュメントを選択してください。<br>
+                                システムの使い方、運用方法、トラブルシューティングなどの情報を確認できます。
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                                <div class="p-4 border border-gray-200 rounded-lg">
+                                    <i class="fas fa-user-guide text-2xl text-blue-500 mb-2"></i>
+                                    <h3 class="font-bold mb-1">ユーザーマニュアル</h3>
+                                    <p class="text-sm text-gray-600">エンドユーザー向けの完全ガイド</p>
+                                </div>
+                                <div class="p-4 border border-gray-200 rounded-lg">
+                                    <i class="fas fa-file-code text-2xl text-green-500 mb-2"></i>
+                                    <h3 class="font-bold mb-1">システム仕様書</h3>
+                                    <p class="text-sm text-gray-600">技術仕様とAPI仕様</p>
+                                </div>
+                                <div class="p-4 border border-gray-200 rounded-lg">
+                                    <i class="fas fa-exclamation-triangle text-2xl text-orange-500 mb-2"></i>
+                                    <h3 class="font-bold mb-1">エラー対処法</h3>
+                                    <p class="text-sm text-gray-600">トラブルシューティングガイド</p>
+                                </div>
+                                <div class="p-4 border border-gray-200 rounded-lg">
+                                    <i class="fas fa-tasks text-2xl text-purple-500 mb-2"></i>
+                                    <h3 class="font-bold mb-1">運用ガイド</h3>
+                                    <p class="text-sm text-gray-600">日常運用タスクと手順</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Document Content -->
+                        <div id="content" class="p-8 markdown-content hidden"></div>
+                        
+                        <!-- Error State -->
+                        <div id="error" class="p-12 text-center hidden">
+                            <i class="fas fa-exclamation-circle text-6xl text-red-500 mb-6"></i>
+                            <h2 class="text-2xl font-bold text-gray-900 mb-4">読み込みエラー</h2>
+                            <p class="text-gray-600 mb-6" id="error-message">
+                                ドキュメントの読み込みに失敗しました。
+                            </p>
+                            <button onclick="location.reload()" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
+                                <i class="fas fa-redo mr-2"></i>再読み込み
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            // Document content mapping
+            const docs = {
+                'USER_MANUAL_V6.7.4': {
+                    title: 'ユーザーマニュアル v6.7.4',
+                    file: 'USER_MANUAL_V6.7.4.md'
+                },
+                'OPERATIONS_MANUAL_SPECIFICATIONS': {
+                    title: 'システム仕様書',
+                    file: 'OPERATIONS_MANUAL_SPECIFICATIONS.md'
+                },
+                'OPERATIONS_MANUAL_ERROR_HANDLING': {
+                    title: 'エラー対処法',
+                    file: 'OPERATIONS_MANUAL_ERROR_HANDLING.md'
+                },
+                'OPERATIONS_MANUAL_GUIDE': {
+                    title: '運用ガイド',
+                    file: 'OPERATIONS_MANUAL_GUIDE.md'
+                },
+                'MONITORING_SETUP': {
+                    title: '監視設定ガイド',
+                    file: 'MONITORING_SETUP.md'
+                },
+                'PRE_RELEASE_CHECKLIST': {
+                    title: 'リリース前チェックリスト',
+                    file: 'PRE_RELEASE_CHECKLIST.md'
+                }
+            };
+
+            function showElement(id) {
+                ['loading', 'welcome', 'content', 'error'].forEach(el => {
+                    document.getElementById(el).classList.add('hidden');
+                });
+                document.getElementById(id).classList.remove('hidden');
+            }
+
+            async function loadDoc(docKey) {
+                const doc = docs[docKey];
+                if (!doc) {
+                    showError('ドキュメントが見つかりません');
+                    return;
+                }
+
+                showElement('loading');
+
+                try {
+                    const response = await fetch(\`/admin/api/docs/\${doc.file}\`);
+                    if (!response.ok) {
+                        throw new Error('ドキュメントの読み込みに失敗しました');
+                    }
+
+                    const markdown = await response.text();
+                    const html = marked.parse(markdown);
+                    
+                    document.getElementById('content').innerHTML = html;
+                    showElement('content');
+                    
+                    // Scroll to top
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } catch (error) {
+                    console.error('Error loading document:', error);
+                    showError(error.message);
+                }
+            }
+
+            function showError(message) {
+                document.getElementById('error-message').textContent = message;
+                showElement('error');
+            }
+        </script>
+    </body>
+    </html>
+  `);
+});
+
+/**
+ * API: Get document content
+ */
+admin.get('/api/docs/:filename', async (c) => {
+  const filename = c.req.param('filename');
+  
+  // Security: Only allow specific document files
+  const allowedFiles = [
+    'USER_MANUAL_V6.7.4.md',
+    'OPERATIONS_MANUAL_SPECIFICATIONS.md',
+    'OPERATIONS_MANUAL_ERROR_HANDLING.md',
+    'OPERATIONS_MANUAL_GUIDE.md',
+    'MONITORING_SETUP.md',
+    'PRE_RELEASE_CHECKLIST.md'
+  ];
+  
+  if (!allowedFiles.includes(filename)) {
+    return c.text('File not found', 404);
+  }
+  
+  // In Cloudflare Workers, we need to serve docs from a different approach
+  // Since we can't read files directly, we'll return a placeholder
+  // In production, these should be uploaded to R2 or KV storage
+  
+  const docContent = `# ドキュメント: ${filename}
+
+このドキュメントは現在開発中です。
+
+**Note**: Cloudflare Workers環境では、ドキュメントファイルをR2またはKV storageに保存する必要があります。
+
+## 実装オプション
+
+### オプション1: R2 Storage
+\`\`\`bash
+# ドキュメントをR2にアップロード
+npx wrangler r2 object put my-agent-analytics-docs/${filename} --file=docs/${filename}
+\`\`\`
+
+### オプション2: KV Storage  
+\`\`\`bash
+# ドキュメントをKVに保存
+npx wrangler kv:key put "${filename}" --path=docs/${filename} --binding=DOCS
+\`\`\`
+
+### オプション3: GitHub Pages
+- docsディレクトリをGitHub Pagesで公開
+- 管理画面から直接リンク
+
+## 一時的な解決策
+
+ドキュメントファイルはGitHubリポジトリで参照できます:
+- [ユーザーマニュアル](https://github.com/YOUR_ORG/webapp/blob/main/docs/USER_MANUAL_V6.7.4.md)
+- [システム仕様書](https://github.com/YOUR_ORG/webapp/blob/main/docs/OPERATIONS_MANUAL_SPECIFICATIONS.md)
+- [エラー対処法](https://github.com/YOUR_ORG/webapp/blob/main/docs/OPERATIONS_MANUAL_ERROR_HANDLING.md)
+- [運用ガイド](https://github.com/YOUR_ORG/webapp/blob/main/docs/OPERATIONS_MANUAL_GUIDE.md)
+- [監視設定ガイド](https://github.com/YOUR_ORG/webapp/blob/main/docs/MONITORING_SETUP.md)
+- [リリースチェックリスト](https://github.com/YOUR_ORG/webapp/blob/main/docs/PRE_RELEASE_CHECKLIST.md)
+`;
+
+  return c.text(docContent, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8'
+    }
   });
 });
 
