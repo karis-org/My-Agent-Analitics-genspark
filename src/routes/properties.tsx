@@ -36,7 +36,7 @@ properties.get('/', (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">物件一覧</h1>
                     </div>
@@ -185,7 +185,7 @@ properties.get('/new', (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">新規物件登録</h1>
                     </div>
@@ -768,7 +768,7 @@ properties.get('/:id/edit', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">物件編集</h1>
                     </div>
@@ -934,7 +934,7 @@ properties.get('/:id', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">物件詳細</h1>
                     </div>
@@ -1102,7 +1102,7 @@ properties.get('/:id/analyze', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">物件分析</h1>
                     </div>
@@ -2390,7 +2390,7 @@ properties.get('/:id/comprehensive-report', async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
                         </a>
                         <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
                             統合分析ダッシュボード

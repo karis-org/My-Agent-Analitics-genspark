@@ -30,7 +30,7 @@ help.get('/', (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
                         </a>
                         <h1 class="text-2xl font-bold text-gray-900">使い方ガイド</h1>
                     </div>
