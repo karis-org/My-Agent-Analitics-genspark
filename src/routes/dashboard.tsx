@@ -35,7 +35,7 @@ dashboard.get('/', (c) => {
             <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <img src="/static/icons/my-agent-logo-new.png" alt="My Agent Analytics" class="h-12" style="height: auto; max-height: 48px;">
+                        <img src="/static/icons/my-agent-analytics-full-logo.png" alt="My Agent Analytics" class="h-12" style="height: auto; max-height: 48px;">
                         <h1 class="text-2xl font-bold hidden md:block">
                             <span class="logo-my-agent">My Agent</span>
                             <span class="logo-analytics">Analytics</span>
