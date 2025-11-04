@@ -35,7 +35,7 @@ stigma.get('/check', authMiddleware, async (c) => {
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <a href="/dashboard">
-                            <img src="/static/icons/app-icon.svg" alt="Logo" class="h-10 w-10">
+                            <img src="/static/icons/app-icon.png" alt="Logo" class="h-10 w-10">
                         </a>
                         <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
                             事故物件（心理的瑕疵）調査

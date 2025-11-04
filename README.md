@@ -13,7 +13,13 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 **🚀 面倒な設定は一切不要！ログインするだけですぐに使えます。**
 
-**✨ v6.7.4 更新情報** (NEW):
+**✨ v6.7.5 更新情報** (NEW):
+- ✅ **完全透過ロゴ実装** - 3D浮き出し効果、グラデーション、グロー効果追加
+- ✅ **黒背景問題完全解決** - PNG削除、SVG完全移行、manifest.json修正
+- ✅ **3D立体効果実装** - スフィアグラデーション、ドロップシャドウ、ハイライト光沢
+- ✅ **全PNG参照削除** - properties.tsx、manifest.jsonの残存参照修正
+
+**✨ v6.7.4 更新情報**:
 - ✅ **ロゴ透過問題完全解決** - SVG形式に移行、透過円形背景実装
 - ✅ **リリース前チェックリスト作成** - 95%完成度確認、全機能検証済み
 - ✅ **包括的エラーテスト実施** - 35項目テスト実施（21合格、14警告、0失敗）
@@ -75,8 +81,11 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🚀 デモ
 
-**🚀 本番環境（v6.7.4 最新）**: [https://3ccc9c44.my-agent-analytics.pages.dev](https://3ccc9c44.my-agent-analytics.pages.dev)  
-✨ **SVGロゴ実装・包括的テスト完了・リリース準備95%完了** 🎉
+**🚀 本番環境（v6.7.5 最新）**: 準備中（次回デプロイ）  
+✨ **3D透過ロゴ実装・黒背景問題完全解決** 🎉
+
+**🚀 本番環境（v6.7.4）**: [https://3ccc9c44.my-agent-analytics.pages.dev](https://3ccc9c44.my-agent-analytics.pages.dev)  
+✨ **SVGロゴ実装・包括的テスト完了・リリース準備95%完了**
 
 **🚀 本番環境（v6.7.3）**: [https://95edbd46.my-agent-analytics.pages.dev](https://95edbd46.my-agent-analytics.pages.dev)
 

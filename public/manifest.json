@@ -1,12 +1,15 @@
 {
   "name": "My Agent Analytics",
   "short_name": "Agent Analytics",
-  "description": "エージェント分析ツール - AI エージェントによるデータ分析と可視化",
+  "description": "AIを活用した不動産投資分析プラットフォーム - 13の先進機能で物件データを多角的に分析。OCR、市場データ取得、事故物件調査まで完全自動化。",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -30,9 +33,50 @@
       "src": "/icons/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
+    },
+    {
+      "src": "/static/icons/app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["productivity", "business", "utilities"],
-  "lang": "ja",
-  "dir": "ltr"
+  "screenshots": [],
+  "categories": ["productivity", "business", "utilities", "finance"],
+  "lang": "ja-JP",
+  "dir": "ltr",
+  "related_applications": [],
+  "shortcuts": [
+    {
+      "name": "物件一覧",
+      "short_name": "物件",
+      "description": "物件一覧ページを開く",
+      "url": "/properties",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "新規物件登録",
+      "short_name": "新規登録",
+      "description": "新しい物件を登録",
+      "url": "/properties/new",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "ダッシュボード",
+      "short_name": "ダッシュボード",
+      "description": "ダッシュボードを表示",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "/properties/new",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "name",
+      "text": "description",
+      "url": "url"
+    }
+  }
 }

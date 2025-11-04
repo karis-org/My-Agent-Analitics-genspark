@@ -1,63 +1,61 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- 完全透過背景 - 背景要素なし -->
-  
-  <!-- 3D効果用のグラデーション定義 -->
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- 完全透過背景 - 3D浮き出し効果付き -->
   <defs>
-    <!-- 外側のグロー効果（発光） -->
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+    <!-- グラデーション定義 - 3D効果 -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 影の定義 -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8"/>
+      <feOffset dx="4" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
       <feMerge>
-        <feMergeNode in="coloredBlur"/>
+        <feMergeNode/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
     
-    <!-- 3D立体効果用のグラデーション -->
-    <radialGradient id="sphereGradient" cx="35%" cy="35%">
-      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
-    </radialGradient>
-    
-    <!-- テキスト用のグラデーション -->
-    <linearGradient id="textGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1" />
-    </linearGradient>
-    
-    <!-- ドロップシャドウ効果 -->
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.3"/>
+    <!-- ハイライト効果 -->
+    <filter id="highlight">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="-2" dy="-2" result="offsetblur"/>
+      <feFlood flood-color="white" flood-opacity="0.5"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
   </defs>
   
-  <!-- 背景の円（3Dグラデーション適用） -->
-  <circle cx="256" cy="256" r="240" 
-          fill="url(#sphereGradient)" 
-          filter="url(#shadow)" />
+  <!-- メインテキスト "MA" - 3D効果付き -->
+  <text 
+    x="50%" 
+    y="55%" 
+    dominant-baseline="middle" 
+    text-anchor="middle" 
+    font-size="240" 
+    fill="url(#textGradient)" 
+    font-family="Arial, sans-serif" 
+    font-weight="bold"
+    filter="url(#shadow)"
+    style="paint-order: stroke fill;">MA</text>
   
-  <!-- ハイライト（光沢効果） -->
-  <ellipse cx="256" cy="180" rx="160" ry="80" 
-           fill="white" 
-           opacity="0.2" />
-  
-  <!-- テキスト "MA" （グラデーション＋影付き） -->
-  <text x="50%" y="50%" 
-        dominant-baseline="middle" 
-        text-anchor="middle" 
-        font-size="200" 
-        fill="url(#textGradient)" 
-        font-family="Arial, sans-serif" 
-        font-weight="bold"
-        filter="url(#glow)">MA</text>
-  
-  <!-- テキストの立体感を出すための影 -->
-  <text x="50%" y="51%" 
-        dominant-baseline="middle" 
-        text-anchor="middle" 
-        font-size="200" 
-        fill="#1e40af" 
-        font-family="Arial, sans-serif" 
-        font-weight="bold"
-        opacity="0.3">MA</text>
+  <!-- ハイライトテキスト（3D効果強化） -->
+  <text 
+    x="50%" 
+    y="54%" 
+    dominant-baseline="middle" 
+    text-anchor="middle" 
+    font-size="240" 
+    fill="white" 
+    fill-opacity="0.2"
+    font-family="Arial, sans-serif" 
+    font-weight="bold">MA</text>
 </svg>
