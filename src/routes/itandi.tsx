@@ -46,6 +46,22 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
         </header>
 
         <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <!-- Info Banner -->
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-6 mb-6 rounded-lg">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-blue-900 mb-2">デモモード（サンプルデータ）</h3>
+                        <p class="text-blue-800 text-sm">
+                            現在、サンプルデータを表示しています。イタンジBB APIと連携することで、実際の賃貸市場データを取得できます。
+                            <br>API連携を希望される場合は、イタンジBBの認証情報（メールアドレス・パスワード）を設定してください。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Search Form -->
             <div class="bg-white rounded-lg shadow p-6 mb-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-4">

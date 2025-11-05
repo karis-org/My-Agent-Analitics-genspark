@@ -71,6 +71,27 @@ residential.get('/evaluate', async (c) => {
                 <i class="fas fa-home text-blue-600 mr-3"></i>実需用不動産の資産性評価
             </h1>
 
+            <!-- OCR Upload Section - Moved to top -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="section-title">
+                    <i class="fas fa-file-image mr-2"></i>マイソク・概要書読み取り
+                </div>
+                <div class="bg-blue-50 border-2 border-blue-200 border-dashed rounded-lg p-6">
+                    <div class="text-center">
+                        <i class="fas fa-upload text-5xl text-blue-600 mb-4"></i>
+                        <p class="text-lg font-semibold text-gray-900 mb-2">画像またはPDFをアップロード</p>
+                        <p class="text-sm text-gray-600 mb-4">物件情報を自動で読み取り、入力欄に反映します</p>
+                        <input type="file" id="mysoku-upload" accept="image/*,.pdf" class="hidden">
+                        <button type="button" onclick="document.getElementById('mysoku-upload').click()"
+                                class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-lg transition-colors">
+                            <i class="fas fa-upload mr-2"></i>ファイルを選択
+                        </button>
+                        <p class="text-xs text-gray-500 mt-3">対応形式: JPG, PNG, PDF（最大10MB）</p>
+                    </div>
+                    <div id="ocr-status" class="mt-4 hidden"></div>
+                </div>
+            </div>
+
             <!-- Evaluation Form -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-8">
                 <form id="evaluationForm">
@@ -110,70 +131,6 @@ residential.get('/evaluate', async (c) => {
                         </div>
                     </div>
 
-                    <!-- Building Specification for Cost Approach -->
-                    <div class="section-title">
-                        <i class="fas fa-hammer mr-2"></i>原価法評価データ
-                    </div>
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">土地面積 (㎡)</label>
-                            <input type="number" id="landArea" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="150" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">土地単価 (円/㎡)</label>
-                            <input type="number" id="landPricePerSqm" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="850000">
-                        </div>
-                    </div>
-
-                    <!-- Asset Evaluation Factors -->
-                    <div class="section-title">
-                        <i class="fas fa-star mr-2"></i>資産性評価スコア (各0-100点)
-                    </div>
-                    <div class="grid md:grid-cols-3 gap-4">
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">立地スコア</label>
-                            <input type="number" id="locationScore" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="85" min="0" max="100">
-                        </div>
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">アクセススコア</label>
-                            <input type="number" id="accessibilityScore" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="90" min="0" max="100">
-                        </div>
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">周辺環境スコア</label>
-                            <input type="number" id="neighborhoodScore" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="80" min="0" max="100">
-                        </div>
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">建物品質スコア</label>
-                            <input type="number" id="buildingQualityScore" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="75" min="0" max="100">
-                        </div>
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">将来性スコア</label>
-                            <input type="number" id="futureProspectScore" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="70" min="0" max="100">
-                        </div>
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">流動性スコア</label>
-                            <input type="number" id="liquidityScore" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="85" min="0" max="100">
-                        </div>
-                    </div>
-
-                    <!-- OCR Upload Section -->
-                    <div class="section-title">
-                        <i class="fas fa-file-image mr-2"></i>マイソク・概要書読み取り
-                    </div>
-                    <div class="bg-blue-50 border-2 border-blue-200 border-dashed rounded-lg p-6 mb-4">
-                        <div class="text-center">
-                            <i class="fas fa-upload text-4xl text-blue-600 mb-3"></i>
-                            <p class="text-sm text-gray-700 mb-3">画像をアップロードすると物件情報を自動で入力します</p>
-                            <input type="file" id="mysoku-upload" accept="image/*,.pdf" class="hidden">
-                            <button type="button" onclick="document.getElementById('mysoku-upload').click()"
-                                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                                <i class="fas fa-upload mr-2"></i>画像をアップロード
-                            </button>
-                            <p class="text-xs text-gray-500 mt-2">対応形式: JPG, PNG, PDF</p>
-                        </div>
-                        <div id="ocr-status" class="mt-4 hidden"></div>
-                    </div>
-
                     <!-- Comparables Section -->
                     <div class="section-title">
                         <i class="fas fa-chart-line mr-2"></i>周辺取引事例
@@ -187,9 +144,6 @@ residential.get('/evaluate', async (c) => {
                     <div id="comparablesContainer" class="space-y-4">
                         <!-- Comparables will be added here dynamically -->
                     </div>
-                    <button type="button" id="addComparableBtn" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
-                        <i class="fas fa-plus mr-2"></i>取引事例を手動追加
-                    </button>
 
                     <!-- Land Price History Section -->
                     <div class="section-title">
@@ -204,9 +158,6 @@ residential.get('/evaluate', async (c) => {
                     <div id="landPriceContainer" class="space-y-4">
                         <!-- Land price history will be added here -->
                     </div>
-                    <button type="button" id="addLandPriceBtn" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
-                        <i class="fas fa-plus mr-2"></i>地価データを手動追加
-                    </button>
 
                     <!-- Evaluation Methods -->
                     <div class="section-title">
