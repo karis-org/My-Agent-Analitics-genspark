@@ -35,17 +35,28 @@ dashboard.get('/', (c) => {
             <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <img src="/static/icons/my-agent-analytics-full-logo.png" alt="My Agent Analytics" class="h-12" style="height: auto; max-height: 48px;">
-                        <h1 class="text-2xl font-bold hidden md:block">
-                            <span class="logo-my-agent">My Agent</span>
-                            <span class="logo-analytics">Analytics</span>
+                        <img src="/static/icons/my-agent-analytics-full-logo.png" 
+                             alt="My Agent Analytics" 
+                             class="h-12 object-contain" 
+                             style="max-height: 48px;"
+                             onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                        <h1 class="text-2xl font-bold md:block">
+                            <span class="text-blue-600">My Agent</span>
+                            <span class="text-gray-800">Analytics</span>
                         </h1>
                     </div>
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center space-x-3">
-                            <img src="${user?.picture || 'https://via.placeholder.com/40'}" 
+                            ${user?.picture ? `
+                            <img src="${user.picture}" 
                                  alt="${user?.name}" 
-                                 class="h-10 w-10 rounded-full">
+                                 class="h-10 w-10 rounded-full object-cover border border-gray-300"
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect fill=%22%236b7280%22 width=%2240%22 height=%2240%22/%3E%3Ctext fill=%22white%22 font-family=%22sans-serif%22 font-size=%2218%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3E${user?.name?.charAt(0) || 'U'}%3C/text%3E%3C/svg%3E';">
+                            ` : `
+                            <div class="h-10 w-10 rounded-full bg-gray-500 flex items-center justify-center text-white font-semibold">
+                                ${user?.name?.charAt(0) || 'U'}
+                            </div>
+                            `}
                             <div>
                                 <p class="text-sm font-medium text-gray-900">${user?.name}</p>
                                 <p class="text-xs text-gray-500">${user?.email}</p>

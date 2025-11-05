@@ -89,15 +89,15 @@ api.post('/properties/ocr', async (c) => {
     const isPDF = image.startsWith('data:application/pdf');
     const isImage = image.startsWith('data:image/');
     
-    // PDFファイルは現在サポートされていない
+    // PDFファイルはフロントエンドで画像に変換されるはずだが、念のためチェック
     if (isPDF) {
       return c.json({ 
-        error: 'PDF形式は現在サポートされていません',
-        errorCode: 'PDF_NOT_SUPPORTED',
+        error: 'PDFファイルは直接処理できません',
+        errorCode: 'PDF_NOT_CONVERTED',
         suggestions: [
+          'PDFは自動的に画像に変換されます。もう一度お試しください。',
           'PDFを画像形式（JPG、PNG）に変換してください',
-          'スクリーンショットを撮影してアップロードしてください',
-          '手動で入力することもできます'
+          'スクリーンショットを撮影してアップロードしてください'
         ],
         available: false,
         canRetry: true
@@ -132,6 +132,7 @@ api.post('/properties/ocr', async (c) => {
         total_floor_area: 65.5,
         age: 5,
         distance_from_station: 8,
+        monthly_rent: 100000,
         confidence: 'demo',
         mode: 'demonstration',
         message: 'デモンストレーションモードで動作しています。実際のOCR機能を利用するには、OpenAI APIキーを設定してください。'
@@ -198,8 +199,16 @@ api.post('/properties/ocr', async (c) => {
    - 例: "徒歩8分" → 8
    - 例: "駅5分" → 5
 
+8. **monthly_rent** (想定賃料・月額賃料)
+   - **数値のみ**を抽出（単位を含めない）
+   - 月額賃料、想定賃料、家賃などの記載
+   - 例: "賃料10万円" → 100000
+   - 例: "家賃 ¥120,000/月" → 120000
+   - 例: "8.5万円/月" → 85000
+   - 収益物件でない場合や記載がない場合はnull
+
 【重要な注意事項】
-- すべての数値フィールド(price, total_floor_area, age, distance_from_station)は**必ず数値型**で返す
+- すべての数値フィールド(price, total_floor_area, age, distance_from_station, monthly_rent)は**必ず数値型**で返す
 - 文字列の数値（例: "45000000"）ではなく、数値（例: 45000000）で返す
 - 情報が読み取れない場合のみnullを返す
 - レスポンスは**必ず有効なJSON形式のみ**で、コードブロック記号や説明文は一切含めない
@@ -212,7 +221,8 @@ api.post('/properties/ocr', async (c) => {
   "structure": "RC造",
   "total_floor_area": 65.5,
   "age": 5,
-  "distance_from_station": 8
+  "distance_from_station": 8,
+  "monthly_rent": 100000
 }`
             },
             {
