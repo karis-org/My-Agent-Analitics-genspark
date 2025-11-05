@@ -1185,9 +1185,15 @@ properties.get('/:id/analyze', async (c) => {
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">年間経費 (円)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                年間経費 (円)
+                                <button type="button" class="ml-1 text-xs text-blue-600 hover:text-blue-800 info-tooltip" data-message="年間経費の目安&#10;&#10;建物管理費: 22,000～55,000円/戸/月&#10;(建物管理会社によって異なります)&#10;&#10;その他経費:&#10;・修繕積立金&#10;・固定資産税&#10;・都市計画税&#10;・火災保険料&#10;・PM管理費（賃貸管理費）">
+                                    <i class="fas fa-question-circle"></i>
+                                </button>
+                            </label>
                             <input type="number" id="annualExpenses" value="0"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="例: 500000 (年間50万円)">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">ローン借入額 (円)</label>
@@ -1792,6 +1798,26 @@ properties.get('/:id/comprehensive-report', async (c) => {
                     \${stigma ? \`
                     <div class="dashboard-card">
                         <h3 class="section-header"><i class="fas fa-shield-alt mr-2"></i>事故物件調査結果</h3>
+                        
+                        <!-- 警告バナー -->
+                        <div class="mb-4 p-4 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mt-0.5"></i>
+                                <div class="flex-1 text-sm">
+                                    <p class="text-yellow-200 font-medium mb-1">⚠️ 注意事項</p>
+                                    <p class="text-slate-300 text-xs leading-relaxed">
+                                        本調査は参考情報です。完全な検出を保証するものではありません。
+                                        詳細は
+                                        <a href="https://www.oshimaland.co.jp/" target="_blank" rel="noopener noreferrer" 
+                                           class="text-blue-400 hover:text-blue-300 underline">
+                                            大島てる
+                                            <i class="fas fa-external-link-alt text-xs ml-1"></i>
+                                        </a>
+                                        で直接ご確認ください。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                         
                         <div class="flex items-center justify-between mb-6 p-4 bg-slate-800/50 rounded-lg border border-blue-500/20">
                             <span class="text-slate-300 font-medium">リスクレベル</span>

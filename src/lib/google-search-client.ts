@@ -96,26 +96,61 @@ export class GoogleSearchClient {
   async searchStigmatizedProperty(address: string, propertyName?: string): Promise<SearchResult[]> {
     const allResults: SearchResult[] = [];
     
-    // 検索クエリのバリエーション
-    const queries = [
-      // メイン検索
-      `${address}${propertyName ? ' ' + propertyName : ''} 事故 事件 大島てる`,
-      // 具体的なキーワードで検索
-      `${address}${propertyName ? ' ' + propertyName : ''} 自殺 他殺 火災`,
-      // 大島てる専用検索
-      `site:oshimaland.co.jp ${address}${propertyName ? ' ' + propertyName : ''}`,
-    ];
-
-    // 各クエリで検索（エラーが発生しても続行）
-    for (const query of queries) {
+    // 住所の正規化と複数バリエーション生成
+    const { normalizeAddress } = await import('./address-normalizer');
+    const addressVariations = normalizeAddress(address);
+    
+    console.log('[Google Search] Address variations:', addressVariations);
+    
+    const queries: string[] = [];
+    
+    // 区と町名を抽出（例: 葛飾区新小岩）
+    const kuMatch = address.match(/(.+区)(.+?)([0-9０-９一二三四五六七八九十]+|$)/);
+    const ku = kuMatch ? kuMatch[1] : '';
+    const town = kuMatch ? kuMatch[2] : '';
+    
+    // 各住所バリエーションで検索クエリを生成
+    for (const addr of addressVariations.slice(0, 3)) {  // 最大3バリエーション
+      queries.push(
+        // 大島てるサイト直接検索
+        `site:oshimaland.co.jp ${addr}`,
+        // 区と町名での広範囲検索
+        `site:oshimaland.co.jp ${ku} ${town}`,
+        // 一般的な事故物件検索
+        `${addr} 事故物件 大島てる`,
+        `${addr} 事件 事故`,
+        // 心理的瑕疵関連キーワード
+        `${addr} 自殺 他殺`,
+        `${addr} 火災 死亡`
+      );
+    }
+    
+    // 物件名がある場合は追加の検索
+    if (propertyName) {
+      queries.push(
+        `${propertyName} ${address} 事故`,
+        `site:oshimaland.co.jp ${propertyName}`,
+        `${propertyName} 事故物件`
+      );
+    }
+    
+    // 重複を削除
+    const uniqueQueries = Array.from(new Set(queries));
+    
+    console.log(`[Google Search] Total queries: ${uniqueQueries.length}`);
+    
+    // 各クエリで検索（最大15クエリまで）
+    for (const query of uniqueQueries.slice(0, 15)) {
       try {
+        console.log(`[Google Search] Searching: ${query}`);
         const results = await this.search(query, { num: 10 });
+        console.log(`[Google Search] Found ${results.length} results`);
         allResults.push(...results);
         
         // API制限を避けるため、少し待機
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 300));
       } catch (error) {
-        console.warn(`Search failed for query: ${query}`, error);
+        console.warn(`[Google Search] Failed for query: ${query}`, error);
         // エラーが発生しても次の検索を続行
       }
     }
@@ -124,6 +159,8 @@ export class GoogleSearchClient {
     const uniqueResults = allResults.filter((result, index, self) =>
       index === self.findIndex(r => r.link === result.link)
     );
+    
+    console.log(`[Google Search] Total unique results: ${uniqueResults.length}`);
 
     return uniqueResults;
   }

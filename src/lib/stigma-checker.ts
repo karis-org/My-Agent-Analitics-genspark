@@ -126,6 +126,12 @@ export class StigmatizedPropertyChecker {
     searchResults: SearchResult[]
   ): Promise<Omit<StigmaCheckResult, 'sourcesChecked' | 'checkedAt' | 'mode'>> {
     
+    // 住所バリエーションを生成
+    const { normalizeAddress } = await import('./address-normalizer');
+    const addressVariations = normalizeAddress(address);
+    
+    console.log('[Stigma Checker] Address variations for analysis:', addressVariations);
+    
     // 検索結果をテキストにまとめる
     const searchResultsText = searchResults.map((result, index) => `
 【検索結果 ${index + 1}】
@@ -138,6 +144,11 @@ URL: ${result.link}
 あなたは不動産の心理的瑕疵調査の専門家です。
 以下のGoogle検索結果から、「${address}${propertyName ? ` (${propertyName})` : ''}」に関する事故物件情報（心理的瑕疵）を分析してください。
 
+【調査対象住所】
+元の住所: ${address}
+住所バリエーション（これらはすべて同じ物件を指します）:
+${addressVariations.map((v, i) => `  ${i + 1}. ${v}`).join('\n')}
+
 【Google検索結果】
 ${searchResultsText}
 
@@ -148,11 +159,20 @@ ${searchResultsText}
    - 重大な犯罪事件（殺人、強盗等）
    - 火災事故
    - その他の心理的瑕疵に該当する事象
-3. 住所や物件名が完全一致または近似しているもののみ判定対象とする
-4. 単なる地域の一般的なニュースは除外する
+3. **重要**: 住所のバリエーション（例: 「六丁目」=「6丁目」=「6-」）を考慮してマッチング
+4. 検索結果の住所が上記のバリエーションのいずれかに該当する場合は同一物件と判定
+5. 単なる地域の一般的なニュースは除外する
+
+【住所マッチングの例】
+- 「東京都葛飾区新小岩二丁目27-2」
+- 「東京都葛飾区新小岩2丁目27-2」
+- 「葛飾区新小岩2-27-2」
+- 「葛飾区 新小岩 2-27-2」
+これらはすべて同じ住所として扱う
 
 【重要】
 - 検索結果に事故物件情報がある場合は必ず findings に含める
+- 住所バリエーションのいずれかにマッチすれば該当物件と判定
 - 検索結果がない、または関連性がない場合は findings を空配列にする
 - 憶測や推測は含めず、検索結果から確認できる事実のみを報告
 

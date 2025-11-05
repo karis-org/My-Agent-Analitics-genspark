@@ -3778,6 +3778,48 @@ api.post('/properties/stigma-check', authMiddleware, async (c) => {
 });
 
 /**
+ * TEST ENDPOINT: API Configuration Check
+ * Google Custom Search API設定確認エンドポイント
+ * GET /api/test/google-search-config
+ */
+api.get('/test/google-search-config', async (c) => {
+  const { env } = c;
+  
+  const hasApiKey = !!(env.GOOGLE_CUSTOM_SEARCH_API_KEY && 
+                       env.GOOGLE_CUSTOM_SEARCH_API_KEY !== 'demo' && 
+                       env.GOOGLE_CUSTOM_SEARCH_API_KEY.trim() !== '');
+  
+  const hasEngineId = !!(env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID && 
+                        env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID !== 'demo' && 
+                        env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID.trim() !== '' &&
+                        !env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID.startsWith('YOUR_'));
+  
+  const apiKeyPrefix = env.GOOGLE_CUSTOM_SEARCH_API_KEY ? 
+    env.GOOGLE_CUSTOM_SEARCH_API_KEY.substring(0, 8) + '...' : 'NOT_SET';
+  
+  const engineIdPrefix = env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID ? 
+    env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID.substring(0, 10) + '...' : 'NOT_SET';
+  
+  return c.json({
+    configured: hasApiKey && hasEngineId,
+    apiKey: {
+      set: hasApiKey,
+      prefix: apiKeyPrefix,
+      length: env.GOOGLE_CUSTOM_SEARCH_API_KEY?.length || 0
+    },
+    engineId: {
+      set: hasEngineId,
+      prefix: engineIdPrefix,
+      length: env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID?.length || 0,
+      isPlaceholder: env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID?.startsWith('YOUR_') || false
+    },
+    openai: {
+      set: !!(env.OPENAI_API_KEY && env.OPENAI_API_KEY !== 'demo')
+    }
+  });
+});
+
+/**
  * TEST ENDPOINT: Stigmatized Property Check (No Auth)
  * テスト用事故物件調査エンドポイント（認証不要）
  * POST /api/test/stigma-check
