@@ -1281,7 +1281,7 @@ properties.get('/:id/analyze', async (c) => {
                             <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-sm text-gray-600">表面利回り</p>
-                                    <button class="text-xs text-blue-600 hover:text-blue-800" onclick="alert('表面利回り（グロス利回り）\\n\\n計算式: 年間家賃収入 ÷ 物件価格 × 100\\n\\n経費を考慮せず、満室想定の年間家賃収入から算出する利回りです。物件の収益性を簡易的に比較する際に使用します。')">
+                                    <button type="button" class="text-base text-blue-600 hover:text-blue-800 hover:scale-110 transition-transform" onclick="alert('表面利回り（グロス利回り）\\n\\n計算式: 年間家賃収入 ÷ 物件価格 × 100\\n\\n経費を考慮せず、満室想定の年間家賃収入から算出する利回りです。物件の収益性を簡易的に比較する際に使用します。')" title="用語説明を表示">
                                         <i class="fas fa-question-circle"></i>
                                     </button>
                                 </div>
@@ -1290,7 +1290,7 @@ properties.get('/:id/analyze', async (c) => {
                             <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-sm text-gray-600">実質利回り</p>
-                                    <button class="text-xs text-green-600 hover:text-green-800" onclick="alert('実質利回り（ネット利回り）\\n\\n計算式: NOI ÷ 物件価格 × 100\\n\\n運営費用（管理費、修繕費、固定資産税等）を差し引いた後の利回りです。実際の収益性をより正確に表します。')">
+                                    <button type="button" class="text-base text-green-600 hover:text-green-800 hover:scale-110 transition-transform" onclick="alert('実質利回り（ネット利回り）\\n\\n計算式: NOI ÷ 物件価格 × 100\\n\\n運営費用（管理費、修繕費、固定資産税等）を差し引いた後の利回りです。実際の収益性をより正確に表します。')" title="用語説明を表示">
                                         <i class="fas fa-question-circle"></i>
                                     </button>
                                 </div>
@@ -1299,7 +1299,7 @@ properties.get('/:id/analyze', async (c) => {
                             <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-sm text-gray-600">NOI (純収益)</p>
-                                    <button class="text-xs text-purple-600 hover:text-purple-800" onclick="alert('NOI (Net Operating Income / 純収益)\\n\\n計算式: 実効収入 - 運営費\\n\\n物件が生み出す純粋な営業利益です。ローン返済前の手取り収入を表します。物件の収益力を評価する重要な指標です。')">
+                                    <button type="button" class="text-base text-purple-600 hover:text-purple-800 hover:scale-110 transition-transform" onclick="alert('NOI (Net Operating Income / 純収益)\\n\\n計算式: 実効収入 - 運営費\\n\\n物件が生み出す純粋な営業利益です。ローン返済前の手取り収入を表します。物件の収益力を評価する重要な指標です。')" title="用語説明を表示">
                                         <i class="fas fa-question-circle"></i>
                                     </button>
                                 </div>

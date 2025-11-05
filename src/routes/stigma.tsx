@@ -173,7 +173,34 @@ stigma.get('/check', authMiddleware, async (c) => {
                         <i class="fas fa-clipboard-list text-green-600"></i>
                         推奨アクション
                     </h3>
-                    <div id="actions-content"></div>
+                    <div id="actions-content">
+                        <!-- Default content: Cost information -->
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg">
+                            <h4 class="font-semibold text-blue-900 mb-3">
+                                <i class="fas fa-file-alt mr-2"></i>重要事項調査報告書の取得
+                            </h4>
+                            <p class="text-blue-800 mb-4">
+                                物件購入前に、管理会社から重要事項調査報告書を取得することを強く推奨します。
+                                この報告書には、過去の事故や修繕履歴、管理状況などの重要情報が含まれます。
+                            </p>
+                            <div class="bg-white p-4 rounded border border-blue-200">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-yen-sign text-blue-600 text-xl mt-1"></i>
+                                    <div>
+                                        <p class="font-medium text-gray-900 mb-1">調査費用の目安</p>
+                                        <p class="text-gray-700 text-sm mb-2">
+                                            <span class="font-semibold text-blue-600">22,000〜55,000円/戸</span>
+                                            <span class="text-gray-600">（管理会社により異なります）</span>
+                                        </p>
+                                        <p class="text-sm text-gray-600">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            詳細な費用については、調査対象の建物管理会社にお問い合わせください。
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Actions -->
