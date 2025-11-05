@@ -167,6 +167,15 @@ stigma.get('/check', authMiddleware, async (c) => {
                     <div id="sources-list" class="grid md:grid-cols-2 gap-4"></div>
                 </div>
 
+                <!-- Recommended Actions -->
+                <div id="recommended-actions" class="bg-white rounded-lg shadow p-8">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <i class="fas fa-clipboard-list text-green-600"></i>
+                        推奨アクション
+                    </h3>
+                    <div id="actions-content"></div>
+                </div>
+
                 <!-- Actions -->
                 <div class="bg-gray-50 rounded-lg p-6 flex justify-center space-x-4">
                     <button onclick="window.print()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
@@ -284,6 +293,76 @@ stigma.get('/check', authMiddleware, async (c) => {
                         \`}
                     </div>
                 \`).join('');
+                
+                // Recommended Actions
+                const actionsContent = document.getElementById('actions-content');
+                const riskLevel = result.riskLevel;
+                
+                const actionsByRisk = {
+                    'none': {
+                        title: '現時点で心理的瑕疵の公知情報は確認されていません。',
+                        steps: [
+                            { number: 1, title: '最終確認', description: '最終契約前に管理会社への念のための確認を推奨します。', note: '口頭確認で十分です。' }
+                        ]
+                    },
+                    'low': {
+                        title: '低リスクですが、慎重な確認を推奨します。',
+                        steps: [
+                            { number: 1, title: '管理会社照会（推奨）', description: '過去5年の自殺・事故・火災・特殊清掃の有無について文書照会', cost: '17,000〜20,000円/戸', note: '東急コミュニティー、ホームズ建物管理等の公式フォームから申請' },
+                            { number: 2, title: '現地ヒアリング（推奨）', description: '管理員または隣接住戸への詳細ヒアリング', note: '警察出動、救急搬送、長期封鎖などの事実確認' }
+                        ]
+                    },
+                    'medium': {
+                        title: '中リスク。管理会社照会と現地調査を強く推奨します。',
+                        steps: [
+                            { number: 1, title: '管理会社照会（必須）', description: '過去5年の自殺・事故・火災・特殊清掃の有無について文書照会', cost: '17,000〜20,000円/戸', note: '東急コミュニティー、ホームズ建物管理等の公式フォームから申請' },
+                            { number: 2, title: '現地ヒアリング（必須）', description: '管理員・隣接住戸・清掃業者への詳細ヒアリング', note: '発言者・日時を記録。警察出動・救急搬送・長期封鎖の確認' },
+                            { number: 3, title: '公的照会（推奨）', description: '所轄警察署・消防署への出動記録確認', note: '口頭照会。個人情報制限あり' }
+                        ]
+                    },
+                    'high': {
+                        title: '高リスク。管理会社照会および公的照会を必須とします。',
+                        steps: [
+                            { number: 1, title: '管理会社照会（必須）', description: '過去5年の自殺・事故・火災・特殊清掃の有無について文書照会', cost: '17,000〜20,000円/戸', note: '東急コミュニティー、ホームズ建物管理等の公式フォームから申請' },
+                            { number: 2, title: '現地ヒアリング（必須）', description: '管理員・隣接住戸・清掃業者への詳細ヒアリング', note: '発言者・日時を記録。警察出動・救急搬送・長期封鎖の確認' },
+                            { number: 3, title: '公的照会（必須）', description: '所轄警察署・消防署への出動・通報記録確認', note: '出動記録の有無を確認（口頭照会）。個人情報制限あり' },
+                            { number: 4, title: '報告・告知判断（必須）', description: '調査結果を要約し、宅建業法第47条に基づく告知判断を記録', note: '社内・買主向け資料を作成。国交省ガイドライン（2021）に準拠' }
+                        ]
+                    }
+                };
+                
+                const actions = actionsByRisk[riskLevel] || actionsByRisk['none'];
+                
+                actionsContent.innerHTML = \`
+                    <div class="mb-6">
+                        <p class="text-gray-700 leading-relaxed">\${actions.title}</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        \${actions.steps.map(step => \`
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-blue-600 font-bold">\${step.number}</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900 mb-2">\${step.title}</h4>
+                                        <p class="text-sm text-gray-600 mb-2">\${step.description}</p>
+                                        \${step.cost ? \`<p class="text-sm text-blue-600 mb-1"><i class="fas fa-yen-sign mr-1"></i>費用: \${step.cost}</p>\` : ''}
+                                        \${step.note ? \`<p class="text-xs text-gray-500 mt-2">※ \${step.note}</p>\` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        \`).join('')}
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-sm text-yellow-800 flex items-start">
+                            <i class="fas fa-info-circle mt-0.5 mr-2"></i>
+                            <span>国交省ガイドライン（2021）では、自然死・不慮の死は原則告知不要、事故から3年経過後も原則不要（例外あり）とされています。</span>
+                        </p>
+                    </div>
+                \`;
                 
                 // Scroll to results
                 document.getElementById('results').scrollIntoView({ behavior: 'smooth' });

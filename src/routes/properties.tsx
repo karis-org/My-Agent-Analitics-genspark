@@ -1809,7 +1809,7 @@ properties.get('/:id/comprehensive-report', async (c) => {
                         </div>
                         
                         \${stigma.incidents_found && stigma.incidents_found.length > 0 ? \`
-                        <div class="p-4 bg-red-900/10 rounded-lg border border-red-500/20">
+                        <div class="p-4 bg-red-900/10 rounded-lg border border-red-500/20 mb-4">
                             <h4 class="text-sm text-red-400 uppercase tracking-wide mb-3">
                                 <i class="fas fa-exclamation-triangle mr-2"></i>発見された事例
                             </h4>
@@ -1823,6 +1823,87 @@ properties.get('/:id/comprehensive-report', async (c) => {
                             </ul>
                         </div>
                         \` : ''}
+                        
+                        <!-- 推奨アクション -->
+                        <div class="p-4 bg-blue-900/10 rounded-lg border border-blue-500/20">
+                            <h4 class="text-sm text-blue-400 uppercase tracking-wide mb-3">
+                                <i class="fas fa-clipboard-list mr-2"></i>推奨アクション
+                            </h4>
+                            <p class="text-slate-200 mb-4 leading-relaxed">
+                                \${stigma.risk_level === 'none' ? '現時点で心理的瑕疵の公知情報は確認されていません。最終契約前に管理会社への念のための確認を推奨します。' :
+                                  stigma.risk_level === 'low' ? '低リスクですが、慎重な確認を推奨します。' :
+                                  stigma.risk_level === 'medium' ? '中リスク。管理会社照会と現地調査を強く推奨します。' :
+                                  '高リスク。管理会社照会および公的照会を必須とします。'}
+                            </p>
+                            
+                            <div class="space-y-3">
+                                \${stigma.risk_level !== 'none' ? \`
+                                <div class="p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                                    <div class="flex items-start">
+                                        <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                                            <span class="text-blue-400 font-bold text-sm">1</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h5 class="text-slate-200 font-medium mb-1">管理会社照会（\${stigma.risk_level === 'medium' || stigma.risk_level === 'high' ? '必須' : '推奨'}）</h5>
+                                            <p class="text-slate-400 text-sm mb-2">過去5年の自殺・事故・火災・特殊清掃の有無について文書照会</p>
+                                            <p class="text-blue-300 text-xs"><i class="fas fa-yen-sign mr-1"></i>費用: 17,000〜20,000円/戸</p>
+                                            <p class="text-slate-500 text-xs mt-1">※ 東急コミュニティー、ホームズ建物管理等の公式フォームから申請</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                                    <div class="flex items-start">
+                                        <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                                            <span class="text-blue-400 font-bold text-sm">2</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h5 class="text-slate-200 font-medium mb-1">現地ヒアリング（\${stigma.risk_level === 'medium' || stigma.risk_level === 'high' ? '必須' : '推奨'}）</h5>
+                                            <p class="text-slate-400 text-sm mb-2">管理員・隣接住戸・清掃業者への詳細ヒアリング</p>
+                                            <p class="text-slate-500 text-xs">※ 発言者・日時を記録。警察出動・救急搬送・長期封鎖の確認</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                \` : ''}
+                                
+                                \${stigma.risk_level === 'medium' || stigma.risk_level === 'high' ? \`
+                                <div class="p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                                    <div class="flex items-start">
+                                        <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                                            <span class="text-blue-400 font-bold text-sm">3</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h5 class="text-slate-200 font-medium mb-1">公的照会（\${stigma.risk_level === 'high' ? '必須' : '推奨'}）</h5>
+                                            <p class="text-slate-400 text-sm mb-2">所轄警察署・消防署への出動・通報記録確認</p>
+                                            <p class="text-slate-500 text-xs">※ 出動記録の有無を確認（口頭照会）。個人情報制限あり</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                \` : ''}
+                                
+                                \${stigma.risk_level === 'high' ? \`
+                                <div class="p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                                    <div class="flex items-start">
+                                        <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                                            <span class="text-blue-400 font-bold text-sm">4</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h5 class="text-slate-200 font-medium mb-1">報告・告知判断（必須）</h5>
+                                            <p class="text-slate-400 text-sm mb-2">調査結果を要約し、宅建業法第47条に基づく告知判断を記録</p>
+                                            <p class="text-slate-500 text-xs">※ 社内・買主向け資料を作成。国交省ガイドライン（2021）に準拠</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                \` : ''}
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-yellow-900/10 rounded-lg border border-yellow-500/20">
+                                <p class="text-yellow-300 text-xs flex items-start">
+                                    <i class="fas fa-info-circle mt-0.5 mr-2"></i>
+                                    <span>国交省ガイドライン（2021）では、自然死・不慮の死は原則告知不要、事故から3年経過後も原則不要（例外あり）とされています。</span>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                     \` : ''}
                     

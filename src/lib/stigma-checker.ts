@@ -243,6 +243,97 @@ ${searchResultsText}
   }
 
   /**
+   * リスクレベルに応じた推奨アクションを取得
+   */
+  static getRecommendedActions(riskLevel: string): {
+    title: string;
+    steps: Array<{
+      step: string;
+      action: string;
+      cost?: string;
+      note?: string;
+    }>;
+  } {
+    const actions: Record<string, any> = {
+      none: {
+        title: '現時点で心理的瑕疵の公知情報は確認されていません。',
+        steps: [
+          {
+            step: '最終確認',
+            action: '最終契約前に管理会社への念のための確認を推奨します。',
+            note: '口頭確認で十分です。'
+          }
+        ]
+      },
+      low: {
+        title: '低リスクですが、慎重な確認を推奨します。',
+        steps: [
+          {
+            step: 'Step 1: 管理会社照会',
+            action: '過去5年の自殺・事故・火災・特殊清掃の有無について文書照会',
+            cost: '17,000〜20,000円/戸',
+            note: '管理会社の公式フォームから申請'
+          },
+          {
+            step: 'Step 2: 現地確認',
+            action: '管理員または隣接住戸へのヒアリング',
+            note: '警察出動、救急搬送、長期封鎖などの事実確認'
+          }
+        ]
+      },
+      medium: {
+        title: '中リスク。管理会社照会と現地調査を強く推奨します。',
+        steps: [
+          {
+            step: 'Step 1: 管理会社照会（必須）',
+            action: '過去5年の自殺・事故・火災・特殊清掃の有無について文書照会',
+            cost: '17,000〜20,000円/戸',
+            note: '東急コミュニティー、ホームズ建物管理等の公式フォームから申請'
+          },
+          {
+            step: 'Step 2: 現地ヒアリング（必須）',
+            action: '管理員・隣接住戸・清掃業者への詳細ヒアリング',
+            note: '発言者・日時を記録。警察出動・救急搬送・長期封鎖の確認'
+          },
+          {
+            step: 'Step 3: 公的照会（推奨）',
+            action: '所轄警察署・消防署への出動記録確認',
+            note: '口頭照会。個人情報制限あり'
+          }
+        ]
+      },
+      high: {
+        title: '高リスク。管理会社照会および公的照会を必須とします。',
+        steps: [
+          {
+            step: 'Step 1: 管理会社照会（必須）',
+            action: '過去5年の自殺・事故・火災・特殊清掃の有無について文書照会',
+            cost: '17,000〜20,000円/戸',
+            note: '東急コミュニティー、ホームズ建物管理等の公式フォームから申請'
+          },
+          {
+            step: 'Step 2: 現地ヒアリング（必須）',
+            action: '管理員・隣接住戸・清掃業者への詳細ヒアリング',
+            note: '発言者・日時を記録。警察出動・救急搬送・長期封鎖の確認'
+          },
+          {
+            step: 'Step 3: 公的照会（必須）',
+            action: '所轄警察署・消防署への出動・通報記録確認',
+            note: '出動記録の有無を確認（口頭照会）。個人情報制限あり'
+          },
+          {
+            step: 'Step 4: 報告・告知判断',
+            action: '調査結果を要約し、宅建業法第47条に基づく告知判断を記録',
+            note: '社内・買主向け資料を作成。国交省ガイドライン（2021）に準拠'
+          }
+        ]
+      }
+    };
+
+    return actions[riskLevel] || actions.none;
+  }
+
+  /**
    * カテゴリーの日本語説明を取得
    */
   static getCategoryDescription(category: string): string {
