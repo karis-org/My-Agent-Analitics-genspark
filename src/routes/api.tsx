@@ -184,12 +184,15 @@ api.post('/properties/ocr', async (c) => {
    - 例: "徒歩8分" → 8
    - 例: "駅5分" → 5
 
-8. **monthly_rent** (想定賃料・月額賃料)
+8. **monthly_rent** (想定賃料・月額賃料・サブリース賃料)
    - **数値のみ**を抽出（単位を含めない）
-   - 月額賃料、想定賃料、家賃などの記載
+   - 「想定賃料」「賃料」「月額賃料」「家賃」「サブリース賃料」「貸室賃料」などの記載を探す
+   - 万円表記の場合は10,000倍して円に変換
+   - 例: "想定賃料 12万円" → 120000
    - 例: "賃料10万円" → 100000
    - 例: "家賃 ¥120,000/月" → 120000
-   - 例: "8.5万円/月" → 85000
+   - 例: "サブリース賃料 8.5万円/月" → 85000
+   - 例: "月額 ¥95,000" → 95000
    - 収益物件でない場合や記載がない場合はnull
 
 【重要な注意事項】
@@ -3637,29 +3640,59 @@ api.get('/properties/:id/comprehensive-data', authMiddleware, async (c) => {
       LIMIT 1
     `).bind(propertyId).first();
 
-    // 4. 人口動態分析結果取得
-    const demographicsResult = await env.DB.prepare(`
-      SELECT * FROM analysis_results 
-      WHERE property_id = ? AND analysis_type = 'demographics'
+    // 4. 人口動態分析結果取得（demographics_data テーブルまたは analysis_results テーブルから）
+    let demographicsResult = await env.DB.prepare(`
+      SELECT * FROM demographics_data 
+      WHERE property_id = ? 
       ORDER BY created_at DESC 
       LIMIT 1
     `).bind(propertyId).first();
+    
+    // Fallback to analysis_results table if not found in demographics_data
+    if (!demographicsResult) {
+      demographicsResult = await env.DB.prepare(`
+        SELECT * FROM analysis_results 
+        WHERE property_id = ? AND analysis_type = 'demographics'
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `).bind(propertyId).first();
+    }
 
-    // 5. AI市場分析結果取得
-    const aiMarketResult = await env.DB.prepare(`
-      SELECT * FROM analysis_results 
-      WHERE property_id = ? AND analysis_type = 'aiMarket'
+    // 5. AI市場分析結果取得（ai_analysis_results テーブルまたは analysis_results テーブルから）
+    let aiMarketResult = await env.DB.prepare(`
+      SELECT * FROM ai_analysis_results 
+      WHERE property_id = ? AND analysis_type = 'market'
       ORDER BY created_at DESC 
       LIMIT 1
     `).bind(propertyId).first();
+    
+    // Fallback to analysis_results table if not found in ai_analysis_results
+    if (!aiMarketResult) {
+      aiMarketResult = await env.DB.prepare(`
+        SELECT * FROM analysis_results 
+        WHERE property_id = ? AND analysis_type = 'aiMarket'
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `).bind(propertyId).first();
+    }
 
-    // 6. 地図データ取得
-    const mapsResult = await env.DB.prepare(`
-      SELECT * FROM analysis_results 
-      WHERE property_id = ? AND analysis_type = 'maps'
+    // 6. 地図データ取得（property_maps テーブルまたは analysis_results テーブルから）
+    let mapsResult = await env.DB.prepare(`
+      SELECT * FROM property_maps 
+      WHERE property_id = ? 
       ORDER BY created_at DESC 
       LIMIT 1
     `).bind(propertyId).first();
+    
+    // Fallback to analysis_results table if not found in property_maps
+    if (!mapsResult) {
+      mapsResult = await env.DB.prepare(`
+        SELECT * FROM analysis_results 
+        WHERE property_id = ? AND analysis_type = 'maps'
+        ORDER BY created_at DESC 
+        LIMIT 1
+      `).bind(propertyId).first();
+    }
 
     // JSON文字列をパース
     const parsedData = {
@@ -3669,9 +3702,24 @@ api.get('/properties/:id/comprehensive-data', authMiddleware, async (c) => {
         incidents_found: stigmaResult.incidents_found ? JSON.parse(stigmaResult.incidents_found as string) : []
       } : null,
       rental: rentalResult,
-      demographics: demographicsResult ? JSON.parse(demographicsResult.result_data as string) : null,
-      aiMarket: aiMarketResult ? JSON.parse(aiMarketResult.result_data as string) : null,
-      maps: mapsResult ? JSON.parse(mapsResult.result_data as string) : null
+      // demographics: 専用テーブルの場合はdemographics_detailをパース、analysis_resultsの場合はresult_dataをパース
+      demographics: demographicsResult ? (
+        demographicsResult.demographics_detail 
+          ? JSON.parse(demographicsResult.demographics_detail as string)
+          : (demographicsResult.result_data ? JSON.parse(demographicsResult.result_data as string) : demographicsResult)
+      ) : null,
+      // aiMarket: 専用テーブルの場合はanalysis_detailをパース、analysis_resultsの場合はresult_dataをパース
+      aiMarket: aiMarketResult ? (
+        aiMarketResult.analysis_detail 
+          ? JSON.parse(aiMarketResult.analysis_detail as string)
+          : (aiMarketResult.result_data ? JSON.parse(aiMarketResult.result_data as string) : aiMarketResult)
+      ) : null,
+      // maps: 専用テーブルの場合はそのまま使用、analysis_resultsの場合はresult_dataをパース
+      maps: mapsResult ? (
+        mapsResult.map_1km_url 
+          ? mapsResult // 専用テーブルの場合はそのまま
+          : (mapsResult.result_data ? JSON.parse(mapsResult.result_data as string) : mapsResult)
+      ) : null
     };
 
     return c.json({
