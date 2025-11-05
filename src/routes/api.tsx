@@ -3751,28 +3751,16 @@ api.post('/properties/stigma-check', authMiddleware, async (c) => {
       return c.json({ error: 'Address is required' }, 400);
     }
 
-    // Verify all required API keys are configured
-    if (!env.OPENAI_API_KEY || !env.GOOGLE_CUSTOM_SEARCH_API_KEY || !env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
-      return c.json({
-        success: false,
-        error: 'API認証情報が設定されていません。管理者に連絡してください。',
-        missing: {
-          openai: !env.OPENAI_API_KEY,
-          googleSearchKey: !env.GOOGLE_CUSTOM_SEARCH_API_KEY,
-          googleSearchEngineId: !env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
-        }
-      }, 500);
-    }
-
     // Initialize Stigma Checker with Google Custom Search API
     const { StigmatizedPropertyChecker } = await import('../lib/stigma-checker');
+    
     const checker = new StigmatizedPropertyChecker(
-      env.OPENAI_API_KEY,
-      env.GOOGLE_CUSTOM_SEARCH_API_KEY,
-      env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+      env.OPENAI_API_KEY || 'demo',
+      env.GOOGLE_CUSTOM_SEARCH_API_KEY || undefined,
+      env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID || undefined
     );
 
-    // Execute stigma check
+    // Execute stigma check (with real web search if APIs are configured)
     const result = await checker.checkProperty(address, propertyName);
 
     return c.json({
