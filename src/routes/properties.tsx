@@ -516,25 +516,13 @@ properties.get('/new', (c) => {
                                 ? \`<ul class="mt-2 text-xs text-gray-600 space-y-1">\${extractedFields.map(f => \`<li>✓ \${f}</li>\`).join('')}</ul>\`
                                 : '';
                             
-                            // デモモードの警告表示
-                            if (data.mode === 'demonstration') {
-                                uploadResult.innerHTML = \`
-                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                        <i class="fas fa-info-circle text-yellow-600 mr-2"></i>
-                                        <span class="text-sm text-yellow-800 font-medium">デモモード: サンプルデータを表示しています</span>
-                                        <p class="text-xs text-yellow-700 mt-2">実際のOCR機能を利用するには、OpenAI APIキーを設定してください。</p>
-                                        \${fieldsSummary}
-                                    </div>
-                                \`;
-                            } else {
-                                uploadResult.innerHTML = \`
-                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
-                                        <span class="text-sm text-green-800 font-medium">物件情報を自動入力しました</span>
-                                        \${fieldsSummary}
-                                    </div>
-                                \`;
-                            }
+                            uploadResult.innerHTML = \`
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                                    <span class="text-sm text-green-800 font-medium">物件情報を自動入力しました</span>
+                                    \${fieldsSummary}
+                                </div>
+                            \`;
                         } catch (error) {
                             console.error('OCR failed:', error);
                             uploadStatus.classList.add('hidden');
@@ -1804,18 +1792,6 @@ properties.get('/:id/comprehensive-report', async (c) => {
                     \${stigma ? \`
                     <div class="dashboard-card">
                         <h3 class="section-header"><i class="fas fa-shield-alt mr-2"></i>事故物件調査結果</h3>
-                        
-                        \${stigma.mode === 'demonstration' ? \`
-                        <div class="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                            <div class="flex items-start">
-                                <i class="fas fa-info-circle text-yellow-400 mr-3 mt-0.5"></i>
-                                <div class="flex-1">
-                                    <p class="text-yellow-300 font-medium text-sm">デモモード</p>
-                                    <p class="text-yellow-200/80 text-xs mt-1">実際の調査を行うには、OpenAI APIキーを設定してください。現在はサンプルデータを表示しています。</p>
-                                </div>
-                            </div>
-                        </div>
-                        \` : ''}
                         
                         <div class="flex items-center justify-between mb-6 p-4 bg-slate-800/50 rounded-lg border border-blue-500/20">
                             <span class="text-slate-300 font-medium">リスクレベル</span>

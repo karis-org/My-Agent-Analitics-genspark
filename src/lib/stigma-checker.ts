@@ -17,7 +17,6 @@ export interface StigmaCheckResult {
   summary: string;
   checkedAt: string;
   searchResults?: SearchResult[]; // 実際の検索結果を保存
-  mode: 'full' | 'demo'; // 動作モード
 }
 
 export interface StigmaFinding {
@@ -41,16 +40,20 @@ export class StigmatizedPropertyChecker {
   private openaiApiKey: string;
   private googleSearchClient: GoogleSearchClient | null;
 
-  constructor(openaiApiKey: string, googleApiKey?: string, searchEngineId?: string) {
-    this.openaiApiKey = openaiApiKey;
-    
-    // Google Custom Search APIが設定されている場合はクライアントを初期化
-    if (googleApiKey && searchEngineId && 
-        googleApiKey !== 'demo' && searchEngineId !== 'demo') {
-      this.googleSearchClient = new GoogleSearchClient(googleApiKey, searchEngineId);
-    } else {
-      this.googleSearchClient = null;
+  constructor(openaiApiKey: string, googleApiKey: string, searchEngineId: string) {
+    // APIキーの検証
+    if (!openaiApiKey || openaiApiKey.trim() === '') {
+      throw new Error('OpenAI APIキーが設定されていません。');
     }
+    if (!googleApiKey || googleApiKey.trim() === '') {
+      throw new Error('Google Custom Search APIキーが設定されていません。');
+    }
+    if (!searchEngineId || searchEngineId.trim() === '') {
+      throw new Error('Google Search Engine IDが設定されていません。');
+    }
+
+    this.openaiApiKey = openaiApiKey;
+    this.googleSearchClient = new GoogleSearchClient(googleApiKey, searchEngineId);
   }
 
   /**
@@ -61,23 +64,11 @@ export class StigmatizedPropertyChecker {
   async checkProperty(address: string, propertyName?: string): Promise<StigmaCheckResult> {
     const checkedAt = new Date().toISOString();
 
-    // デモモードチェック
-    const hasOpenAI = this.openaiApiKey && 
-                      this.openaiApiKey !== 'demo' && 
-                      this.openaiApiKey.trim() !== '';
-    const hasGoogleSearch = this.googleSearchClient !== null;
-
-    console.log('[Stigma Checker] Configuration:', {
-      hasOpenAI,
-      hasGoogleSearch,
-      openaiKeyPrefix: hasOpenAI ? this.openaiApiKey.substring(0, 10) + '...' : 'none'
+    console.log('[Stigma Checker] Starting property check:', {
+      address,
+      propertyName,
+      openaiKeyPrefix: this.openaiApiKey.substring(0, 10) + '...'
     });
-
-    // デモモード：両方のAPIキーが不足している場合
-    if (!hasOpenAI || !hasGoogleSearch) {
-      console.warn('[Stigma Checker] Running in demo mode - missing API keys');
-      return this.generateDemoResult(address, propertyName, checkedAt);
-    }
 
     try {
       // Step 1: Google Custom Search APIで実際にウェブ検索
@@ -109,8 +100,7 @@ export class StigmatizedPropertyChecker {
           sourcesChecked: sourcesToCheck,
           summary: `Google検索を実行しましたが、「${address}」に関する事故物件情報は見つかりませんでした。`,
           checkedAt,
-          searchResults: [],
-          mode: 'full'
+          searchResults: []
         };
       }
 
@@ -217,15 +207,12 @@ ${searchResultsText}
         sourcesChecked: sourcesToCheck,
         summary: analysis.summary || 'Google検索の結果、心理的瑕疵に該当する情報は確認されませんでした。',
         checkedAt,
-        searchResults,
-        mode: 'full'
+        searchResults
       };
 
     } catch (error) {
       console.error('[Stigma Checker] Error during check:', error);
-      
-      // エラー時はデモ結果を返す
-      return this.generateDemoResult(address, propertyName, checkedAt);
+      throw new Error(`事故物件調査に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -240,32 +227,6 @@ ${searchResultsText}
       { name: '警察庁', url: 'https://www.npa.go.jp', checked: false, foundIssues: 0 },
       { name: '消防庁', url: 'https://www.fdma.go.jp', checked: false, foundIssues: 0 },
     ];
-  }
-
-  /**
-   * デモモード用の結果生成
-   */
-  private generateDemoResult(address: string, propertyName: string | undefined, checkedAt: string): StigmaCheckResult {
-    const sourcesToCheck = this.getDefaultSources();
-    sourcesToCheck.forEach(s => s.checked = true);
-
-    return {
-      hasStigma: false,
-      riskLevel: 'none',
-      findings: [],
-      sourcesChecked: sourcesToCheck,
-      summary: `【デモモード】調査対象: ${address}${propertyName ? ` (${propertyName})` : ''}
-
-調査の結果、主要なニュースサイト、警察・消防関連サイト、事故物件公示サイト（大島てる）を確認しましたが、心理的瑕疵に該当する事件・事故の情報は確認されませんでした。
-
-※これはデモモードの結果です。実際のウェブ検索を行うには、以下のAPIキーの設定が必要です:
-- Google Custom Search APIキー
-- Google Search Engine ID
-- OpenAI APIキー`,
-      checkedAt,
-      searchResults: [],
-      mode: 'demo'
-    };
   }
 
   /**

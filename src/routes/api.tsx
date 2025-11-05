@@ -116,27 +116,12 @@ api.post('/properties/ocr', async (c) => {
     
     const { env } = c;
     
-    // OpenAI API Keyが設定されていない場合はモックデータを返す (v5.1.0)
-    if (!env.OPENAI_API_KEY || 
-        env.OPENAI_API_KEY === 'your-openai-api-key-here' || 
-        env.OPENAI_API_KEY === 'your-openai-api-key' ||
-        env.OPENAI_API_KEY.trim() === '') {
-      console.warn('OPENAI_API_KEY not configured, using mock data');
-      // モックデータを返す（デモンストレーションモード）
+    // OpenAI API Keyの検証
+    if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === '') {
       return c.json({
-        success: true,
-        name: 'サンプルマンション',
-        price: 45000000,
-        location: '東京都渋谷区恵比寿1-1-1',
-        structure: 'RC造',
-        total_floor_area: 65.5,
-        age: 5,
-        distance_from_station: 8,
-        monthly_rent: 100000,
-        confidence: 'demo',
-        mode: 'demonstration',
-        message: 'デモンストレーションモードで動作しています。実際のOCR機能を利用するには、OpenAI APIキーを設定してください。'
-      });
+        success: false,
+        error: 'OpenAI APIキーが設定されていません。管理者に連絡してください。'
+      }, 500);
     }
     
     // OpenAI Vision APIを使用して画像から情報を抽出
@@ -565,36 +550,12 @@ api.post('/market/analyze', async (c) => {
       return c.json({ error: 'Either area or city is required' }, 400);
     }
     
-    // v5.1.0: モックデータフォールバック
+    // REINFOLIB API Keyの検証
     if (!env.REINFOLIB_API_KEY || env.REINFOLIB_API_KEY.trim() === '') {
-      console.warn('REINFOLIB_API_KEY not configured, using mock data');
       return c.json({
-        success: true,
-        mode: 'demonstration',
-        analysis: {
-          area: city || area,
-          year: parseInt(year),
-          averagePrice: 45000000,
-          averagePricePerSquareMeter: 850000,
-          transactionCount: 156,
-          priceRange: {
-            min: 20000000,
-            max: 120000000,
-            median: 42000000
-          },
-          priceTrend: {
-            currentQuarter: 45000000,
-            previousQuarter: 43500000,
-            changeRate: 3.45
-          },
-          popularPropertyTypes: [
-            { type: 'マンション', count: 98, percentage: 62.8 },
-            { type: '戸建て', count: 38, percentage: 24.4 },
-            { type: '土地', count: 20, percentage: 12.8 }
-          ]
-        },
-        message: 'デモンストレーションモードで動作しています。実際の市場データを利用するには、REINFOLIB APIキーを設定してください。'
-      });
+        success: false,
+        error: 'REINFOLIB APIキーが設定されていません。管理者に連絡してください。'
+      }, 500);
     }
     
     const client = new ReinfolibClient(env.REINFOLIB_API_KEY);
@@ -2141,33 +2102,12 @@ api.post('/ai/analyze-property', async (c) => {
       return c.json({ error: 'Property data is required' }, 400);
     }
 
-    // v5.1.0: モックデータフォールバック
+    // OpenAI API Keyの検証
     if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === '') {
-      console.warn('OPENAI_API_KEY not configured, using mock analysis');
       return c.json({
-        success: true,
-        mode: 'demonstration',
-        analysis: {
-          summary: 'この物件は立地条件が良好で、投資対象として魅力的です。',
-          strengths: [
-            '駅徒歩圏内で利便性が高い',
-            '周辺環境が良好で居住需要が安定',
-            '建物の管理状態が良好'
-          ],
-          weaknesses: [
-            '築年数がやや経過している',
-            '設備の更新が必要な時期が近い'
-          ],
-          financialMetrics: {
-            estimatedYield: 5.2,
-            riskLevel: 'medium',
-            marketLiquidity: 'high'
-          },
-          recommendation: 'この物件への投資は「やや推奨」と判断されます。',
-          investmentScore: 72,
-          message: 'デモンストレーションモードで動作しています。実際のAI分析を利用するには、OpenAI APIキーを設定してください。'
-        }
-      });
+        success: false,
+        error: 'OpenAI APIキーが設定されていません。管理者に連絡してください。'
+      }, 500);
     }
 
     const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);
@@ -3327,25 +3267,36 @@ api.post('/properties/comprehensive-analysis', authMiddleware, async (c) => {
       }, 400);
     }
     
-    // APIキーの確認（モックデータモードの判定）
-    const hasReinfolib = env.REINFOLIB_API_KEY && env.REINFOLIB_API_KEY.trim() !== '';
-    const hasEStat = env.ESTAT_API_KEY && env.ESTAT_API_KEY.trim() !== '';
-    const hasOpenAI = env.OPENAI_API_KEY && env.OPENAI_API_KEY.trim() !== '';
-    
-    const mode = (!hasReinfolib || !hasEStat || !hasOpenAI) ? 'demonstration' : 'full';
-    
-    if (mode === 'demonstration') {
-      console.warn('[ComprehensiveAnalysis] Running in demonstration mode - some APIs not configured');
+    // APIキーの検証
+    if (!env.REINFOLIB_API_KEY || env.REINFOLIB_API_KEY.trim() === '') {
+      return c.json({
+        success: false,
+        error: 'REINFOLIB APIキーが設定されていません。管理者に連絡してください。'
+      }, 500);
     }
+    if (!env.ESTAT_API_KEY || env.ESTAT_API_KEY.trim() === '') {
+      return c.json({
+        success: false,
+        error: 'e-Stat APIキーが設定されていません。管理者に連絡してください。'
+      }, 500);
+    }
+    if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY.trim() === '') {
+      return c.json({
+        success: false,
+        error: 'OpenAI APIキーが設定されていません。管理者に連絡してください。'
+      }, 500);
+    }
+    
+    console.log('[ComprehensiveAnalysis] All API keys validated');
     
     // ComprehensivePropertyAnalyzerのインポート
     const { ComprehensivePropertyAnalyzer } = await import('../lib/comprehensive-analyzer');
     
     // アナライザーの初期化
     const analyzer = new ComprehensivePropertyAnalyzer(
-      env.REINFOLIB_API_KEY || 'demo',
-      env.ESTAT_API_KEY || 'demo',
-      env.OPENAI_API_KEY || 'demo'
+      env.REINFOLIB_API_KEY,
+      env.ESTAT_API_KEY,
+      env.OPENAI_API_KEY
     );
     
     // 分析の実行
@@ -3381,11 +3332,8 @@ api.post('/properties/comprehensive-analysis', authMiddleware, async (c) => {
     
     return c.json({
       success: true,
-      mode,
       analysis: result,
-      message: mode === 'demonstration' 
-        ? 'デモンストレーションモードで動作しています。完全な分析には、すべてのAPIキーを設定してください。'
-        : '完全な統合分析が完了しました。',
+      message: '統合分析が完了しました。',
     });
   } catch (error: any) {
     console.error('[ComprehensiveAnalysis] Error:', error);
@@ -3755,45 +3703,38 @@ api.post('/properties/stigma-check', authMiddleware, async (c) => {
       return c.json({ error: 'Address is required' }, 400);
     }
 
-    // Check if Google Custom Search API is configured
-    const hasGoogleSearch = env.GOOGLE_CUSTOM_SEARCH_API_KEY && 
-                           env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID &&
-                           env.GOOGLE_CUSTOM_SEARCH_API_KEY !== 'demo' &&
-                           env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID !== 'demo';
-
-    const hasOpenAI = env.OPENAI_API_KEY && env.OPENAI_API_KEY !== 'demo';
+    // Verify all required API keys are configured
+    if (!env.OPENAI_API_KEY || !env.GOOGLE_CUSTOM_SEARCH_API_KEY || !env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
+      return c.json({
+        success: false,
+        error: 'API認証情報が設定されていません。管理者に連絡してください。',
+        missing: {
+          openai: !env.OPENAI_API_KEY,
+          googleSearchKey: !env.GOOGLE_CUSTOM_SEARCH_API_KEY,
+          googleSearchEngineId: !env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+        }
+      }, 500);
+    }
 
     // Initialize Stigma Checker with Google Custom Search API
     const { StigmatizedPropertyChecker } = await import('../lib/stigma-checker');
     const checker = new StigmatizedPropertyChecker(
-      env.OPENAI_API_KEY || 'demo',
-      env.GOOGLE_CUSTOM_SEARCH_API_KEY || 'demo',
-      env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID || 'demo'
+      env.OPENAI_API_KEY,
+      env.GOOGLE_CUSTOM_SEARCH_API_KEY,
+      env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
     );
 
     // Execute stigma check
     const result = await checker.checkProperty(address, propertyName);
 
-    // Determine mode
-    let mode: 'full' | 'partial' | 'demo' = 'demo';
-    if (hasGoogleSearch && hasOpenAI) {
-      mode = 'full';
-    } else if (hasOpenAI || hasGoogleSearch) {
-      mode = 'partial';
-    }
-
     return c.json({
       success: true,
-      mode,
-      apiStatus: {
-        googleSearch: hasGoogleSearch ? 'active' : 'missing',
-        openai: hasOpenAI ? 'active' : 'missing'
-      },
       ...result,
     });
   } catch (error: any) {
     console.error('Stigma check error:', error);
     return c.json({
+      success: false,
       error: '事故物件調査に失敗しました',
       details: error.message,
     }, 500);

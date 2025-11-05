@@ -143,34 +143,27 @@ export class ItandiClient {
     if (!this.sessionToken) {
       const loginSuccess = await this.login();
       if (!loginSuccess) {
-        console.warn('Itandi BB authentication failed, falling back to mock data');
-        return this.getMockRentalAnalysis(params);
+        throw new Error('イタンジBBへのログインに失敗しました。認証情報を確認してください。');
       }
     }
 
-    try {
-      // 実際のAPI呼び出し
-      const response = await fetch(`${this.apiBaseUrl}/rental/analysis`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.sessionToken}`,
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        body: JSON.stringify(params)
-      });
+    // 実際のAPI呼び出し
+    const response = await fetch(`${this.apiBaseUrl}/rental/analysis`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.sessionToken}`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      body: JSON.stringify(params)
+    });
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return this.parseAnalysisResult(data);
-    } catch (error) {
-      console.error('API error:', error);
-      // フォールバック: モックデータを返す
-      return this.getMockRentalAnalysis(params);
+    if (!response.ok) {
+      throw new Error(`イタンジBB APIリクエストに失敗しました: ${response.status}`);
     }
+
+    const data = await response.json();
+    return this.parseAnalysisResult(data);
   }
 
   /**
@@ -180,32 +173,26 @@ export class ItandiClient {
     if (!this.sessionToken) {
       const loginSuccess = await this.login();
       if (!loginSuccess) {
-        console.warn('Itandi BB authentication failed, falling back to mock data');
-        return this.getMockRentalTrend(params, months);
+        throw new Error('イタンジBBへのログインに失敗しました。認証情報を確認してください。');
       }
     }
 
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/rental/trend`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.sessionToken}`,
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        body: JSON.stringify({ ...params, months })
-      });
+    const response = await fetch(`${this.apiBaseUrl}/rental/trend`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.sessionToken}`,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      body: JSON.stringify({ ...params, months })
+    });
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return this.parseTrendResult(data);
-    } catch (error) {
-      console.error('API error:', error);
-      return this.getMockRentalTrend(params, months);
+    if (!response.ok) {
+      throw new Error(`イタンジBB APIリクエストに失敗しました: ${response.status}`);
     }
+
+    const data = await response.json();
+    return this.parseTrendResult(data);
   }
 
   /**
@@ -271,176 +258,7 @@ export class ItandiClient {
     };
   }
 
-  /**
-   * モックデータ生成（API接続失敗時のフォールバック）
-   */
-  private getMockRentalAnalysis(params: RentalSearchParams): RentalAnalysisResult {
-    // エリアと間取りに基づいた基準賃料を計算
-    const baseRent = this.calculateBaseRent(params);
-    const variance = baseRent * 0.3;
 
-    // サンプルプロパティを生成
-    const sampleCount = 25 + Math.floor(Math.random() * 30);
-    const properties: RentalProperty[] = [];
-
-    for (let i = 0; i < sampleCount; i++) {
-      const rentVariation = (Math.random() - 0.5) * variance;
-      const rent = Math.round(baseRent + rentVariation);
-      
-      properties.push({
-        name: `サンプル物件${i + 1}`,
-        address: `${params.prefecture}${params.city}${params.town || ''}`,
-        rent: rent,
-        roomType: params.roomType || this.getRandomRoomType(),
-        area: params.minArea && params.maxArea 
-          ? params.minArea + Math.random() * (params.maxArea - params.minArea)
-          : 20 + Math.random() * 60,
-        age: Math.floor(Math.random() * 30),
-        walkMinutes: Math.floor(Math.random() * 15) + 1,
-        structure: ['RC造', 'SRC造', '鉄骨造', '木造'][Math.floor(Math.random() * 4)],
-        floor: `${Math.floor(Math.random() * 10) + 1}階`,
-        nearestStation: '最寄り駅'
-      });
-    }
-
-    // ソート
-    properties.sort((a, b) => a.rent - b.rent);
-
-    const rents = properties.map(p => p.rent);
-    const averageRent = Math.round(rents.reduce((sum, r) => sum + r, 0) / rents.length);
-    const medianRent = rents[Math.floor(rents.length / 2)];
-    const minRent = rents[0];
-    const maxRent = rents[rents.length - 1];
-
-    // 分布を計算
-    const rentDistribution = this.calculateDistribution(rents);
-
-    return {
-      averageRent,
-      medianRent,
-      minRent,
-      maxRent,
-      sampleSize: sampleCount,
-      rentDistribution,
-      properties
-    };
-  }
-
-  /**
-   * モックトレンドデータ生成
-   */
-  private getMockRentalTrend(params: RentalSearchParams, months: number): RentalTrendResult {
-    const baseRent = this.calculateBaseRent(params);
-    const trendData: RentalTrendData[] = [];
-
-    const now = new Date();
-    for (let i = months - 1; i >= 0; i--) {
-      const date = new Date(now);
-      date.setMonth(date.getMonth() - i);
-
-      // ランダムな変動を加える
-      const variation = (Math.random() - 0.5) * baseRent * 0.1;
-      const averageRent = Math.round(baseRent + variation);
-      const medianRent = Math.round(averageRent * 0.95);
-
-      trendData.push({
-        month: date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short' }),
-        averageRent,
-        medianRent,
-        sampleSize: 40 + Math.floor(Math.random() * 20)
-      });
-    }
-
-    // トレンド計算
-    const firstRent = trendData[0].averageRent;
-    const lastRent = trendData[trendData.length - 1].averageRent;
-    const changeRate = ((lastRent - firstRent) / firstRent) * 100;
-
-    let overallTrend: 'increasing' | 'stable' | 'decreasing' = 'stable';
-    if (changeRate > 2) {
-      overallTrend = 'increasing';
-    } else if (changeRate < -2) {
-      overallTrend = 'decreasing';
-    }
-
-    return {
-      trendData,
-      overallTrend,
-      changeRate
-    };
-  }
-
-  /**
-   * エリアと間取りに基づいた基準賃料を計算
-   */
-  private calculateBaseRent(params: RentalSearchParams): number {
-    let baseRent = 100000; // デフォルト
-
-    // 都道府県による補正
-    const prefectureFactors: { [key: string]: number } = {
-      '東京都': 1.5,
-      '神奈川県': 1.2,
-      '大阪府': 1.1,
-      '愛知県': 1.0,
-      '福岡県': 0.9
-    };
-    baseRent *= prefectureFactors[params.prefecture] || 0.8;
-
-    // 間取りによる補正
-    const roomTypeFactors: { [key: string]: number } = {
-      '1R': 0.7,
-      '1K': 0.8,
-      '1DK': 0.9,
-      '1LDK': 1.0,
-      '2K': 1.1,
-      '2DK': 1.2,
-      '2LDK': 1.4,
-      '3LDK': 1.8
-    };
-    if (params.roomType) {
-      baseRent *= roomTypeFactors[params.roomType] || 1.0;
-    }
-
-    // 面積による補正
-    if (params.minArea && params.maxArea) {
-      const avgArea = (params.minArea + params.maxArea) / 2;
-      baseRent *= (avgArea / 40); // 40㎡を基準
-    }
-
-    return Math.round(baseRent);
-  }
-
-  /**
-   * ランダムな間取りを取得
-   */
-  private getRandomRoomType(): string {
-    const types = ['1R', '1K', '1DK', '1LDK', '2K', '2DK', '2LDK', '3LDK'];
-    return types[Math.floor(Math.random() * types.length)];
-  }
-
-  /**
-   * 賃料分布を計算
-   */
-  private calculateDistribution(rents: number[]): Array<{ range: string; count: number }> {
-    const min = Math.min(...rents);
-    const max = Math.max(...rents);
-    const rangeSize = (max - min) / 5;
-
-    const distribution: Array<{ range: string; count: number }> = [];
-    for (let i = 0; i < 5; i++) {
-      const rangeStart = Math.round(min + rangeSize * i);
-      const rangeEnd = Math.round(min + rangeSize * (i + 1));
-      
-      const count = rents.filter(r => r >= rangeStart && r < rangeEnd).length;
-      
-      distribution.push({
-        range: `¥${(rangeStart / 10000).toFixed(0)}-${(rangeEnd / 10000).toFixed(0)}万円`,
-        count
-      });
-    }
-
-    return distribution;
-  }
 }
 
 /**
