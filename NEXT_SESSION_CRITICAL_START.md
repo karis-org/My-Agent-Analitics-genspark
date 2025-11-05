@@ -1,200 +1,150 @@
-# 🚨 次セッション開始時の最優先指示
+# 🚨 次セッション開始時の必須作業
 
-**日付**: 2025年11月5日セッション2完了時点  
-**優先度**: 🔥 CRITICAL  
-**必読時間**: 10分
+## ⚡ 最優先タスク（この順番で実施）
 
----
+### 1. 事故物件調査の実地テスト 🔥🔥🔥
 
-## ✅ 前セッションの成果（簡易版）
-
-### 完了したこと
-1. ✅ **Google Custom Search API統合完了**
-   - APIキー取得・Cloudflare Secrets設定
-   - 事故物件調査が実際にウェブ検索を実行できるようになった
-   - 2段階処理実装: Google検索 → GPT-4分析
-
-2. ✅ **デプロイ完了**
-   - Production URL: https://84833068.my-agent-analytics.pages.dev
-   - Commit: `bf2cfee`
-
-### 進捗状況
-- **本番稼働中**: 2/6機能（財務分析、事故物件調査）
-- **実装済みだが動作要確認**: イタンジBB
-- **未実装**: 人口動態分析、AI市場分析専用ページ
-
----
-
-## 📖 必読ドキュメント（この順番で）
+**必ずこれを最初に実施してください！**
 
 ```bash
-cd /home/user/webapp
+# Production URLにアクセス
+https://a3596d24.my-agent-analytics.pages.dev
 
-# 1. このセッションの詳細（最優先）
-cat HANDOFF_2025-11-05_SESSION2.md
-
-# 2. 前セッションの引き継ぎ
-cat HANDOFF_2025-11-05.md
-
-# 3. 6機能の最新状況
-cat CORE_FEATURES_STATUS.md
-
-# 4. 作業継続ガイド
-cat HOW_TO_CONTINUE_WORK.md
+# テスト用住所（大島てる登録物件）
+- 東京都港区六本木7-18-18
+- 東京都渋谷区道玄坂1-10-7
 ```
 
----
+**確認項目**:
+- [ ] Google検索結果が取得できる
+- [ ] GPT-4分析が実行される
+- [ ] 「該当あり」と正しく表示される
+- [ ] 検索ソースが表示される
 
-## 🎯 次セッションの最優先タスク
-
-### Task 1: 事故物件調査の実地テスト 🔥🔥🔥
-
-**目的**: Google Custom Search API統合が正しく動作するか検証
-
-**手順**:
-1. 大島てるで実際に登録されている物件の住所を取得
-2. 本番環境でテスト実行: https://84833068.my-agent-analytics.pages.dev
-3. 以下を確認:
-   - [ ] Google検索結果が取得できる
-   - [ ] GPT-4が正確に分析している
-   - [ ] 「該当なし」が誤って表示されない
-
-**期待される結果**:
-- ✅ 大島てる登録物件 → 「心理的瑕疵あり」と正しく判定
-- ✅ 登録されていない物件 → 「該当なし」と正しく判定
-
----
-
-### Task 2: イタンジBB認証情報の再確認 🔥
-
-**問題**:
-Excelシートに2種類の認証情報が記載されているが、どちらを使うべきか不明:
-
-```
-1. APIキー: 92c58BF851b80169b3676ed3046f1ea03
-   → 既に ITANDI_API_KEY としてCloudflare Secretsに設定済み
-
-2. ログイン情報:
-   - コピーネットID: 1340792731
-   - パスワード: gthome1120
-   - URL: https://itandi-accounts.com/login
-```
-
-**確認手順**:
-1. `src/lib/itandi-client.ts` の実装を確認
-2. APIキーのみで動作するのか、ログイン認証も必要なのか判断
-3. 必要に応じてCloudflare Secretsを追加:
-   ```bash
-   npx wrangler pages secret put ITANDI_EMAIL --project-name my-agent-analytics
-   npx wrangler pages secret put ITANDI_PASSWORD --project-name my-agent-analytics
-   ```
-
----
-
-### Task 3: 人口動態分析ページ実装（Phase 2）
-
-**前提条件**:
-- ✅ e-Stat APIキーは設定済み: `ESTAT_API_KEY`
-
-**実装内容**:
-1. `/demographics/analyze` ページ作成
-2. `src/lib/estat-client.ts` 作成
-3. `POST /api/demographics/analyze` APIエンドポイント実装
-4. Chart.jsでグラフ表示
-
-**参考コード** (HANDOFF_2025-11-05_SESSION2.md に記載):
-```typescript
-export class EStatClient {
-  private apiKey: string;
-  private baseUrl = 'https://api.e-stat.go.jp/rest/3.0/app/json';
-
-  async getPopulationData(prefCode: string, cityCode: string) {
-    const statsId = '0003410379'; // 人口推計統計ID
-    // ...
-  }
-}
-```
-
----
-
-## 🔑 重要な環境変数
-
-### Cloudflare Secrets（本番環境） - 全て設定済み
-
-```
-✅ GOOGLE_CUSTOM_SEARCH_API_KEY (新規追加)
-✅ GOOGLE_CUSTOM_SEARCH_ENGINE_ID (新規追加)
-✅ ESTAT_API_KEY
-✅ ITANDI_API_KEY
-✅ OPENAI_API_KEY
-✅ REINFOLIB_API_KEY
-```
-
-### ローカル開発環境（.dev.vars） - 更新済み
+### 2. イタンジBB本番API動作確認 🔥
 
 ```bash
-GOOGLE_CUSTOM_SEARCH_API_KEY=AIzaSyBXQRCsZ2fo7QndwXcjHaVwkhb9r3v1kWo
-GOOGLE_CUSTOM_SEARCH_ENGINE_ID=36ae8a9d2db404814
+# 認証情報確認
+APIキー: 92c58BF851b80169b3676ed3046f1ea03
+ログインID: 1340792731
+パスワード: gthome1120
 ```
+
+**確認項目**:
+- [ ] ログイン処理が成功する
+- [ ] 賃貸相場データが取得できる
+- [ ] エラーが発生しない
 
 ---
 
-## 📊 デプロイ情報
+## 📚 必読ドキュメント（この順番で読む）
 
-- **Production URL**: https://84833068.my-agent-analytics.pages.dev
+1. **`HANDOFF_2025-11-05_SESSION3.md`** - 前回セッションの詳細
+2. **`CORE_FEATURES_STATUS.md`** - 機能実装状況
+3. **`README.md`** - プロジェクト概要
+
+---
+
+## ✅ 環境変数チェックリスト
+
+**すべて設定済み（確認不要）**:
+- [x] `GOOGLE_CUSTOM_SEARCH_API_KEY`
+- [x] `GOOGLE_CUSTOM_SEARCH_ENGINE_ID`
+- [x] `OPENAI_API_KEY`
+- [x] `ESTAT_API_KEY`
+- [x] `ITANDI_API_KEY`
+- [x] `REINFOLIB_API_KEY`
+
+---
+
+## 🎯 完了した主要変更
+
+### ✅ セッション3で完了したこと
+
+1. **デモモード完全削除** ✅
+   - すべてのモックデータを削除（約810行削除）
+   - 本番APIのみで動作
+   - 認証情報不足時はエラー表示
+
+2. **削除したファイル** ✅
+   - `src/lib/external-apis.ts` （479行・完全削除）
+
+3. **修正したファイル** ✅
+   - `src/lib/stigma-checker.ts` - デモモード削除
+   - `src/lib/itandi-client.ts` - モックデータ削除（200行）
+   - `src/routes/api.tsx` - 複数エンドポイントのデモ削除
+   - `src/routes/properties.tsx` - フロントエンドのデモ表示削除
+
+4. **デプロイ完了** ✅
+   - Commit: `d2c1887`
+   - Production: https://a3596d24.my-agent-analytics.pages.dev
+
+---
+
+## 🚀 次のアクション（優先順位順）
+
+### Phase 1: リリースブロッカー
+
+1. **事故物件調査の実地テスト** 🔥🔥🔥
+   - 大島てる登録物件でテスト
+   - Google検索結果の確認
+   - GPT-4分析精度の検証
+
+2. **イタンジBB本番API確認** 🔥
+   - ログイン処理の動作確認
+   - 賃貸相場データ取得の確認
+   - エラーハンドリングの確認
+
+### Phase 2: 高優先度
+
+3. **人口動態分析機能の実装**
+   - `/demographics/analyze` ページ作成
+   - `src/lib/estat-client.ts` 作成（**デモモードなし**）
+   - `POST /api/demographics/analyze` 実装
+   - Chart.jsでグラフ表示
+
+4. **AI市場分析専用ページ作成**
+   - `/ai/market-analysis` ページ作成
+   - 既存APIを利用
+   - 入力フォーム＋結果表示
+
+---
+
+## ⚠️ 重要な方針
+
+### デモモード = 未実装
+
+**絶対に守ること**:
+- ❌ デモモードは作らない
+- ❌ モックデータは使わない
+- ✅ APIキーが揃うまで機能は非公開
+- ✅ 認証情報不足時は明確なエラー表示
+
+**理由**:
+デモモードがあると「完成した気になる」→ユーザーに混乱を与える
+
+---
+
+## 📊 現在の機能状況
+
+| 機能 | 実装 | 本番 | デモモード |
+|------|------|------|-----------|
+| ① 財務分析 | ✅ | ✅ | ❌ 削除済み |
+| ② イタンジBB | ✅ | ⚠️ | ❌ 削除済み |
+| ③ 人口動態 | ❌ | ❌ | - |
+| ④ AI市場分析 | ⚠️ | ✅ | ❌ 削除済み |
+| ⑤ 地図生成 | ⚠️ | ⚠️ | - |
+| ⑥ 事故物件調査 | ✅ | ✅ | ❌ 削除済み |
+
+---
+
+## 🔗 重要リンク
+
+- **Production**: https://a3596d24.my-agent-analytics.pages.dev
 - **GitHub**: https://github.com/koki-187/My-Agent-Analitics-genspark
-- **Latest Commit**: `bf2cfee - Deploy: Google Custom Search API integration for stigma check`
-- **Branch**: `main`
-
----
-
-## 🚀 作業開始の合図
-
-以下を確認したら作業開始可能：
-
-```bash
-# 1. ドキュメント確認完了
-echo "✅ HANDOFF_2025-11-05_SESSION2.md 確認完了"
-
-# 2. サービス確認
-pm2 list
-curl http://localhost:3000/api/health
-
-# 3. 本番環境確認
-curl https://84833068.my-agent-analytics.pages.dev/
-
-# 4. 作業開始
-echo "🚀 Task 1: 事故物件調査の実地テスト 開始"
-```
-
----
-
-## ⚠️ やってはいけないこと
-
-1. ❌ ドキュメントを読まずに作業開始
-2. ❌ テストせずにデプロイ
-3. ❌ 既存のSecretsを上書き削除
-4. ❌ 絵文字をコミットメッセージに使用（Cloudflareデプロイエラーの原因）
-
----
-
-## 💡 前セッションからの学び
-
-1. **Cloudflareデプロイエラー対策**
-   - コミットメッセージに絵文字を使用するとUTF-8エラーになる
-   - 英数字のみのメッセージを使用する
-
-2. **Google Custom Search API設定**
-   - APIキーとSearch Engine IDの両方が必要
-   - 無料枠: 1日100回まで
-
-3. **2段階処理の有効性**
-   - Google検索 → GPT-4分析のパターンが正常に動作
-   - 実際のウェブ検索結果を分析することで精度向上
+- **Latest Commit**: `d2c1887`
 
 ---
 
 **作成日**: 2025年11月5日  
-**次回更新**: Phase 1完了後
-
-**🎉 前セッションの成果を活かして、引き続き頑張りましょう！**
+**最終更新**: セッション3完了時
