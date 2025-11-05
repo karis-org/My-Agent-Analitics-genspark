@@ -3778,6 +3778,48 @@ api.post('/properties/stigma-check', authMiddleware, async (c) => {
 });
 
 /**
+ * TEST ENDPOINT: Stigmatized Property Check (No Auth)
+ * テスト用事故物件調査エンドポイント（認証不要）
+ * POST /api/test/stigma-check
+ */
+api.post('/test/stigma-check', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.json();
+    const { address, propertyName } = body;
+
+    if (!address) {
+      return c.json({ error: 'Address is required' }, 400);
+    }
+
+    // Initialize Stigma Checker with Google Custom Search API
+    const { StigmatizedPropertyChecker } = await import('../lib/stigma-checker');
+    
+    const checker = new StigmatizedPropertyChecker(
+      env.OPENAI_API_KEY || 'demo',
+      env.GOOGLE_CUSTOM_SEARCH_API_KEY || undefined,
+      env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID || undefined
+    );
+
+    // Execute stigma check (with real web search if APIs are configured)
+    const result = await checker.checkProperty(address, propertyName);
+
+    return c.json({
+      success: true,
+      testMode: true,
+      ...result,
+    });
+  } catch (error: any) {
+    console.error('Stigma check error:', error);
+    return c.json({
+      success: false,
+      error: '事故物件調査に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
  * Agents Management API Endpoints
  * AIエージェント管理APIエンドポイント
  */
