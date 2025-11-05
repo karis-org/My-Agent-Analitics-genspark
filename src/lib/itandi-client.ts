@@ -106,7 +106,12 @@ export class ItandiClient {
       });
 
       if (!loginResponse.ok) {
-        console.error('Login failed');
+        const errorText = await loginResponse.text();
+        console.error('[Itandi Client] Login failed:', {
+          status: loginResponse.status,
+          statusText: loginResponse.statusText,
+          body: errorText
+        });
         return false;
       }
 
@@ -159,10 +164,17 @@ export class ItandiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`イタンジBB APIリクエストに失敗しました: ${response.status}`);
+      const errorText = await response.text();
+      console.error('[Itandi Client] API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      throw new Error(`イタンジBB APIリクエストに失敗しました: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('[Itandi Client] Analysis result received:', data);
     return this.parseAnalysisResult(data);
   }
 
@@ -266,14 +278,15 @@ export class ItandiClient {
  */
 let itandiClientInstance: ItandiClient | null = null;
 
-export function getItandiClient(): ItandiClient {
+export function getItandiClient(env?: any): ItandiClient {
   if (!itandiClientInstance) {
-    // 環境変数または固定値から認証情報を取得
+    // 環境変数を優先的に使用、なければデフォルト値
     const credentials: ItandiCredentials = {
-      username: '1340792731', // ラビーネットID
-      password: 'gthome1120'  // パスワード
+      username: env?.ITANDI_EMAIL || '1340792731', // 環境変数優先
+      password: env?.ITANDI_PASSWORD || 'gthome1120'  // 環境変数優先
     };
     itandiClientInstance = new ItandiClient(credentials);
+    console.log('[Itandi Client] Initialized with username:', credentials.username);
   }
   return itandiClientInstance;
 }

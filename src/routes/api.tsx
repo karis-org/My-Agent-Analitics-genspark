@@ -3366,7 +3366,7 @@ api.post('/itandi/rental-analysis', authMiddleware, async (c) => {
 
     // Import Itandi Client
     const { getItandiClient } = await import('../lib/itandi-client');
-    const itandiClient = getItandiClient();
+    const itandiClient = getItandiClient(env);
 
     // Execute rental analysis
     const result = await itandiClient.getRentalAnalysis({
@@ -3412,7 +3412,7 @@ api.post('/itandi/rental-trend', authMiddleware, async (c) => {
 
     // Import Itandi Client
     const { getItandiClient } = await import('../lib/itandi-client');
-    const itandiClient = getItandiClient();
+    const itandiClient = getItandiClient(env);
 
     // Execute rental trend analysis
     const result = await itandiClient.getRentalTrend({
