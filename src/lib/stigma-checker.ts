@@ -1,9 +1,13 @@
 /**
- * Stigmatized Property Checker
+ * Stigmatized Property Checker with Google Custom Search API
  * 事故物件（心理的瑕疵）調査ライブラリ
  * 
- * ニュース、警察・消防関連サイトで心理的瑕疵に該当する事件・事故を調査
+ * Google Custom Search APIで実際にウェブ検索を行い、
+ * 結果をOpenAI GPT-4で分析して心理的瑕疵を判定
  */
+
+import { GoogleSearchClient } from './google-search-client';
+import type { SearchResult } from '../types/google-search';
 
 export interface StigmaCheckResult {
   hasStigma: boolean;
@@ -12,6 +16,8 @@ export interface StigmaCheckResult {
   sourcesChecked: SourceChecked[];
   summary: string;
   checkedAt: string;
+  searchResults?: SearchResult[]; // 実際の検索結果を保存
+  mode: 'full' | 'demo'; // 動作モード
 }
 
 export interface StigmaFinding {
@@ -33,13 +39,22 @@ export interface SourceChecked {
 
 export class StigmatizedPropertyChecker {
   private openaiApiKey: string;
+  private googleSearchClient: GoogleSearchClient | null;
 
-  constructor(openaiApiKey: string) {
+  constructor(openaiApiKey: string, googleApiKey?: string, searchEngineId?: string) {
     this.openaiApiKey = openaiApiKey;
+    
+    // Google Custom Search APIが設定されている場合はクライアントを初期化
+    if (googleApiKey && searchEngineId && 
+        googleApiKey !== 'demo' && searchEngineId !== 'demo') {
+      this.googleSearchClient = new GoogleSearchClient(googleApiKey, searchEngineId);
+    } else {
+      this.googleSearchClient = null;
+    }
   }
 
   /**
-   * 事故物件調査を実行
+   * 事故物件調査を実行（Google Custom Search API + OpenAI GPT-4）
    * @param address 調査対象物件の住所
    * @param propertyName 物件名（任意）
    */
@@ -47,71 +62,106 @@ export class StigmatizedPropertyChecker {
     const checkedAt = new Date().toISOString();
 
     // デモモードチェック
-    console.log('[Stigma Checker] OpenAI API Key status:', {
-      exists: !!this.openaiApiKey,
-      value: this.openaiApiKey ? `${this.openaiApiKey.substring(0, 10)}...` : 'null',
-      isDemo: this.openaiApiKey === 'demo',
-      isEmpty: this.openaiApiKey ? this.openaiApiKey.trim() === '' : true
+    const hasOpenAI = this.openaiApiKey && 
+                      this.openaiApiKey !== 'demo' && 
+                      this.openaiApiKey.trim() !== '';
+    const hasGoogleSearch = this.googleSearchClient !== null;
+
+    console.log('[Stigma Checker] Configuration:', {
+      hasOpenAI,
+      hasGoogleSearch,
+      openaiKeyPrefix: hasOpenAI ? this.openaiApiKey.substring(0, 10) + '...' : 'none'
     });
-    
-    if (!this.openaiApiKey || this.openaiApiKey === 'demo' || this.openaiApiKey.trim() === '') {
-      console.warn('[Stigma Checker] Running in demo mode due to missing/invalid API key');
+
+    // デモモード：両方のAPIキーが不足している場合
+    if (!hasOpenAI || !hasGoogleSearch) {
+      console.warn('[Stigma Checker] Running in demo mode - missing API keys');
       return this.generateDemoResult(address, propertyName, checkedAt);
     }
-    
-    console.log('[Stigma Checker] Running in full mode with valid API key');
 
     try {
-      // 調査対象ソースリスト
-      const sourcesToCheck: SourceChecked[] = [
-        { name: 'Google News', url: 'https://news.google.com', checked: false, foundIssues: 0 },
-        { name: 'Yahoo!ニュース', url: 'https://news.yahoo.co.jp', checked: false, foundIssues: 0 },
-        { name: '事故物件公示サイト', url: 'https://www.oshimaland.co.jp', checked: false, foundIssues: 0 },
-        { name: '警察庁統計', url: 'https://www.npa.go.jp', checked: false, foundIssues: 0 },
-        { name: '消防庁統計', url: 'https://www.fdma.go.jp', checked: false, foundIssues: 0 },
+      // Step 1: Google Custom Search APIで実際にウェブ検索
+      console.log('[Stigma Checker] Step 1: Performing Google search...');
+      
+      const baseQuery = `${address}${propertyName ? ' ' + propertyName : ''}`;
+      const searchQueries = [
+        `${baseQuery} 事故 事件 大島てる`,
+        `${baseQuery} 火災 死亡`,
+        `${baseQuery} 自殺 殺人`
       ];
 
-      // OpenAI APIを使用して調査
-      const searchQuery = `${address}${propertyName ? ' ' + propertyName : ''} 事故 事件 火災 死亡 自殺 殺人`;
+      const searchResults = await this.googleSearchClient!.searchMultiple(searchQueries);
+
+      console.log('[Stigma Checker] Google search results:', {
+        count: searchResults.length,
+        queries: searchQueries
+      });
+
+      // 検索結果がない場合
+      if (searchResults.length === 0) {
+        const sourcesToCheck: SourceChecked[] = this.getDefaultSources();
+        sourcesToCheck.forEach(s => s.checked = true);
+
+        return {
+          hasStigma: false,
+          riskLevel: 'none',
+          findings: [],
+          sourcesChecked: sourcesToCheck,
+          summary: `Google検索を実行しましたが、「${address}」に関する事故物件情報は見つかりませんでした。`,
+          checkedAt,
+          searchResults: [],
+          mode: 'full'
+        };
+      }
+
+      // Step 2: 検索結果をGPT-4で分析
+      console.log('[Stigma Checker] Step 2: Analyzing results with GPT-4...');
+
+      const searchResultsText = searchResults.map((r, i) => `
+【検索結果 ${i + 1}】
+タイトル: ${r.title}
+URL: ${r.url}
+概要: ${r.snippet}
+`).join('\n---\n');
 
       const prompt = `
-あなたは不動産の心理的瑕疵調査の専門家です。以下の物件について、事故物件（心理的瑕疵）に該当する可能性のある事件・事故がないか調査してください。
+あなたは不動産の心理的瑕疵調査の専門家です。
+以下のGoogle検索結果から、「${address}」${propertyName ? `（${propertyName}）` : ''}に関する事故物件情報を分析してください。
 
-調査対象物件:
-- 住所: ${address}
-${propertyName ? `- 物件名: ${propertyName}` : ''}
+【Google検索結果】
+${searchResultsText}
 
-調査項目:
+【調査項目】
 1. 過去の死亡事故（自殺、他殺、孤独死等）
 2. 重大な犯罪事件（殺人、強盗等）
 3. 火災事故
 4. その他の心理的瑕疵に該当する事象
 
-以下のJSON形式で調査結果を返してください:
+【重要な注意点】
+- 検索結果に記載されている情報のみを分析してください
+- 住所が完全一致または近似している場合のみ該当とみなしてください
+- 別の場所の事故を誤って関連付けないでください
+- 不確実な情報は含めないでください
+
+以下のJSON形式で分析結果を返してください:
 {
   "hasStigma": boolean,
   "riskLevel": "none" | "low" | "medium" | "high",
   "findings": [
     {
-      "source": "ソース名",
+      "source": "ソース名（検索結果のサイト名）",
       "sourceUrl": "URL",
       "title": "見出し",
-      "content": "内容の要約",
-      "date": "発生日（YYYY-MM-DD形式）",
+      "content": "内容の要約（200文字以内）",
+      "date": "発生日（YYYY-MM-DD形式、不明な場合は\"不明\"）",
       "category": "death" | "crime" | "fire" | "disaster" | "other",
-      "relevance": 0-100の数値
+      "relevance": 関連性スコア（0-100）
     }
   ],
-  "summary": "調査結果の総括"
-}
+  "summary": "調査結果の総括（検索結果の総合評価）"
+}`;
 
-注意:
-- 実在する情報のみを報告してください
-- 確認できない情報は含めないでください
-- findingsが空の場合は、心理的瑕疵なしと判断してください
-`;
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.openaiApiKey}`,
@@ -122,61 +172,57 @@ ${propertyName ? `- 物件名: ${propertyName}` : ''}
           messages: [
             {
               role: 'system',
-              content: 'あなたは不動産の心理的瑕疵調査の専門家です。正確で客観的な情報のみを提供してください。',
+              content: '不動産の心理的瑕疵調査の専門家として、検索結果を正確に分析してください。',
             },
             {
               role: 'user',
               content: prompt,
             },
           ],
-          temperature: 0.3,
-          max_tokens: 2000,
+          temperature: 0.2,
+          max_tokens: 2500,
+          response_format: { type: 'json_object' }
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        throw new Error(`OpenAI API error: ${aiResponse.status} - ${errorText}`);
       }
 
-      const data = await response.json();
-      const content = data.choices[0]?.message?.content;
-
-      console.log('[Stigma Checker] OpenAI API response content:', content);
+      const aiData = await aiResponse.json();
+      const content = aiData.choices[0]?.message?.content;
 
       if (!content) {
-        console.error('[Stigma Checker] No content in OpenAI response:', data);
         throw new Error('No content in OpenAI response');
       }
 
-      // JSONをパース
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('[Stigma Checker] No JSON found in response. Content:', content);
-        throw new Error('No JSON found in response');
-      }
-      
-      console.log('[Stigma Checker] Extracted JSON:', jsonMatch[0]);
+      console.log('[Stigma Checker] GPT-4 analysis result:', content.substring(0, 200) + '...');
 
-      const result = JSON.parse(jsonMatch[0]);
+      const analysis = JSON.parse(content);
 
       // ソースチェック状況を更新
-      for (const source of sourcesToCheck) {
+      const sourcesToCheck = this.getDefaultSources();
+      sourcesToCheck.forEach(source => {
         source.checked = true;
-        source.foundIssues = result.findings.filter((f: any) => 
-          f.source.toLowerCase().includes(source.name.toLowerCase())
+        source.foundIssues = searchResults.filter(r => 
+          r.url.includes(source.url.replace('https://', '').replace('www.', ''))
         ).length;
-      }
+      });
 
       return {
-        hasStigma: result.hasStigma || false,
-        riskLevel: result.riskLevel || 'none',
-        findings: result.findings || [],
+        hasStigma: analysis.hasStigma || false,
+        riskLevel: analysis.riskLevel || 'none',
+        findings: analysis.findings || [],
         sourcesChecked: sourcesToCheck,
-        summary: result.summary || '調査の結果、心理的瑕疵に該当する情報は確認されませんでした。',
+        summary: analysis.summary || 'Google検索の結果、心理的瑕疵に該当する情報は確認されませんでした。',
         checkedAt,
+        searchResults,
+        mode: 'full'
       };
+
     } catch (error) {
-      console.error('Stigma check error:', error);
+      console.error('[Stigma Checker] Error during check:', error);
       
       // エラー時はデモ結果を返す
       return this.generateDemoResult(address, propertyName, checkedAt);
@@ -184,24 +230,41 @@ ${propertyName ? `- 物件名: ${propertyName}` : ''}
   }
 
   /**
+   * デフォルトのチェック対象ソースリストを取得
+   */
+  private getDefaultSources(): SourceChecked[] {
+    return [
+      { name: 'Google News', url: 'https://news.google.com', checked: false, foundIssues: 0 },
+      { name: 'Yahoo!ニュース', url: 'https://news.yahoo.co.jp', checked: false, foundIssues: 0 },
+      { name: '大島てる', url: 'https://www.oshimaland.co.jp', checked: false, foundIssues: 0 },
+      { name: '警察庁', url: 'https://www.npa.go.jp', checked: false, foundIssues: 0 },
+      { name: '消防庁', url: 'https://www.fdma.go.jp', checked: false, foundIssues: 0 },
+    ];
+  }
+
+  /**
    * デモモード用の結果生成
    */
   private generateDemoResult(address: string, propertyName: string | undefined, checkedAt: string): StigmaCheckResult {
-    const sourcesToCheck: SourceChecked[] = [
-      { name: 'Google News', url: 'https://news.google.com', checked: true, foundIssues: 0 },
-      { name: 'Yahoo!ニュース', url: 'https://news.yahoo.co.jp', checked: true, foundIssues: 0 },
-      { name: '事故物件公示サイト', url: 'https://www.oshimaland.co.jp', checked: true, foundIssues: 0 },
-      { name: '警察庁統計', url: 'https://www.npa.go.jp', checked: true, foundIssues: 0 },
-      { name: '消防庁統計', url: 'https://www.fdma.go.jp', checked: true, foundIssues: 0 },
-    ];
+    const sourcesToCheck = this.getDefaultSources();
+    sourcesToCheck.forEach(s => s.checked = true);
 
     return {
       hasStigma: false,
       riskLevel: 'none',
       findings: [],
       sourcesChecked: sourcesToCheck,
-      summary: `【デモモード】調査対象: ${address}${propertyName ? ` (${propertyName})` : ''}\n\n調査の結果、主要なニュースサイト、警察・消防関連サイト、事故物件公示サイトを確認しましたが、心理的瑕疵に該当する事件・事故の情報は確認されませんでした。\n\n※これはデモモードの結果です。実際の調査を行うには、OpenAI APIキーを設定してください。`,
+      summary: `【デモモード】調査対象: ${address}${propertyName ? ` (${propertyName})` : ''}
+
+調査の結果、主要なニュースサイト、警察・消防関連サイト、事故物件公示サイト（大島てる）を確認しましたが、心理的瑕疵に該当する事件・事故の情報は確認されませんでした。
+
+※これはデモモードの結果です。実際のウェブ検索を行うには、以下のAPIキーの設定が必要です:
+- Google Custom Search APIキー
+- Google Search Engine ID
+- OpenAI APIキー`,
       checkedAt,
+      searchResults: [],
+      mode: 'demo'
     };
   }
 

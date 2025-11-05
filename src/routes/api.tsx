@@ -3755,16 +3755,40 @@ api.post('/properties/stigma-check', authMiddleware, async (c) => {
       return c.json({ error: 'Address is required' }, 400);
     }
 
-    // Initialize Stigma Checker
+    // Check if Google Custom Search API is configured
+    const hasGoogleSearch = env.GOOGLE_CUSTOM_SEARCH_API_KEY && 
+                           env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID &&
+                           env.GOOGLE_CUSTOM_SEARCH_API_KEY !== 'demo' &&
+                           env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID !== 'demo';
+
+    const hasOpenAI = env.OPENAI_API_KEY && env.OPENAI_API_KEY !== 'demo';
+
+    // Initialize Stigma Checker with Google Custom Search API
     const { StigmatizedPropertyChecker } = await import('../lib/stigma-checker');
-    const checker = new StigmatizedPropertyChecker(env.OPENAI_API_KEY || 'demo');
+    const checker = new StigmatizedPropertyChecker(
+      env.OPENAI_API_KEY || 'demo',
+      env.GOOGLE_CUSTOM_SEARCH_API_KEY || 'demo',
+      env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID || 'demo'
+    );
 
     // Execute stigma check
     const result = await checker.checkProperty(address, propertyName);
 
+    // Determine mode
+    let mode: 'full' | 'partial' | 'demo' = 'demo';
+    if (hasGoogleSearch && hasOpenAI) {
+      mode = 'full';
+    } else if (hasOpenAI || hasGoogleSearch) {
+      mode = 'partial';
+    }
+
     return c.json({
       success: true,
-      mode: (!env.OPENAI_API_KEY || env.OPENAI_API_KEY === 'demo') ? 'demonstration' : 'full',
+      mode,
+      apiStatus: {
+        googleSearch: hasGoogleSearch ? 'active' : 'missing',
+        openai: hasOpenAI ? 'active' : 'missing'
+      },
       ...result,
     });
   } catch (error: any) {
