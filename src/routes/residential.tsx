@@ -136,10 +136,9 @@ residential.get('/evaluate', async (c) => {
                         <i class="fas fa-chart-line mr-2"></i>周辺取引事例
                     </div>
                     <div class="mb-4">
-                        <button type="button" id="autoFetchComparablesBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
-                            <i class="fas fa-download mr-2"></i>不動産情報ライブラリから自動取得
-                        </button>
-                        <span id="comparable-fetch-status" class="ml-3 text-sm text-gray-600"></span>
+                        <p class="text-sm text-purple-600">
+                            <i class="fas fa-info-circle mr-2"></i>評価実行時に不動産情報ライブラリから自動的に2件の取引事例を取得します
+                        </p>
                     </div>
                     <div id="comparablesContainer" class="space-y-4">
                         <!-- Comparables will be added here dynamically -->
@@ -150,10 +149,9 @@ residential.get('/evaluate', async (c) => {
                         <i class="fas fa-chart-area mr-2"></i>地価推移データ（5年分）
                     </div>
                     <div class="mb-4">
-                        <button type="button" id="autoFetchLandPricesBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
-                            <i class="fas fa-download mr-2"></i>不動産情報ライブラリから自動取得
-                        </button>
-                        <span id="landprice-fetch-status" class="ml-3 text-sm text-gray-600"></span>
+                        <p class="text-sm text-purple-600">
+                            <i class="fas fa-info-circle mr-2"></i>評価実行時に不動産情報ライブラリから自動的に5年分の地価データを取得します
+                        </p>
                     </div>
                     <div id="landPriceContainer" class="space-y-4">
                         <!-- Land price history will be added here -->
@@ -616,25 +614,88 @@ residential.get('/evaluate', async (c) => {
                     age: parseInt(document.getElementById('propertyAge').value),
                     distanceFromStation: parseFloat(document.getElementById('propertyDistance').value),
                 };
+                
+                // Auto-fetch comparables and land prices before evaluation
+                const location = document.getElementById('propertyLocation').value;
+                let autoFetchedComparables = [];
+                let autoFetchedLandPrices = [];
+                
+                if (location) {
+                    try {
+                        // Auto-fetch comparables (top 2)
+                        const cityCode = getCityCodeFromLocation(location);
+                        const comparablesResponse = await axios.post('/api/market/comparables', {
+                            city: cityCode,
+                            propertyType: '中古マンション等',
+                            minArea: targetProperty.area * 0.85,
+                            maxArea: targetProperty.area * 1.15,
+                            limit: 10
+                        });
+                        
+                        if (comparablesResponse.data.success && comparablesResponse.data.data) {
+                            autoFetchedComparables = comparablesResponse.data.data.slice(0, 2).map(comp => ({
+                                price: comp.TradePrice || 0,
+                                area: comp.Area || 0,
+                                age: comp.BuildingYear ? 2025 - parseInt(comp.BuildingYear.replace(/[^0-9]/g, '')) : 0,
+                                distanceFromStation: comp.TimeToNearestStation || 0,
+                                transactionDate: comp.Period || '',
+                                location: comp.Municipality || ''
+                            }));
+                            console.log('[Auto-fetch] Comparables:', autoFetchedComparables);
+                        }
+                    } catch (error) {
+                        console.warn('[Auto-fetch] Failed to fetch comparables:', error);
+                    }
+                    
+                    try {
+                        // Auto-fetch land prices (last 5 years)
+                        const prefCode = getPrefCodeFromLocation(location);
+                        const currentYear = new Date().getFullYear();
+                        const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
+                        
+                        for (const year of years) {
+                            try {
+                                const landPriceResponse = await axios.get(\`/api/market/land-prices?year=\${year}&area=\${prefCode}&division=00\`);
+                                
+                                if (landPriceResponse.data.success && landPriceResponse.data.data && landPriceResponse.data.data.length > 0) {
+                                    const landData = landPriceResponse.data.data[0];
+                                    const pricePerSqm = landData.CurrentYearPrice || landData.PreviousYearPrice || 0;
+                                    
+                                    if (pricePerSqm > 0) {
+                                        autoFetchedLandPrices.push({
+                                            year: year,
+                                            pricePerSquareMeter: pricePerSqm
+                                        });
+                                    }
+                                }
+                            } catch (error) {
+                                console.warn(\`[Auto-fetch] Failed to fetch land price for year \${year}:\`, error);
+                            }
+                        }
+                        console.log('[Auto-fetch] Land prices:', autoFetchedLandPrices);
+                    } catch (error) {
+                        console.warn('[Auto-fetch] Failed to fetch land prices:', error);
+                    }
+                }
 
                 const buildingSpec = {
                     structure: document.getElementById('propertyStructure').value,
                     totalFloorArea: parseFloat(document.getElementById('propertyArea').value),
                     age: parseInt(document.getElementById('propertyAge').value),
-                    landArea: parseFloat(document.getElementById('landArea').value) || 0,
-                    landPricePerSquareMeter: parseFloat(document.getElementById('landPricePerSqm').value) || 0,
+                    landArea: document.getElementById('landArea') ? parseFloat(document.getElementById('landArea').value) || 0 : 0,
+                    landPricePerSquareMeter: document.getElementById('landPricePerSqm') ? parseFloat(document.getElementById('landPricePerSqm').value) || 0 : 0,
                 };
 
                 const assetFactors = {
-                    locationScore: parseFloat(document.getElementById('locationScore').value) || 0,
-                    accessibilityScore: parseFloat(document.getElementById('accessibilityScore').value) || 0,
-                    neighborhoodScore: parseFloat(document.getElementById('neighborhoodScore').value) || 0,
-                    buildingQualityScore: parseFloat(document.getElementById('buildingQualityScore').value) || 0,
-                    futureProspectScore: parseFloat(document.getElementById('futureProspectScore').value) || 0,
-                    liquidityScore: parseFloat(document.getElementById('liquidityScore').value) || 0,
+                    locationScore: document.getElementById('locationScore') ? parseFloat(document.getElementById('locationScore').value) || 0 : 0,
+                    accessibilityScore: document.getElementById('accessibilityScore') ? parseFloat(document.getElementById('accessibilityScore').value) || 0 : 0,
+                    neighborhoodScore: document.getElementById('neighborhoodScore') ? parseFloat(document.getElementById('neighborhoodScore').value) || 0 : 0,
+                    buildingQualityScore: document.getElementById('buildingQualityScore') ? parseFloat(document.getElementById('buildingQualityScore').value) || 0 : 0,
+                    futureProspectScore: document.getElementById('futureProspectScore') ? parseFloat(document.getElementById('futureProspectScore').value) || 0 : 0,
+                    liquidityScore: document.getElementById('liquidityScore') ? parseFloat(document.getElementById('liquidityScore').value) || 0 : 0,
                 };
 
-                // Collect comparables
+                // Collect comparables (manual + auto-fetched)
                 const comparables = [];
                 document.querySelectorAll('#comparablesContainer > div').forEach(div => {
                     const price = div.querySelector('.comparable-price').value;
@@ -650,8 +711,11 @@ residential.get('/evaluate', async (c) => {
                         });
                     }
                 });
+                
+                // Add auto-fetched comparables
+                comparables.push(...autoFetchedComparables);
 
-                // Collect land price history
+                // Collect land price history (manual + auto-fetched)
                 const landPriceHistory = [];
                 document.querySelectorAll('#landPriceContainer > div').forEach(div => {
                     const year = div.querySelector('.land-price-year').value;
@@ -663,6 +727,9 @@ residential.get('/evaluate', async (c) => {
                         });
                     }
                 });
+                
+                // Add auto-fetched land prices
+                landPriceHistory.push(...autoFetchedLandPrices);
 
                 // Get selected evaluation methods
                 const evaluationMethods = [];
@@ -681,7 +748,7 @@ residential.get('/evaluate', async (c) => {
                         evaluationMethods,
                     });
 
-                    displayResults(response.data);
+                    displayResults(response.data, autoFetchedComparables, autoFetchedLandPrices);
                 } catch (error) {
                     console.error('Evaluation error:', error);
                     alert('評価の実行中にエラーが発生しました: ' + (error.response?.data?.error || error.message));
@@ -690,7 +757,7 @@ residential.get('/evaluate', async (c) => {
                 }
             });
 
-            function displayResults(data) {
+            function displayResults(data, autoComparables = [], autoLandPrices = []) {
                 const container = document.getElementById('resultsContainer');
                 const { summary, results } = data;
 
@@ -737,6 +804,42 @@ residential.get('/evaluate', async (c) => {
                                 </div>
                             </div>
                         </div>
+                    \`;
+                    
+                    // Display auto-fetched comparables details
+                    if (autoComparables && autoComparables.length > 0) {
+                        html += \`
+                            <div class="bg-blue-50 rounded-lg border border-blue-200 p-4 mt-4">
+                                <h4 class="text-lg font-bold text-blue-700 mb-3">
+                                    <i class="fas fa-database mr-2"></i>参考取引事例詳細 (不動産情報ライブラリより自動取得)
+                                </h4>
+                                <div class="grid md:grid-cols-2 gap-4">
+                        \`;
+                        
+                        autoComparables.forEach((comp, index) => {
+                            html += \`
+                                <div class="bg-white rounded-lg p-4 border border-blue-200">
+                                    <h5 class="font-bold text-blue-600 mb-2">事例 \${index + 1}</h5>
+                                    <div class="space-y-1 text-sm">
+                                        <p><span class="text-gray-600">取引価格:</span> <span class="font-semibold">\${comp.price.toLocaleString()}円</span></p>
+                                        <p><span class="text-gray-600">面積:</span> <span class="font-semibold">\${comp.area}㎡</span></p>
+                                        <p><span class="text-gray-600">築年数:</span> <span class="font-semibold">\${comp.age}年</span></p>
+                                        <p><span class="text-gray-600">駅距離:</span> <span class="font-semibold">\${comp.distanceFromStation}分</span></p>
+                                        <p><span class="text-gray-600">取引時期:</span> <span class="font-semibold">\${comp.transactionDate}</span></p>
+                                        <p><span class="text-gray-600">所在地:</span> <span class="font-semibold">\${comp.location}</span></p>
+                                        <p><span class="text-gray-600">㎡単価:</span> <span class="font-semibold text-blue-600">\${Math.round(comp.price / comp.area).toLocaleString()}円/㎡</span></p>
+                                    </div>
+                                </div>
+                            \`;
+                        });
+                        
+                        html += \`
+                                </div>
+                            </div>
+                        \`;
+                    }
+                    
+                    html += \`
                     \`;
                 }
 
@@ -801,6 +904,60 @@ residential.get('/evaluate', async (c) => {
                                 </div>
                             </div>
                         </div>
+                    \`;
+                    
+                    // Display auto-fetched land price details
+                    if (autoLandPrices && autoLandPrices.length > 0) {
+                        // Sort by year
+                        const sortedPrices = [...autoLandPrices].sort((a, b) => a.year - b.year);
+                        
+                        html += \`
+                            <div class="bg-purple-50 rounded-lg border border-purple-200 p-4 mt-4">
+                                <h4 class="text-lg font-bold text-purple-700 mb-3">
+                                    <i class="fas fa-database mr-2"></i>地価推移詳細 (不動産情報ライブラリより自動取得)
+                                </h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full bg-white rounded-lg border border-purple-200">
+                                        <thead class="bg-purple-100">
+                                            <tr>
+                                                <th class="px-4 py-2 text-left text-sm font-semibold text-purple-700">年度</th>
+                                                <th class="px-4 py-2 text-right text-sm font-semibold text-purple-700">地価 (円/㎡)</th>
+                                                <th class="px-4 py-2 text-right text-sm font-semibold text-purple-700">前年比</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        \`;
+                        
+                        sortedPrices.forEach((data, index) => {
+                            let changeRate = '';
+                            let changeColor = 'text-gray-600';
+                            
+                            if (index > 0) {
+                                const prevPrice = sortedPrices[index - 1].pricePerSquareMeter;
+                                const currentPrice = data.pricePerSquareMeter;
+                                const rate = ((currentPrice - prevPrice) / prevPrice * 100).toFixed(2);
+                                changeRate = rate >= 0 ? \`+\${rate}%\` : \`\${rate}%\`;
+                                changeColor = rate >= 0 ? 'text-green-600' : 'text-red-600';
+                            }
+                            
+                            html += \`
+                                <tr class="border-t border-purple-100">
+                                    <td class="px-4 py-2 text-sm">\${data.year}年</td>
+                                    <td class="px-4 py-2 text-sm text-right font-semibold">\${data.pricePerSquareMeter.toLocaleString()}円</td>
+                                    <td class="px-4 py-2 text-sm text-right font-semibold \${changeColor}">\${changeRate}</td>
+                                </tr>
+                            \`;
+                        });
+                        
+                        html += \`
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        \`;
+                    }
+                    
+                    html += \`
                     \`;
                 }
 
