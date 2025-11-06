@@ -333,7 +333,13 @@ npm run db:migrate:local
 
 ## 📚 ドキュメント
 
-### 重要ドキュメント（必読）
+### 🚨 AI開発者向け必須ドキュメント（作業開始前に必ず確認）
+- **[MANDATORY_CHECKLIST.md](./MANDATORY_CHECKLIST.md)** - 🔴 作業前の必須確認事項（最優先）
+- **[CRITICAL_ERRORS.md](./CRITICAL_ERRORS.md)** - 🔴 過去の致命的エラー記録（同じミスを繰り返さない）
+- **[KNOWN_ISSUES.md](./KNOWN_ISSUES.md)** - 🔴 既知の問題リスト（現在の状態）
+- **[HANDOFF_TO_NEXT_AI.md](./HANDOFF_TO_NEXT_AI.md)** - 🔴 次のAIへの引き継ぎ（必読）
+
+### 重要ドキュメント
 - **[ACTUAL_ISSUES_FOUND.md](./ACTUAL_ISSUES_FOUND.md)** - ✨ 実装状況の真実（最優先で確認）
 - **[HOW_TO_CONTINUE_WORK.md](./HOW_TO_CONTINUE_WORK.md)** - ✨ 作業引き継ぎガイド
 
