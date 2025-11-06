@@ -357,92 +357,8 @@ residential.get('/evaluate', async (c) => {
                 return '13113';
             }
 
-            // Auto-fetch comparables from Reinfolib API
-            document.getElementById('autoFetchComparablesBtn').addEventListener('click', async function() {
-                const statusSpan = document.getElementById('comparable-fetch-status');
-                statusSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 取得中...';
-                
-                try {
-                    // Get property location to determine city code
-                    const location = document.getElementById('propertyLocation').value;
-                    const area = parseFloat(document.getElementById('propertyArea').value) || 65;
-                    
-                    if (!location) {
-                        alert('物件の所在地を入力してください');
-                        statusSpan.innerHTML = '';
-                        return;
-                    }
-                    
-                    // Extract city code from location
-                    const cityCode = getCityCodeFromLocation(location);
-                    
-                    const response = await axios.post('/api/market/comparables', {
-                        city: cityCode,
-                        propertyType: '中古マンション等',
-                        minArea: area * 0.85,
-                        maxArea: area * 1.15,
-                        limit: 10
-                    });
-                    
-                    if (response.data.success && response.data.data && response.data.data.length > 0) {
-                        // Clear existing comparables
-                        document.getElementById('comparablesContainer').innerHTML = '';
-                        
-                        // Add fetched comparables
-                        response.data.data.slice(0, 5).forEach((comp, index) => {
-                            comparableCount++;
-                            const container = document.getElementById('comparablesContainer');
-                            const comparableDiv = document.createElement('div');
-                            comparableDiv.className = 'border border-purple-300 bg-purple-50 rounded-lg p-4';
-                            comparableDiv.innerHTML = \`
-                                <div class="flex justify-between items-center mb-4">
-                                    <h4 class="font-semibold text-purple-800"><i class="fas fa-download mr-2"></i>取引事例 #\${comparableCount} (自動取得)</h4>
-                                    <button type="button" class="text-red-600 hover:text-red-700" onclick="this.parentElement.parentElement.remove()">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                                <div class="grid md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">取引価格 (円)</label>
-                                        <input type="number" class="comparable-price w-full px-4 py-2 border border-gray-300 rounded-lg" value="\${comp.TradePrice || ''}" readonly>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">面積 (㎡)</label>
-                                        <input type="number" class="comparable-area w-full px-4 py-2 border border-gray-300 rounded-lg" value="\${comp.Area || ''}" step="0.01" readonly>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">築年数 (年)</label>
-                                        <input type="number" class="comparable-age w-full px-4 py-2 border border-gray-300 rounded-lg" value="\${comp.BuildingYear ? 2025 - parseInt(comp.BuildingYear.replace(/[^0-9]/g, '')) : ''}" readonly>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">駅距離 (分)</label>
-                                        <input type="number" class="comparable-distance w-full px-4 py-2 border border-gray-300 rounded-lg" value="\${comp.TimeToNearestStation || ''}" readonly>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">取引時期</label>
-                                        <input type="text" class="comparable-date w-full px-4 py-2 border border-gray-300 rounded-lg" value="\${comp.Period || ''}" readonly>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">所在地</label>
-                                        <input type="text" class="comparable-location w-full px-4 py-2 border border-gray-300 rounded-lg" value="\${comp.Municipality || ''}" readonly>
-                                    </div>
-                                </div>
-                            \`;
-                            container.appendChild(comparableDiv);
-                        });
-                        
-                        statusSpan.innerHTML = \`<i class="fas fa-check-circle text-green-600"></i> \${response.data.data.length}件取得成功\`;
-                        setTimeout(() => statusSpan.innerHTML = '', 3000);
-                    } else {
-                        statusSpan.innerHTML = '<i class="fas fa-exclamation-circle text-yellow-600"></i> データが見つかりませんでした';
-                        setTimeout(() => statusSpan.innerHTML = '', 3000);
-                    }
-                } catch (error) {
-                    console.error('Failed to fetch comparables:', error);
-                    statusSpan.innerHTML = '<i class="fas fa-times-circle text-red-600"></i> 取得失敗';
-                    setTimeout(() => statusSpan.innerHTML = '', 3000);
-                }
-            });
+            // NOTE: Auto-fetch comparables functionality has been moved to evaluation form submission
+            // Comparables are now automatically fetched during evaluation without manual button click
 
             // Helper function: Extract prefecture code from location
             function getPrefCodeFromLocation(location) {
@@ -460,79 +376,8 @@ residential.get('/evaluate', async (c) => {
                 return '13';
             }
 
-            // Auto-fetch land prices from Reinfolib API (last 5 years)
-            document.getElementById('autoFetchLandPricesBtn').addEventListener('click', async function() {
-                const statusSpan = document.getElementById('landprice-fetch-status');
-                statusSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 取得中...';
-                
-                try {
-                    const location = document.getElementById('propertyLocation').value;
-                    
-                    if (!location) {
-                        alert('物件の所在地を入力してください');
-                        statusSpan.innerHTML = '';
-                        return;
-                    }
-                    
-                    // Extract prefecture code from location
-                    const prefCode = getPrefCodeFromLocation(location);
-                    
-                    // Clear existing land prices
-                    document.getElementById('landPriceContainer').innerHTML = '';
-                    
-                    // Fetch land prices for last 5 years
-                    const currentYear = new Date().getFullYear();
-                    const years = [currentYear - 4, currentYear - 3, currentYear - 2, currentYear - 1, currentYear];
-                    
-                    let successCount = 0;
-                    for (const year of years) {
-                        try {
-                            const response = await axios.get(\`/api/market/land-prices?year=\${year}&area=\${prefCode}&division=00\`);
-                            
-                            if (response.data.success && response.data.data && response.data.data.length > 0) {
-                                // Take first land price data point
-                                const landData = response.data.data[0];
-                                const pricePerSqm = landData.CurrentYearPrice || landData.PreviousYearPrice || 0;
-                                
-                                if (pricePerSqm > 0) {
-                                    landPriceCount++;
-                                    const container = document.getElementById('landPriceContainer');
-                                    const landPriceDiv = document.createElement('div');
-                                    landPriceDiv.className = 'border border-purple-300 bg-purple-50 rounded-lg p-4 flex items-end gap-4';
-                                    landPriceDiv.innerHTML = \`
-                                        <div class="flex-1">
-                                            <label class="block text-sm font-medium text-gray-700 mb-2"><i class="fas fa-download mr-2 text-purple-600"></i>年</label>
-                                            <input type="number" class="land-price-year w-full px-4 py-2 border border-gray-300 rounded-lg" value="\${year}" readonly>
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">地価 (円/㎡)</label>
-                                            <input type="number" class="land-price-value w-full px-4 py-2 border border-gray-300 rounded-lg" value="\${pricePerSqm}" readonly>
-                                        </div>
-                                        <button type="button" class="text-red-600 hover:text-red-700 px-4 py-2" onclick="this.parentElement.remove()">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    \`;
-                                    container.appendChild(landPriceDiv);
-                                    successCount++;
-                                }
-                            }
-                        } catch (error) {
-                            console.error(\`Failed to fetch land price for year \${year}:\`, error);
-                        }
-                    }
-                    
-                    if (successCount > 0) {
-                        statusSpan.innerHTML = \`<i class="fas fa-check-circle text-green-600"></i> \${successCount}年分取得成功\`;
-                    } else {
-                        statusSpan.innerHTML = '<i class="fas fa-exclamation-circle text-yellow-600"></i> データが見つかりませんでした';
-                    }
-                    setTimeout(() => statusSpan.innerHTML = '', 3000);
-                } catch (error) {
-                    console.error('Failed to fetch land prices:', error);
-                    statusSpan.innerHTML = '<i class="fas fa-times-circle text-red-600"></i> 取得失敗';
-                    setTimeout(() => statusSpan.innerHTML = '', 3000);
-                }
-            });
+            // NOTE: Auto-fetch land prices functionality has been moved to evaluation form submission
+            // Land prices are now automatically fetched during evaluation without manual button click
 
             // Add comparable form
             document.getElementById('addComparableBtn').addEventListener('click', function() {
