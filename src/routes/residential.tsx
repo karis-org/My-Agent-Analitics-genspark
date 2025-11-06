@@ -294,6 +294,71 @@ residential.get('/evaluate', async (c) => {
                 }
             });
 
+            // Helper function: Extract city code from location
+            function getCityCodeFromLocation(location) {
+                // 東京都23区
+                if (location.includes('千代田区')) return '13101';
+                if (location.includes('中央区')) return '13102';
+                if (location.includes('港区')) return '13103';
+                if (location.includes('新宿区')) return '13104';
+                if (location.includes('文京区')) return '13105';
+                if (location.includes('台東区')) return '13106';
+                if (location.includes('墨田区')) return '13107';
+                if (location.includes('江東区')) return '13108';
+                if (location.includes('品川区')) return '13109';
+                if (location.includes('目黒区')) return '13110';
+                if (location.includes('大田区')) return '13111';
+                if (location.includes('世田谷区')) return '13112';
+                if (location.includes('渋谷区')) return '13113';
+                if (location.includes('中野区')) return '13114';
+                if (location.includes('杉並区')) return '13115';
+                if (location.includes('豊島区')) return '13116';
+                if (location.includes('北区')) return '13117';
+                if (location.includes('荒川区')) return '13118';
+                if (location.includes('板橋区')) return '13119';
+                if (location.includes('練馬区')) return '13120';
+                if (location.includes('足立区')) return '13121';
+                if (location.includes('葛飾区')) return '13122';
+                if (location.includes('江戸川区')) return '13123';
+                // 東京都市部
+                if (location.includes('八王子市')) return '13201';
+                if (location.includes('立川市')) return '13202';
+                if (location.includes('武蔵野市')) return '13203';
+                if (location.includes('三鷹市')) return '13204';
+                if (location.includes('青梅市')) return '13205';
+                if (location.includes('府中市')) return '13206';
+                if (location.includes('昭島市')) return '13207';
+                if (location.includes('調布市')) return '13208';
+                if (location.includes('町田市')) return '13209';
+                if (location.includes('小金井市')) return '13210';
+                if (location.includes('小平市')) return '13211';
+                if (location.includes('日野市')) return '13212';
+                if (location.includes('東村山市')) return '13213';
+                if (location.includes('国分寺市')) return '13214';
+                if (location.includes('国立市')) return '13215';
+                // 神奈川県
+                if (location.includes('横浜市')) return '14100';
+                if (location.includes('川崎市')) return '14130';
+                if (location.includes('相模原市')) return '14150';
+                if (location.includes('横須賀市')) return '14201';
+                if (location.includes('鎌倉市')) return '14204';
+                if (location.includes('藤沢市')) return '14205';
+                // 大阪府
+                if (location.includes('大阪市')) return '27100';
+                if (location.includes('堺市')) return '27140';
+                if (location.includes('豊中市')) return '27203';
+                if (location.includes('吹田市')) return '27205';
+                if (location.includes('高槻市')) return '27207';
+                if (location.includes('枚方市')) return '27210';
+                // 愛知県
+                if (location.includes('名古屋市')) return '23100';
+                if (location.includes('豊橋市')) return '23201';
+                if (location.includes('岡崎市')) return '23202';
+                if (location.includes('一宮市')) return '23203';
+                // Default: 渋谷区（データが見つからない場合のフォールバック）
+                return '13113';
+            }
+
             // Auto-fetch comparables from Reinfolib API
             document.getElementById('autoFetchComparablesBtn').addEventListener('click', async function() {
                 const statusSpan = document.getElementById('comparable-fetch-status');
@@ -310,9 +375,8 @@ residential.get('/evaluate', async (c) => {
                         return;
                     }
                     
-                    // Extract city code from location (simplified - you may need more sophisticated parsing)
-                    // For demo, using Tokyo's Shibuya: 13113
-                    const cityCode = '13113'; // TODO: Implement proper location to city code mapping
+                    // Extract city code from location
+                    const cityCode = getCityCodeFromLocation(location);
                     
                     const response = await axios.post('/api/market/comparables', {
                         city: cityCode,
@@ -382,6 +446,22 @@ residential.get('/evaluate', async (c) => {
                 }
             });
 
+            // Helper function: Extract prefecture code from location
+            function getPrefCodeFromLocation(location) {
+                if (location.includes('東京都')) return '13';
+                if (location.includes('神奈川県')) return '14';
+                if (location.includes('埼玉県')) return '11';
+                if (location.includes('千葉県')) return '12';
+                if (location.includes('大阪府')) return '27';
+                if (location.includes('愛知県')) return '23';
+                if (location.includes('福岡県')) return '40';
+                if (location.includes('北海道')) return '01';
+                if (location.includes('宮城県')) return '04';
+                if (location.includes('広島県')) return '34';
+                // Default: 東京都
+                return '13';
+            }
+
             // Auto-fetch land prices from Reinfolib API (last 5 years)
             document.getElementById('autoFetchLandPricesBtn').addEventListener('click', async function() {
                 const statusSpan = document.getElementById('landprice-fetch-status');
@@ -396,8 +476,8 @@ residential.get('/evaluate', async (c) => {
                         return;
                     }
                     
-                    // Extract prefecture code from location (simplified)
-                    const prefCode = '13'; // TODO: Implement proper location to pref code mapping
+                    // Extract prefecture code from location
+                    const prefCode = getPrefCodeFromLocation(location);
                     
                     // Clear existing land prices
                     document.getElementById('landPriceContainer').innerHTML = '';
