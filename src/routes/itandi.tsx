@@ -46,6 +46,21 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
         </header>
 
         <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <!-- Demo Mode Banner -->
+            <div id="demo-banner" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            <strong>デモモード:</strong> イタンジBB API認証情報が未設定のため、サンプルデータを表示しています。
+                            実際のデータを取得するには、管理者に環境変数 <code class="bg-yellow-100 px-1 rounded">ITANDI_EMAIL</code> と <code class="bg-yellow-100 px-1 rounded">ITANDI_PASSWORD</code> の設定を依頼してください。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Search Form -->
             <div class="bg-white rounded-lg shadow p-6 mb-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-4">
@@ -209,6 +224,11 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
                     console.log('[DEBUG] Calling displayResults...');
                     displayResults(analysis, trend);
                     console.log('[DEBUG] displayResults completed');
+                    
+                    // Show demo banner if in demo mode
+                    if (analysis.isDemoMode || trend.isDemoMode) {
+                        document.getElementById('demo-banner').classList.remove('hidden');
+                    }
                 } catch (error) {
                     console.error('[ERROR] Analysis failed:', error);
                     console.error('[ERROR] Error details:', error.response ? error.response.data : error.message);

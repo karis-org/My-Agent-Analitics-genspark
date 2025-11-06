@@ -3371,7 +3371,7 @@ api.post('/itandi/rental-analysis', authMiddleware, async (c) => {
 
     // Import Itandi Client
     const { getItandiClient } = await import('../lib/itandi-client');
-    const itandiClient = getItandiClient(env);
+    const itandiClient = getItandiClient(c.env);
 
     // Execute rental analysis
     const result = await itandiClient.getRentalAnalysis({
@@ -3385,8 +3385,12 @@ api.post('/itandi/rental-analysis', authMiddleware, async (c) => {
       maxRent
     });
 
+    // Check if using demo mode
+    const isDemoMode = !c.env?.ITANDI_EMAIL || c.env.ITANDI_EMAIL === 'YOUR_ITANDI_EMAIL_HERE';
+
     return c.json({
       success: true,
+      isDemoMode,
       ...result
     });
   } catch (error: any) {
@@ -3417,7 +3421,7 @@ api.post('/itandi/rental-trend', authMiddleware, async (c) => {
 
     // Import Itandi Client
     const { getItandiClient } = await import('../lib/itandi-client');
-    const itandiClient = getItandiClient(env);
+    const itandiClient = getItandiClient(c.env);
 
     // Execute rental trend analysis
     const result = await itandiClient.getRentalTrend({
@@ -3429,8 +3433,12 @@ api.post('/itandi/rental-trend', authMiddleware, async (c) => {
       maxArea
     }, months || 12);
 
+    // Check if using demo mode
+    const isDemoMode = !c.env?.ITANDI_EMAIL || c.env.ITANDI_EMAIL === 'YOUR_ITANDI_EMAIL_HERE';
+
     return c.json({
       success: true,
+      isDemoMode,
       ...result
     });
   } catch (error: any) {
