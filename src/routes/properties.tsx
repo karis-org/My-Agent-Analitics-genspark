@@ -1756,18 +1756,18 @@ properties.get('/:id/comprehensive-report', async (c) => {
                                 <i class="fas fa-building text-3xl text-blue-500"></i>
                                 <span class="text-xs text-slate-400">経過年数</span>
                             </div>
-                            <div class="metric-value">\${property.building_age || 0}</div>
+                            <div class="metric-value">\${property.age || 0}</div>
                             <div class="metric-label">築年数 (年)</div>
                         </div>
                         
-                        <!-- 土地面積カード -->
+                        <!-- 駅距離カード -->
                         <div class="dashboard-card">
                             <div class="flex items-center justify-between mb-4">
-                                <i class="fas fa-map-marked-alt text-3xl text-blue-500"></i>
-                                <span class="text-xs text-slate-400">土地</span>
+                                <i class="fas fa-train text-3xl text-blue-500"></i>
+                                <span class="text-xs text-slate-400">アクセス</span>
                             </div>
-                            <div class="metric-value">\${property.land_area || 0}</div>
-                            <div class="metric-label">平米 (㎡)</div>
+                            <div class="metric-value">\${property.distance_from_station || 0}</div>
+                            <div class="metric-label">駅距離 (分)</div>
                         </div>
                     </div>
                     
