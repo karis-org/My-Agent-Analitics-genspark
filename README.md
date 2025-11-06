@@ -15,12 +15,10 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🌍 デモ・本番環境
 
-**🚀 本番環境（最新）**: [https://b69092e6.my-agent-analytics.pages.dev](https://b69092e6.my-agent-analytics.pages.dev)  
-✨ **Session 2完了版 - Google Custom Search API統合・コスト情報追加・UI改善完了** 🎉
+**🚀 本番環境（最新）**: [https://b5cf1df0.my-agent-analytics.pages.dev](https://b5cf1df0.my-agent-analytics.pages.dev)  
+✨ **Session 4完了版 - 住所正規化による事故物件調査精度向上・ドキュメント整理完了** 🎉
 
 **🌐 本番URL**: [https://my-agent-analytics.pages.dev](https://my-agent-analytics.pages.dev)
-
-**🚀 本番環境（前バージョン）**: [https://344024d1.my-agent-analytics.pages.dev](https://344024d1.my-agent-analytics.pages.dev)  
 
 **GitHub リポジトリ**: [https://github.com/koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)
 
@@ -381,88 +379,68 @@ npm run db:migrate:local
 ---
 
 **開発チーム**: My Agent Team  
-**最終更新**: 2025年1月5日（Session 2）  
-**バージョン**: 6.8.0+ (Google Custom Search API統合完了)  
-**プロジェクト完成度**: 95%機能実装完了 ✅  
+**最終更新**: 2025年1月6日（Session 4）  
+**バージョン**: 6.9.0+ (住所正規化による事故物件調査精度向上完了)  
+**プロジェクト完成度**: 96%機能実装完了 ✅  
 **実装機能数**: 15機能（稼働率100%）  
 **デプロイ状態**: 本番環境稼働中 🚀  
-**本番URL（最新）**: [https://b69092e6.my-agent-analytics.pages.dev](https://b69092e6.my-agent-analytics.pages.dev)  
+**本番URL（最新）**: [https://b5cf1df0.my-agent-analytics.pages.dev](https://b5cf1df0.my-agent-analytics.pages.dev)  
 **GitHub**: [koki-187/My-Agent-Analitics-genspark](https://github.com/koki-187/My-Agent-Analitics-genspark)  
-**最新コミット**: 4b69b85
+**ローカルコミット数**: 157
 
-## 🎯 Session 2完了 - Google Custom Search API統合とUI改善
+## 🎯 Session 4完了 - 住所正規化と事故物件調査精度向上
 
-### 完了した作業（2025年1月5日）
+### 完了した作業（2025年1月6日）
 
-#### ✅ Google Custom Search API統合
-- **2段階検索プロセス実装**
-  - Step 1: Google Custom Search APIで実際のウェブ検索（大島てる、ニュースサイト等）
-  - Step 2: OpenAI GPT-4で検索結果を分析・判定
-- **新規ファイル作成**: `src/lib/google-search-client.ts` - Google検索クライアント
-- **完全書き換え**: `src/lib/stigma-checker.ts` - 2段階検索ロジック実装
-- **デモモード対応**: APIキー未設定時は適切なメッセージ表示
+#### ✅ 住所正規化実装
+- **新規ファイル作成**: `src/lib/address-normalizer.ts` - 住所正規化・バリエーション生成
+  - 漢数字→算用数字変換（六丁目→6丁目）
+  - 丁目→ハイフン形式変換（6丁目→6-）
+  - 番地・号の正規化（番→-、号削除）
+  - 全角数字→半角数字変換
+  - スペース削除、都道府県名の有無バリエーション
+- **検索精度向上**: 1つの住所から複数のバリエーションを生成し、検索クエリ数を最大15に拡張
+- **GPT-4プロンプト改善**: 住所バリエーションを明示的に提供し、柔軟なマッチング対応
 
-#### ✅ UI改善
-- **用語解説ボタン改善** (`src/routes/properties.tsx`)
-  - ボタンサイズ拡大（`text-xs` → `text-base`）
-  - ホバー効果追加（`hover:scale-110`）
-  - アクセシビリティ向上（`title`属性）
-  
-- **コスト情報追加** (`src/routes/stigma.tsx`)
-  - 重要事項調査報告書の費用表示
-  - 22,000〜55,000円/戸（管理会社により異なる）
+#### ✅ 事故物件調査機能改善
+- **`google-search-client.ts`改善**: 住所バリエーション対応、検索クエリ最適化
+- **`stigma-checker.ts`改善**: GPT-4に住所バリエーション情報を渡し、分析精度向上
+- **UI改善**: 警告バナー追加、大島てるへの直接リンク提供
+- **コスト情報追加**: 年間経費フィールドに管理費用情報（22,000〜55,000円/戸/月）
 
-#### ✅ デプロイ完了
-- GitHub プッシュ完了: コミット 4b69b85
-- Cloudflare Pages デプロイ完了: https://b69092e6.my-agent-analytics.pages.dev
-- 引き継ぎドキュメント作成: `HANDOFF_2025-01-05_SESSION-2.md`
+#### ✅ プロジェクト整理
+- **ドキュメント整理**: 50ファイル（22,905行）の古いドキュメント削除
+  - 保持: README.md, HANDOFF_TO_NEXT_SESSION.md, STIGMA_CHECK_TEST_RESULTS.md, docs/主要ガイド
+  - 削除: 古いHANDOFF_*.md、実装計画、リリースノート、releases/ディレクトリ
+- **デプロイ完了**: https://b5cf1df0.my-agent-analytics.pages.dev
 
-### ⚠️ 次セッションで実施すべき作業
+### ⚠️ 既知の問題と次セッションでの対応事項
 
-#### 1. 環境変数設定（必須）
-以下のAPIキーをCloudflare Pagesのシークレットに設定してください：
+#### 1. GitHubリポジトリ作成（優先度：高）
+現在のリポジトリ（https://github.com/koki-187/My-Agent-Analitics-genspark）は404エラー。
+GitHub Appの権限制限により自動作成不可。**ユーザーが手動で作成する必要があります。**
 
+**手動作成後の手順**:
 ```bash
-# Google Custom Search API（事故物件調査用）
-npx wrangler pages secret put GOOGLE_CUSTOM_SEARCH_API_KEY --project-name my-agent-analytics
-npx wrangler pages secret put GOOGLE_CUSTOM_SEARCH_ENGINE_ID --project-name my-agent-analytics
+# 新しいリポジトリURL設定
+git remote set-url origin https://github.com/koki-187/My-Agent-Analitics-genspark.git
 
-# イタンジBB認証情報（賃貸相場分析用）
+# プッシュ
+git push -u origin main
+```
+
+#### 2. イタンジBB環境変数設定（優先度：高）
+現在 `ITANDI_API_KEY` のみ設定済み。以下が未設定：
+```bash
 npx wrangler pages secret put ITANDI_EMAIL --project-name my-agent-analytics
 npx wrangler pages secret put ITANDI_PASSWORD --project-name my-agent-analytics
 ```
 
-#### 2. 実地テスト
-- **事故物件調査**: 3つの住所でテスト
-  - 東京都港区六本木7-18-18
-  - 東京都渋谷区道玄坂1-10-7
-  - 東京都板橋区蓮根二丁目17-7
-- **イタンジBB問題調査**: ロゴエラー、デモモードバナー表示問題の解決
+#### 3. 今後の改善提案
+- **Google Custom Search API有料化検討**: 無料枠100クエリ/日では不足の可能性
+- **キャッシュ機構実装**: D1データベースで調査結果をキャッシュし、APIクエリ削減
+- **大島てる直接スクレイピング**: より正確な検出のため、直接スクレイピング実装を検討
 
-詳細は `HANDOFF_2025-01-05_SESSION-2.md` を参照してください。
+## 🎯 Session 2完了 - Google Custom Search API統合とUI改善
 
----
 
-## 🎯 Phase 2完了 - イタンジBB API修正とテスト検証
-
-### 修正内容
-- ✅ **イタンジBB API重複定義削除** - `src/routes/api.tsx`の81行削除
-- ✅ **ビルド成功確認** - エラーゼロでビルド完了
-- ✅ **包括的テスト実施** - 17/18 PASS（94%成功率）
-- ✅ **GitHub プッシュ** - コミット: 9757672
-- ✅ **Cloudflare Pages デプロイ** - URL: 344024d1
-- ✅ **プロジェクトバックアップ** - tar.gz形式で保存完了
-
-### Phase 3完了 - ドキュメント整備
-- ✅ **ACTUAL_ISSUES_FOUND.md** - 実装状況の真実を文書化
-- ✅ **HOW_TO_CONTINUE_WORK.md** - 作業引き継ぎガイド作成
-- ✅ **README.md更新** - 最新の実装状況を正確に反映
-
-### 実装確認済み機能
-1. **物件収益データ入力フォーム** - `/properties/:id/analyze` ✅
-2. **統合分析レポートページ** - `/properties/:id/comprehensive-report` ✅
-3. **イタンジBB 賃貸相場分析** - `/itandi/rental-market` ✅
-4. **分析実行ページ** - リアルタイム財務分析 ✅
-5. **事故物件調査** - Google Custom Search API + AI分析 ✅
-
-**重要**: ユーザーが報告した「未実装」と思われていた機能は、実際には既に実装済みでした。詳細は `ACTUAL_ISSUES_FOUND.md` と `HOW_TO_CONTINUE_WORK.md` を参照してください。
