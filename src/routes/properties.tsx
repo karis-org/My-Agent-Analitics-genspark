@@ -1667,6 +1667,25 @@ properties.get('/:id/comprehensive-report', async (c) => {
             <div id="report-content" class="hidden">
                 <!-- レポート内容がここに動的に挿入されます -->
             </div>
+            
+            <!-- 免責文 -->
+            <div class="dashboard-card mt-8 mb-8 print:block">
+                <div class="text-center">
+                    <h3 class="text-lg font-bold text-blue-400 mb-4">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>免責事項
+                    </h3>
+                    
+                    <!-- 正式表記（デスクトップ・PDF用） -->
+                    <div class="hidden md:block text-sm text-slate-300 leading-relaxed">
+                        本ツールは不動産の情報整理・分析支援を目的とした参考情報であり、投資判断・契約判断の勧誘や約束を行うものではありません。最終判断はご自身の責任で行ってください。数値は出典に基づく推計であり、将来の結果を保証しません。
+                    </div>
+                    
+                    <!-- 短縮版（スマホ・小画面用） -->
+                    <div class="md:hidden text-xs text-slate-300 leading-relaxed">
+                        本ツールは参考情報です。投資・契約判断はご自身の責任で。将来成果を保証しません。
+                    </div>
+                </div>
+            </div>
         </main>
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
