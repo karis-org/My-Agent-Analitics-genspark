@@ -2128,7 +2128,7 @@ properties.get('/:id/comprehensive-report', async (c) => {
                             </div>
                             <div class="data-item">
                                 <span class="data-label">築年数:</span>
-                                <span class="data-value">\${property.building_age || '未設定'}年</span>
+                                <span class="data-value">\${property.age || '未設定'}年</span>
                             </div>
                             <div class="data-item">
                                 <span class="data-label">年間収入:</span>
