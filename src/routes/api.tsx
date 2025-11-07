@@ -3721,31 +3721,51 @@ api.get('/properties/:id/comprehensive-data', authMiddleware, async (c) => {
       `).bind(propertyId).first();
     }
 
-    // JSON文字列をパース
+    // 安全なJSON解析ヘルパー関数
+    const safeJSONParse = (data: any, fieldName: string): any => {
+      if (!data) return null;
+      
+      // すでにオブジェクトの場合はそのまま返す
+      if (typeof data === 'object' && data !== null) return data;
+      
+      // 文字列の場合は解析を試みる
+      if (typeof data === 'string') {
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          console.error(`JSON parse error for ${fieldName}:`, e, 'Data:', data.substring(0, 100));
+          return null;
+        }
+      }
+      
+      return data;
+    };
+
+    // JSON文字列を安全にパース
     const parsedData = {
       property: propertyResult,
       stigma: stigmaResult ? {
         ...stigmaResult,
-        incidents_found: stigmaResult.incidents_found ? JSON.parse(stigmaResult.incidents_found as string) : []
+        incidents_found: safeJSONParse(stigmaResult.incidents_found, 'stigma.incidents_found') || []
       } : null,
       rental: rentalResult,
       // demographics: 専用テーブルの場合はdemographics_detailをパース、analysis_resultsの場合はresult_dataをパース
       demographics: demographicsResult ? (
-        demographicsResult.demographics_detail 
-          ? JSON.parse(demographicsResult.demographics_detail as string)
-          : (demographicsResult.result_data ? JSON.parse(demographicsResult.result_data as string) : demographicsResult)
+        safeJSONParse(demographicsResult.demographics_detail, 'demographics.demographics_detail') ||
+        safeJSONParse(demographicsResult.result_data, 'demographics.result_data') ||
+        demographicsResult
       ) : null,
       // aiMarket: 専用テーブルの場合はanalysis_detailをパース、analysis_resultsの場合はresult_dataをパース
       aiMarket: aiMarketResult ? (
-        aiMarketResult.analysis_detail 
-          ? JSON.parse(aiMarketResult.analysis_detail as string)
-          : (aiMarketResult.result_data ? JSON.parse(aiMarketResult.result_data as string) : aiMarketResult)
+        safeJSONParse(aiMarketResult.analysis_detail, 'aiMarket.analysis_detail') ||
+        safeJSONParse(aiMarketResult.result_data, 'aiMarket.result_data') ||
+        aiMarketResult
       ) : null,
       // maps: 専用テーブルの場合はそのまま使用、analysis_resultsの場合はresult_dataをパース
       maps: mapsResult ? (
         mapsResult.map_1km_url 
           ? mapsResult // 専用テーブルの場合はそのまま
-          : (mapsResult.result_data ? JSON.parse(mapsResult.result_data as string) : mapsResult)
+          : safeJSONParse(mapsResult.result_data, 'maps.result_data') || mapsResult
       ) : null
     };
 
@@ -3755,10 +3775,16 @@ api.get('/properties/:id/comprehensive-data', authMiddleware, async (c) => {
     });
   } catch (error: any) {
     console.error('Comprehensive report data fetch error:', error);
+    console.error('Error stack:', error.stack);
+    
+    // より詳細なエラー情報を返す（デバッグ用）
     return c.json({
       error: '統合レポートデータの取得に失敗しました',
       details: error.message,
-      errorCode: 'COMPREHENSIVE_DATA_FETCH_FAILED'
+      errorCode: 'COMPREHENSIVE_DATA_FETCH_FAILED',
+      errorType: error.name,
+      // エラーの発生箇所を特定しやすくする
+      hint: 'データベース接続またはJSON解析エラーの可能性があります。物件データと分析結果が正しく保存されているか確認してください。'
     }, 500);
   }
 });
