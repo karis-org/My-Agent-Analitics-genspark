@@ -822,7 +822,17 @@ api.post('/properties', authMiddleware, async (c) => {
       total_floor_area, 
       age, 
       distance_from_station,
-      has_elevator
+      has_elevator,
+      // Migration 0008 fields
+      property_type,
+      land_area,
+      registration_date,
+      // Migration 0009 fields
+      monthly_rent,
+      annual_income,
+      annual_expense,
+      gross_yield,
+      net_yield
     } = body;
     
     if (!name || !price) {
@@ -836,8 +846,10 @@ api.post('/properties', authMiddleware, async (c) => {
       INSERT INTO properties (
         id, user_id, name, price, location, structure, 
         total_floor_area, age, distance_from_station, has_elevator,
+        property_type, land_area, registration_date,
+        monthly_rent, annual_income, annual_expense, gross_yield, net_yield,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       propertyId,
       user.id,
@@ -849,6 +861,14 @@ api.post('/properties', authMiddleware, async (c) => {
       age ? parseInt(age) : null,
       distance_from_station ? parseFloat(distance_from_station) : null,
       has_elevator ? 1 : 0,
+      property_type || 'residential',
+      land_area ? parseFloat(land_area) : null,
+      registration_date || null,
+      monthly_rent ? parseFloat(monthly_rent) : 0,
+      annual_income ? parseFloat(annual_income) : 0,
+      annual_expense ? parseFloat(annual_expense) : 0,
+      gross_yield ? parseFloat(gross_yield) : 0,
+      net_yield ? parseFloat(net_yield) : 0,
       now,
       now
     ).run();
@@ -898,14 +918,28 @@ api.put('/properties/:id', authMiddleware, async (c) => {
       total_floor_area, 
       age, 
       distance_from_station,
-      has_elevator
+      has_elevator,
+      // Migration 0008 fields
+      property_type,
+      land_area,
+      registration_date,
+      // Migration 0009 fields
+      monthly_rent,
+      annual_income,
+      annual_expense,
+      gross_yield,
+      net_yield
     } = body;
     
     await env.DB.prepare(`
       UPDATE properties 
       SET name = ?, price = ?, location = ?, structure = ?, 
           total_floor_area = ?, age = ?, distance_from_station = ?, 
-          has_elevator = ?, updated_at = ?
+          has_elevator = ?, 
+          property_type = ?, land_area = ?, registration_date = ?,
+          monthly_rent = ?, annual_income = ?, annual_expense = ?, 
+          gross_yield = ?, net_yield = ?,
+          updated_at = ?
       WHERE id = ? AND user_id = ?
     `).bind(
       name || existing.name,
@@ -916,6 +950,14 @@ api.put('/properties/:id', authMiddleware, async (c) => {
       age !== undefined ? (age ? parseInt(age) : null) : existing.age,
       distance_from_station !== undefined ? (distance_from_station ? parseFloat(distance_from_station) : null) : existing.distance_from_station,
       has_elevator !== undefined ? (has_elevator ? 1 : 0) : existing.has_elevator,
+      property_type !== undefined ? property_type : (existing.property_type || 'residential'),
+      land_area !== undefined ? (land_area ? parseFloat(land_area) : null) : existing.land_area,
+      registration_date !== undefined ? registration_date : existing.registration_date,
+      monthly_rent !== undefined ? (monthly_rent ? parseFloat(monthly_rent) : 0) : (existing.monthly_rent || 0),
+      annual_income !== undefined ? (annual_income ? parseFloat(annual_income) : 0) : (existing.annual_income || 0),
+      annual_expense !== undefined ? (annual_expense ? parseFloat(annual_expense) : 0) : (existing.annual_expense || 0),
+      gross_yield !== undefined ? (gross_yield ? parseFloat(gross_yield) : 0) : (existing.gross_yield || 0),
+      net_yield !== undefined ? (net_yield ? parseFloat(net_yield) : 0) : (existing.net_yield || 0),
       new Date().toISOString(),
       propertyId,
       user.id

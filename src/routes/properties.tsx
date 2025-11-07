@@ -1826,14 +1826,28 @@ properties.get('/:id/comprehensive-report', async (c) => {
                     }
                 } catch (error) {
                     console.error('Failed to load report data:', error);
+                    console.error('Full error object:', JSON.stringify(error, null, 2));
+                    
+                    const errorData = error.response?.data || {};
+                    const errorMessage = errorData.error || error.message || '不明なエラー';
+                    const errorDetails = errorData.details || '';
+                    const errorHint = errorData.hint || '';
+                    
                     document.getElementById('loading').innerHTML = \`
-                        <div class="text-center py-12">
+                        <div class="text-center py-12 max-w-2xl mx-auto">
                             <i class="fas fa-exclamation-triangle text-4xl text-red-600"></i>
-                            <p class="mt-4 text-gray-600">レポートの読み込みに失敗しました</p>
-                            <p class="text-sm text-gray-500 mt-2">\${error.response?.data?.error || error.message}</p>
-                            <a href="/properties/\${propertyId}" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg">
-                                物件ページに戻る
-                            </a>
+                            <p class="mt-4 text-xl font-bold text-gray-800">レポートの読み込みに失敗しました</p>
+                            <p class="text-sm text-gray-700 mt-3 font-semibold">\${errorMessage}</p>
+                            \${errorDetails ? \`<p class="text-xs text-gray-600 mt-2 bg-gray-100 p-3 rounded"><strong>詳細:</strong> \${errorDetails}</p>\` : ''}
+                            \${errorHint ? \`<p class="text-xs text-blue-600 mt-2 bg-blue-50 p-3 rounded"><i class="fas fa-lightbulb mr-1"></i><strong>ヒント:</strong> \${errorHint}</p>\` : ''}
+                            <div class="mt-6 space-x-3">
+                                <a href="/properties/\${propertyId}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                    <i class="fas fa-arrow-left mr-2"></i>物件ページに戻る
+                                </a>
+                                <button onclick="location.reload()" class="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                    <i class="fas fa-redo mr-2"></i>再読み込み
+                                </button>
+                            </div>
                         </div>
                     \`;
                 }
