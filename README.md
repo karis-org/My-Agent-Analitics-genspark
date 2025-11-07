@@ -15,8 +15,8 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🌍 デモ・本番環境
 
-**🚀 本番環境（最新）**: [https://1655998c.my-agent-analytics.pages.dev](https://1655998c.my-agent-analytics.pages.dev)  
-✨ **Session 9 - 統合レポートエラー修正版** 🔧 (2025-11-07)
+**🚀 本番環境（最新）**: [https://1ba49d7e.my-agent-analytics.pages.dev](https://1ba49d7e.my-agent-analytics.pages.dev)  
+✨ **Session 9 Hotfix - 物件フィールド保存バグ修正版** 🔧 (2025-11-07)
 
 **📊 Session 7版**: [https://861df363.my-agent-analytics.pages.dev](https://861df363.my-agent-analytics.pages.dev)  
 統合レポート修正完了、テスター5名による監査完了
@@ -388,12 +388,13 @@ npm run db:migrate:local
 ---
 
 **開発チーム**: My Agent Team  
-**最終更新**: 2025-11-07（Session 9 - 統合レポートエラー修正）  
-**バージョン**: 9.0.1  
+**最終更新**: 2025-11-07（Session 9 Hotfix - 物件フィールド保存バグ修正）  
+**バージョン**: 9.0.2  
 **プロジェクト完成度**: バグ修正対応中 🔧  
 **実装機能数**: 15機能（包括的テスト実施中）  
 **デプロイ状態**: 本番環境稼働中 🚀  
-**本番URL（最新）**: [https://1655998c.my-agent-analytics.pages.dev](https://1655998c.my-agent-analytics.pages.dev)  
+**本番URL（最新）**: [https://1ba49d7e.my-agent-analytics.pages.dev](https://1ba49d7e.my-agent-analytics.pages.dev)  
+**本番URL（Session 9 初回）**: [https://1655998c.my-agent-analytics.pages.dev](https://1655998c.my-agent-analytics.pages.dev)  
 **本番URL（Session 8）**: [https://e929e424.my-agent-analytics.pages.dev](https://e929e424.my-agent-analytics.pages.dev)  
 **本番URL（Session 7）**: [https://861df363.my-agent-analytics.pages.dev](https://861df363.my-agent-analytics.pages.dev)  
 **GitHub**: [karis-org/My-Agent-Analitics-genspark](https://github.com/karis-org/My-Agent-Analitics-genspark)  
