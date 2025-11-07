@@ -1057,6 +1057,22 @@ properties.get('/:id', async (c) => {
                                             <dt class="text-gray-600">駅距離:</dt>
                                             <dd class="font-medium">\${property.distance_from_station || 0}分</dd>
                                         </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">想定賃料:</dt>
+                                            <dd class="font-medium">¥\${(property.monthly_rent || 0).toLocaleString()}/月</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">物件種別:</dt>
+                                            <dd class="font-medium">\${property.property_type || '未設定'}</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">土地面積:</dt>
+                                            <dd class="font-medium">\${property.land_area || 0}㎡</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="text-gray-600">登記日:</dt>
+                                            <dd class="font-medium">\${property.registration_date || '未設定'}</dd>
+                                        </div>
                                     </dl>
                                 </div>
                                 
@@ -1245,7 +1261,9 @@ properties.get('/:id/analyze', async (c) => {
                     const response = await axios.get(\`/api/properties/\${propertyId}\`);
                     const { property } = response.data;
                     
+                    // Auto-populate form fields from property data
                     document.getElementById('propertyPrice').value = property.price || 0;
+                    document.getElementById('monthlyRent').value = property.monthly_rent || 0;
                 } catch (error) {
                     console.error('Failed to load property:', error);
                 }
@@ -1420,9 +1438,80 @@ properties.get('/:id/analyze', async (c) => {
                 
                 // Scroll to results
                 document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                
+                // Re-initialize tooltips for dynamically added content
+                initializeTooltips();
+            }
+            
+            // Initialize tooltips
+            function initializeTooltips() {
+                const tooltips = document.querySelectorAll('.info-tooltip');
+                
+                tooltips.forEach(tooltip => {
+                    const message = tooltip.getAttribute('data-message');
+                    if (!message) return;
+                    
+                    // Skip if already initialized
+                    if (tooltip.hasAttribute('data-tooltip-initialized')) return;
+                    tooltip.setAttribute('data-tooltip-initialized', 'true');
+                    
+                    // Create tooltip element
+                    const tooltipBox = document.createElement('div');
+                    tooltipBox.className = 'fixed z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl max-w-xs hidden';
+                    tooltipBox.style.whiteSpace = 'pre-wrap';
+                    tooltipBox.textContent = message.replace(/&#10;/g, '\\n');
+                    document.body.appendChild(tooltipBox);
+                    
+                    // Show tooltip on click (for mobile)
+                    tooltip.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Hide all other tooltips
+                        document.querySelectorAll('.info-tooltip').forEach(t => {
+                            const box = t.tooltipBox;
+                            if (box && box !== tooltipBox) {
+                                box.classList.add('hidden');
+                            }
+                        });
+                        
+                        // Toggle current tooltip
+                        const rect = tooltip.getBoundingClientRect();
+                        tooltipBox.style.left = Math.min(rect.left, window.innerWidth - tooltipBox.offsetWidth - 10) + 'px';
+                        tooltipBox.style.top = (rect.bottom + 5) + 'px';
+                        tooltipBox.classList.toggle('hidden');
+                    });
+                    
+                    // Show tooltip on hover (for desktop)
+                    tooltip.addEventListener('mouseenter', (e) => {
+                        const rect = tooltip.getBoundingClientRect();
+                        tooltipBox.style.left = Math.min(rect.left, window.innerWidth - tooltipBox.offsetWidth - 10) + 'px';
+                        tooltipBox.style.top = (rect.bottom + 5) + 'px';
+                        tooltipBox.classList.remove('hidden');
+                    });
+                    
+                    tooltip.addEventListener('mouseleave', () => {
+                        tooltipBox.classList.add('hidden');
+                    });
+                    
+                    // Store reference for cleanup
+                    tooltip.tooltipBox = tooltipBox;
+                });
+                
+                // Hide all tooltips when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.info-tooltip')) {
+                        document.querySelectorAll('.info-tooltip').forEach(t => {
+                            if (t.tooltipBox) {
+                                t.tooltipBox.classList.add('hidden');
+                            }
+                        });
+                    }
+                });
             }
             
             loadProperty();
+            initializeTooltips();
         </script>
     </body>
     </html>
@@ -1633,8 +1722,8 @@ properties.get('/:id/comprehensive-report', async (c) => {
             <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
+                        <a href="/dashboard" class="bg-white rounded-lg p-2 shadow-md hover:shadow-lg transition-shadow">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-10 w-10" style="object-fit: contain;">
                         </a>
                         <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
                             統合分析ダッシュボード
