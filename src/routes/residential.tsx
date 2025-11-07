@@ -94,7 +94,7 @@ residential.get('/evaluate', async (c) => {
 
             <!-- Evaluation Form -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <form id="evaluationForm">
+                <form id="evaluationForm" onsubmit="return false;">
                     <!-- Target Property Information -->
                     <div class="section-title">
                         <i class="fas fa-building mr-2"></i>評価対象物件情報
@@ -182,7 +182,7 @@ residential.get('/evaluate', async (c) => {
 
                     <!-- Submit Button -->
                     <div class="mt-8">
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium text-lg">
+                        <button type="button" id="evaluateButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium text-lg">
                             <i class="fas fa-calculator mr-2"></i>評価を実行
                         </button>
                     </div>
@@ -445,17 +445,34 @@ residential.get('/evaluate', async (c) => {
                 \`;
                 container.appendChild(landPriceDiv);
             });
+            
+            // フォーム送信を完全に防止
+            const evaluationForm = document.getElementById('evaluationForm');
+            if (evaluationForm) {
+                evaluationForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[Residential] Form submit event prevented');
+                    return false;
+                });
+            }
 
-            // Form submission
-            document.getElementById('evaluationForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
+            // Evaluate button click handler
+            const evaluateButton = document.getElementById('evaluateButton');
+            if (evaluateButton) {
+                evaluateButton.addEventListener('click', async function(e) {
+                e.preventDefault(); // フォーム送信を防止
+                e.stopPropagation(); // イベント伝播を停止
+                
+                console.log('[Residential] Evaluate button clicked');
+                
+                try {
+                    // Show loading
+                    document.getElementById('loadingIndicator').classList.remove('hidden');
+                    document.getElementById('resultsContainer').classList.add('hidden');
 
-                // Show loading
-                document.getElementById('loadingIndicator').classList.remove('hidden');
-                document.getElementById('resultsContainer').classList.add('hidden');
-
-                // Collect form data
-                const targetProperty = {
+                    // Collect form data
+                    const targetProperty = {
                     name: document.getElementById('propertyName').value,
                     area: parseFloat(document.getElementById('propertyArea').value),
                     age: parseInt(document.getElementById('propertyAge').value),
@@ -578,14 +595,16 @@ residential.get('/evaluate', async (c) => {
                 // Add auto-fetched land prices
                 landPriceHistory.push(...autoFetchedLandPrices);
 
-                // Get selected evaluation methods
-                const evaluationMethods = [];
-                if (document.getElementById('methodComparison').checked) evaluationMethods.push('comparison');
-                if (document.getElementById('methodCost').checked) evaluationMethods.push('cost');
-                if (document.getElementById('methodTrend').checked) evaluationMethods.push('trend');
-                if (document.getElementById('methodAsset').checked) evaluationMethods.push('asset');
+                    // Get selected evaluation methods
+                    const evaluationMethods = [];
+                    if (document.getElementById('methodComparison')?.checked) evaluationMethods.push('comparison');
+                    if (document.getElementById('methodCost')?.checked) evaluationMethods.push('cost');
+                    if (document.getElementById('methodTrend')?.checked) evaluationMethods.push('trend');
+                    if (document.getElementById('methodAsset')?.checked) evaluationMethods.push('asset');
 
-                try {
+                    console.log('[Residential] Evaluation methods:', evaluationMethods);
+                    console.log('[Residential] Target property:', targetProperty);
+
                     const response = await axios.post('/api/properties/residential/evaluate', {
                         targetProperty,
                         comparables,
@@ -595,14 +614,21 @@ residential.get('/evaluate', async (c) => {
                         evaluationMethods,
                     });
 
+                    console.log('[Residential] API response:', response.data);
                     displayResults(response.data, autoFetchedComparables, autoFetchedLandPrices);
+                    
                 } catch (error) {
-                    console.error('Evaluation error:', error);
-                    alert('評価の実行中にエラーが発生しました: ' + (error.response?.data?.error || error.message));
+                    console.error('[Residential] Evaluation error:', error);
+                    console.error('[Residential] Error stack:', error.stack);
+                    const errorMessage = error.response?.data?.error || error.message || '不明なエラーが発生しました';
+                    alert('評価の実行中にエラーが発生しました:\n\n' + errorMessage + '\n\nブラウザのコンソール（F12）を開いて詳細を確認してください。');
                 } finally {
-                    document.getElementById('loadingIndicator').classList.add('hidden');
+                    document.getElementById('loadingIndicator')?.classList.add('hidden');
                 }
-            });
+                });
+            } else {
+                console.error('[Residential] Evaluate button not found!');
+            }
 
             function displayResults(data, autoComparables = [], autoLandPrices = []) {
                 const container = document.getElementById('resultsContainer');

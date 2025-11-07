@@ -236,12 +236,10 @@ export class GoogleMapsClient {
 /**
  * Google Maps APIキーを環境変数から取得
  */
-export function getGoogleMapsClient(): GoogleMapsClient | null {
-  // Cloudflare環境変数から取得
-  const apiKey = (globalThis as any).GOOGLE_MAPS_API_KEY;
-  
+export function getGoogleMapsClient(apiKey?: string): GoogleMapsClient | null {
+  // APIキーが明示的に渡されていない場合は警告
   if (!apiKey) {
-    console.warn('GOOGLE_MAPS_API_KEY is not set. Map generation will use placeholders.');
+    console.warn('GOOGLE_MAPS_API_KEY is not provided. Map generation will use placeholders.');
     return null;
   }
 
@@ -254,9 +252,10 @@ export function getGoogleMapsClient(): GoogleMapsClient | null {
 export async function generateMapsForProperty(
   address: string,
   lat?: number,
-  lng?: number
+  lng?: number,
+  apiKey?: string
 ): Promise<PropertyMapResult | null> {
-  const client = getGoogleMapsClient();
+  const client = getGoogleMapsClient(apiKey);
   
   if (!client) {
     // APIキーが設定されていない場合はnullを返す

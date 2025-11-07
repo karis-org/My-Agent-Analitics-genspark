@@ -27,6 +27,12 @@ import {
   type LandPriceData,
   type AssetEvaluationFactors,
 } from '../lib/residential-evaluator';
+import { 
+  parseOCRNumber, 
+  parseOCRDate, 
+  parseStructureType,
+  safeParseOCRNumber 
+} from '../lib/ocr-parser';
 import {
   exportPropertiesToExcel,
   exportSimulationToExcel,
@@ -344,9 +350,74 @@ api.post('/properties/ocr', async (c) => {
       }, 422);
     }
     
+    // OCRパーサーを適用して数値データを正規化
+    const parseErrors: string[] = [];
+    const parsedData: any = { ...extractedData };
+    
+    // price (販売価格) - 必須フィールド
+    if (extractedData.price !== null && extractedData.price !== undefined) {
+      try {
+        parsedData.price = parseOCRNumber(extractedData.price, 'price');
+      } catch (error) {
+        parseErrors.push(`price: ${error instanceof Error ? error.message : 'パースエラー'}`);
+        parsedData.price = null;
+      }
+    }
+    
+    // total_floor_area (延床面積) - 必須フィールド
+    if (extractedData.total_floor_area !== null && extractedData.total_floor_area !== undefined) {
+      try {
+        parsedData.total_floor_area = parseOCRNumber(extractedData.total_floor_area, 'total_floor_area');
+      } catch (error) {
+        parseErrors.push(`total_floor_area: ${error instanceof Error ? error.message : 'パースエラー'}`);
+        parsedData.total_floor_area = null;
+      }
+    }
+    
+    // age (築年数) - 必須フィールド
+    if (extractedData.age !== null && extractedData.age !== undefined) {
+      try {
+        parsedData.age = parseOCRNumber(extractedData.age, 'age');
+      } catch (error) {
+        parseErrors.push(`age: ${error instanceof Error ? error.message : 'パースエラー'}`);
+        parsedData.age = null;
+      }
+    }
+    
+    // distance_from_station (駅距離) - 必須フィールド
+    if (extractedData.distance_from_station !== null && extractedData.distance_from_station !== undefined) {
+      try {
+        parsedData.distance_from_station = parseOCRNumber(extractedData.distance_from_station, 'distanceFromStation');
+      } catch (error) {
+        parseErrors.push(`distance_from_station: ${error instanceof Error ? error.message : 'パースエラー'}`);
+        parsedData.distance_from_station = null;
+      }
+    }
+    
+    // monthly_rent (月額賃料) - オプショナルフィールド
+    if (extractedData.monthly_rent !== null && extractedData.monthly_rent !== undefined) {
+      try {
+        parsedData.monthly_rent = parseOCRNumber(extractedData.monthly_rent, 'monthlyRent');
+      } catch (error) {
+        parseErrors.push(`monthly_rent: ${error instanceof Error ? error.message : 'パースエラー'}`);
+        parsedData.monthly_rent = null;
+      }
+    }
+    
+    // structure (建物構造) - 正規化
+    if (extractedData.structure) {
+      parsedData.structure = parseStructureType(extractedData.structure);
+    }
+    
+    // パースエラーがあればログに記録（エラーとしては返さず警告として）
+    if (parseErrors.length > 0) {
+      console.warn('[OCR Parser] 以下のフィールドでパースエラーが発生しました:', parseErrors);
+      parsedData._parseWarnings = parseErrors; // 警告情報を含める
+    }
+    
     return c.json({
       success: true,
-      ...extractedData,
+      ...parsedData,
       confidence: 'high' // 将来的に信頼度スコアを追加できる
     });
   } catch (error) {
@@ -3514,6 +3585,7 @@ api.post('/itandi/rental-trend', authMiddleware, async (c) => {
  */
 api.post('/maps/generate', authMiddleware, async (c) => {
   try {
+    const { env } = c;
     const { address, lat, lng } = await c.req.json();
 
     if (!address && (!lat || !lng)) {
@@ -3522,19 +3594,28 @@ api.post('/maps/generate', authMiddleware, async (c) => {
         errorCode: 'MISSING_LOCATION_DATA'
       }, 400);
     }
-
-    // Import Google Maps Client
-    const { generateMapsForProperty } = await import('../lib/google-maps');
-
-    // Generate maps
-    const maps = await generateMapsForProperty(address, lat, lng);
-
-    if (!maps) {
+    
+    // Google Maps APIキーの検証
+    if (!env.GOOGLE_MAPS_API_KEY || env.GOOGLE_MAPS_API_KEY.trim() === '') {
       return c.json({
         error: 'Google Maps APIキーが設定されていません',
         errorCode: 'MAPS_API_KEY_NOT_SET',
         suggestion: '環境変数 GOOGLE_MAPS_API_KEY を設定してください'
       }, 503);
+    }
+
+    // Import Google Maps Client
+    const { generateMapsForProperty } = await import('../lib/google-maps');
+
+    // Generate maps with API key from environment
+    const maps = await generateMapsForProperty(address, lat, lng, env.GOOGLE_MAPS_API_KEY);
+
+    if (!maps) {
+      return c.json({
+        error: '地図の生成に失敗しました',
+        errorCode: 'MAP_GENERATION_FAILED',
+        suggestion: 'APIキーの権限を確認してください'
+      }, 500);
     }
 
     return c.json({
