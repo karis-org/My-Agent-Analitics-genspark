@@ -202,11 +202,13 @@ residential.get('/evaluate', async (c) => {
         </main>
 
         <script>
-            let comparableCount = 0;
-            let landPriceCount = 0;
+            // DOMContentLoaded イベントを待つ
+            document.addEventListener('DOMContentLoaded', function() {
+                let comparableCount = 0;
+                let landPriceCount = 0;
 
-            // OCR Upload Handler
-            document.getElementById('mysoku-upload').addEventListener('change', async (e) => {
+                // OCR Upload Handler
+                document.getElementById('mysoku-upload').addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
                 
@@ -842,6 +844,8 @@ residential.get('/evaluate', async (c) => {
                 // Scroll to results
                 container.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
+            
+            }); // End of DOMContentLoaded
         </script>
     </body>
     </html>
