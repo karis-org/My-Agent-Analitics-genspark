@@ -1314,7 +1314,31 @@ properties.get('/:id/analyze', async (c) => {
                             <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-sm text-gray-600">実質利回り</p>
-                                    <button type="button" class="text-base text-green-600 hover:text-green-800 hover:scale-110 transition-transform" onclick="alert('実質利回り（ネット利回り）\\n\\n計算式: NOI ÷ 物件価格 × 100\\n\\n運営費用（管理費、修繕費、固定資産税等）を差し引いた後の利回りです。実際の収益性をより正確に表します。')" title="用語説明を表示">
+                                    <button type="button" class="text-base text-green-600 hover:text-green-800 hover:scale-110 transition-transform info-tooltip" data-message="実質利回り（ネット利回り / Net Yield）
+
+【計算式】
+NOI（純営業利益） ÷ 物件価格 × 100
+
+【特徴】
+• 運営費用を差し引いた後の実質的な収益率
+• 実際の収益性をより正確に表す重要指標
+• 不動産投資の意思決定に最も重要な指標の一つ
+
+【運営費用に含まれるもの】
+• 固定資産税・都市計画税
+• 管理費・修繕積立金
+• PM管理費（賃貸管理費）
+• 建物部分の利息負担金
+• 修繕費用
+• 保険料等
+
+【目安】
+• 4%以上：優良物件
+• 2-4%：標準的
+• 2%未満：要慎重検討
+
+【投資判断】
+実質利回りが借入金利を上回ることが、レバレッジ効果を活用する上で重要です。" title="用語説明を表示">
                                         <i class="fas fa-question-circle"></i>
                                     </button>
                                 </div>
