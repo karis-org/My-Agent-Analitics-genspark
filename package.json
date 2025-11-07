@@ -26,6 +26,7 @@
     "git:log": "git log --oneline"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "hono": "^4.0.0"
   },
   "devDependencies": {

@@ -83,7 +83,7 @@ export interface AnalysisResult {
 // Cloudflare Bindings
 export interface Bindings {
   DB: D1Database;
-  // KV: KVNamespace;
+  CACHE: KVNamespace; // API caching
   // R2: R2Bucket;
   OPENAI_API_KEY: string;
   ESTAT_API_KEY: string;

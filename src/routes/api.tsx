@@ -9,6 +9,7 @@ import { ReinfolibClient } from '../lib/reinfolib';
 import { EStatClient, analyzeDemographics } from '../lib/estat';
 import { AIMarketAnalyzer } from '../lib/ai-analyzer';
 import { InvestmentSimulator } from '../lib/simulator';
+import { cacheWrapper, generateCacheKey, CACHE_PREFIXES, CACHE_TTL } from '../lib/cache';
 import {
   exportPropertiesToCSV,
   exportAnalysisToCSV,
@@ -132,19 +133,19 @@ api.post('/properties/ocr', async (c) => {
     
     // OpenAI Vision APIを使用して画像から情報を抽出
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `あなたは不動産物件情報の抽出エキスパートです。以下の物件概要書（マイソク）の画像から正確に情報を抽出し、JSON形式で返してください。
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `あなたは不動産物件情報の抽出エキスパートです。以下の物件概要書（マイソク）の画像から正確に情報を抽出し、JSON形式で返してください。
 
 【抽出する情報】
 
@@ -652,11 +653,19 @@ api.post('/market/analyze', async (c) => {
     }
     
     const client = new ReinfolibClient(env.REINFOLIB_API_KEY);
-    const analysis = await client.analyzeMarket({
-      year: parseInt(year),
-      area,
-      city,
-    });
+    
+    // Cache market analysis for 24 hours
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.MARKET, 'analysis', area || '', city || '', year);
+    const analysis = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => client.analyzeMarket({
+        year: parseInt(year),
+        area,
+        city,
+      }),
+      { ttl: CACHE_TTL.LONG }
+    );
     
     return c.json({
       success: true,
@@ -688,12 +697,20 @@ api.get('/market/trade-prices', async (c) => {
     }
     
     const client = new ReinfolibClient(env.REINFOLIB_API_KEY);
-    const result = await client.getTradePrices({
-      year: parseInt(year),
-      quarter: quarter ? parseInt(quarter) : undefined,
-      area,
-      city,
-    });
+    
+    // Cache trade prices for 7 days (historical data rarely changes)
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.MARKET, 'trade-prices', area || '', city || '', year, quarter || 'all');
+    const result = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => client.getTradePrices({
+        year: parseInt(year),
+        quarter: quarter ? parseInt(quarter) : undefined,
+        area,
+        city,
+      }),
+      { ttl: CACHE_TTL.WEEK }
+    );
     
     return c.json({
       success: true,
@@ -724,11 +741,19 @@ api.get('/market/land-prices', async (c) => {
     }
     
     const client = new ReinfolibClient(env.REINFOLIB_API_KEY);
-    const result = await client.getLandPrices({
-      year: parseInt(year),
-      area,
-      division,
-    });
+    
+    // Cache land prices for 7 days (official data updated infrequently)
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.MARKET, 'land-prices', area, year, division);
+    const result = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => client.getLandPrices({
+        year: parseInt(year),
+        area,
+        division,
+      }),
+      { ttl: CACHE_TTL.WEEK }
+    );
     
     return c.json({
       success: true,
@@ -787,13 +812,21 @@ api.post('/market/comparables', async (c) => {
     }
     
     const client = new ReinfolibClient(env.REINFOLIB_API_KEY);
-    const comparables = await client.getNearbyComparables({
-      city,
-      propertyType,
-      minArea: minArea ? parseFloat(minArea) : undefined,
-      maxArea: maxArea ? parseFloat(maxArea) : undefined,
-      limit: limit ? parseInt(limit) : undefined,
-    });
+    
+    // Cache comparables for 24 hours
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.MARKET, 'comparables', city, propertyType || 'all', minArea || 0, maxArea || 0);
+    const comparables = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => client.getNearbyComparables({
+        city,
+        propertyType,
+        minArea: minArea ? parseFloat(minArea) : undefined,
+        maxArea: maxArea ? parseFloat(maxArea) : undefined,
+        limit: limit ? parseInt(limit) : undefined,
+      }),
+      { ttl: CACHE_TTL.LONG }
+    );
     
     return c.json({
       success: true,
@@ -824,12 +857,20 @@ api.post('/market/estimate-price', async (c) => {
     }
     
     const client = new ReinfolibClient(env.REINFOLIB_API_KEY);
-    const estimation = await client.estimatePrice({
-      city,
-      area: parseFloat(area),
-      propertyType,
-      buildingYear,
-    });
+    
+    // Cache price estimations for 1 hour (market conditions change)
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.MARKET, 'estimate', city, area, propertyType, buildingYear || 'unknown');
+    const estimation = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => client.estimatePrice({
+        city,
+        area: parseFloat(area),
+        propertyType,
+        buildingYear,
+      }),
+      { ttl: CACHE_TTL.MEDIUM }
+    );
     
     return c.json({
       success: true,
@@ -2005,7 +2046,15 @@ api.post('/estat/population', async (c) => {
     }
 
     const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
-    const data = await eStatClient.getPopulationData(prefCode, cityCode);
+    
+    // Cache population data for 7 days (census data updated infrequently)
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.ESTAT, 'population', prefCode, cityCode || 'all');
+    const data = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => eStatClient.getPopulationData(prefCode, cityCode),
+      { ttl: CACHE_TTL.WEEK }
+    );
 
     return c.json({
       success: true,
@@ -2042,7 +2091,15 @@ api.post('/estat/economics', async (c) => {
     }
 
     const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
-    const data = await eStatClient.getEconomicIndicators(prefCode, cityCode);
+    
+    // Cache economic indicators for 24 hours
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.ESTAT, 'economics', prefCode, cityCode || 'all');
+    const data = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => eStatClient.getEconomicIndicators(prefCode, cityCode),
+      { ttl: CACHE_TTL.LONG }
+    );
 
     return c.json({
       success: true,
@@ -2079,7 +2136,15 @@ api.post('/estat/land-prices', async (c) => {
     }
 
     const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
-    const data = await eStatClient.getLandPriceData(prefCode, year);
+    
+    // Cache land price data for 7 days
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.ESTAT, 'land-prices', prefCode, year || 'latest');
+    const data = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => eStatClient.getLandPriceData(prefCode, year),
+      { ttl: CACHE_TTL.WEEK }
+    );
 
     return c.json({
       success: true,
@@ -2116,7 +2181,15 @@ api.post('/estat/demographics', async (c) => {
     }
 
     const eStatClient = new EStatClient({ apiKey: env.ESTAT_API_KEY });
-    const analysis = await analyzeDemographics(eStatClient, prefCode, cityCode);
+    
+    // Cache demographics analysis for 7 days
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.ESTAT, 'demographics', prefCode, cityCode || 'all');
+    const analysis = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => analyzeDemographics(eStatClient, prefCode, cityCode),
+      { ttl: CACHE_TTL.WEEK }
+    );
 
     return c.json({
       success: true,
@@ -2208,7 +2281,16 @@ api.post('/ai/analyze-market', async (c) => {
     }
 
     const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);
-    const analysis = await analyzer.analyzeMarket(marketData, propertyData);
+    
+    // Cache AI market analysis for 1 hour (AI results deterministic for same input)
+    const inputHash = JSON.stringify({ marketData, propertyData }).substring(0, 100);
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.OPENAI, 'market-analysis', inputHash);
+    const analysis = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => analyzer.analyzeMarket(marketData, propertyData),
+      { ttl: CACHE_TTL.MEDIUM }
+    );
 
     return c.json({
       success: true,
@@ -2246,7 +2328,16 @@ api.post('/ai/analyze-property', async (c) => {
     }
 
     const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);
-    const analysis = await analyzer.analyzeProperty(propertyData, marketData);
+    
+    // Cache AI property analysis for 1 hour
+    const inputHash = JSON.stringify({ propertyData, marketData }).substring(0, 100);
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.OPENAI, 'property-analysis', inputHash);
+    const analysis = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => analyzer.analyzeProperty(propertyData, marketData),
+      { ttl: CACHE_TTL.MEDIUM }
+    );
 
     return c.json({
       success: true,
@@ -2283,7 +2374,16 @@ api.post('/ai/compare-properties', async (c) => {
     }
 
     const analyzer = new AIMarketAnalyzer(env.OPENAI_API_KEY);
-    const comparison = await analyzer.compareProperties(properties);
+    
+    // Cache AI property comparison for 1 hour
+    const propertyIds = properties.map((p: any) => p.id).join(',');
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.OPENAI, 'compare-properties', propertyIds);
+    const comparison = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => analyzer.compareProperties(properties),
+      { ttl: CACHE_TTL.MEDIUM }
+    );
 
     return c.json({
       success: true,
@@ -3500,17 +3600,32 @@ api.post('/itandi/rental-analysis', authMiddleware, async (c) => {
     const { getItandiClient } = await import('../lib/itandi-client');
     const itandiClient = getItandiClient(c.env);
 
-    // Execute rental analysis
-    const result = await itandiClient.getRentalAnalysis({
+    // Cache rental analysis for 1 hour (rental market changes frequently)
+    const cacheKey = generateCacheKey(
+      CACHE_PREFIXES.ITANDI,
+      'rental-analysis',
       prefecture,
       city,
-      town,
-      roomType,
-      minArea,
-      maxArea,
-      minRent,
-      maxRent
-    });
+      town || 'all',
+      roomType || 'all',
+      minArea || 0,
+      maxArea || 0
+    );
+    const result = await cacheWrapper(
+      c.env.CACHE,
+      cacheKey,
+      () => itandiClient.getRentalAnalysis({
+        prefecture,
+        city,
+        town,
+        roomType,
+        minArea,
+        maxArea,
+        minRent,
+        maxRent
+      }),
+      { ttl: CACHE_TTL.MEDIUM }
+    );
 
     // Check if using demo mode
     const isDemoMode = !c.env?.ITANDI_EMAIL || c.env.ITANDI_EMAIL === 'YOUR_ITANDI_EMAIL_HERE';
@@ -3550,15 +3665,29 @@ api.post('/itandi/rental-trend', authMiddleware, async (c) => {
     const { getItandiClient } = await import('../lib/itandi-client');
     const itandiClient = getItandiClient(c.env);
 
-    // Execute rental trend analysis
-    const result = await itandiClient.getRentalTrend({
+    // Cache rental trend for 24 hours (historical trend data stable)
+    const cacheKey = generateCacheKey(
+      CACHE_PREFIXES.ITANDI,
+      'rental-trend',
       prefecture,
       city,
-      town,
-      roomType,
-      minArea,
-      maxArea
-    }, months || 12);
+      town || 'all',
+      roomType || 'all',
+      months || 12
+    );
+    const result = await cacheWrapper(
+      c.env.CACHE,
+      cacheKey,
+      () => itandiClient.getRentalTrend({
+        prefecture,
+        city,
+        town,
+        roomType,
+        minArea,
+        maxArea
+      }, months || 12),
+      { ttl: CACHE_TTL.LONG }
+    );
 
     // Check if using demo mode
     const isDemoMode = !c.env?.ITANDI_EMAIL || c.env.ITANDI_EMAIL === 'YOUR_ITANDI_EMAIL_HERE';
@@ -3607,8 +3736,15 @@ api.post('/maps/generate', authMiddleware, async (c) => {
     // Import Google Maps Client
     const { generateMapsForProperty } = await import('../lib/google-maps');
 
-    // Generate maps with API key from environment
-    const maps = await generateMapsForProperty(address, lat, lng, env.GOOGLE_MAPS_API_KEY);
+    // Cache map generation for 7 days (location-based data rarely changes)
+    const locationKey = address || `${lat},${lng}`;
+    const cacheKey = generateCacheKey(CACHE_PREFIXES.MAPS, 'property', locationKey);
+    const maps = await cacheWrapper(
+      env.CACHE,
+      cacheKey,
+      () => generateMapsForProperty(address, lat, lng, env.GOOGLE_MAPS_API_KEY),
+      { ttl: CACHE_TTL.WEEK }
+    );
 
     if (!maps) {
       return c.json({

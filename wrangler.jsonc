@@ -22,14 +22,13 @@
   // - ITANDI_USERNAME: Itandi BB username (optional, hardcoded if not set)
   // - ITANDI_PASSWORD: Itandi BB password (optional, hardcoded if not set)
   
-  // KV Namespace configuration (uncomment when needed)
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "KV",
-  //     "id": "your-kv-id-here",
-  //     "preview_id": "your-kv-preview-id-here"
-  //   }
-  // ],
+  // KV Namespace configuration for caching
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "e4f320ef0c9e4408b8e2098f71b305e6"
+    }
+  ],
   
   // R2 Storage configuration (uncomment when needed)
   // "r2_buckets": [

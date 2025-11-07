@@ -20,7 +20,7 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
         <title>賃貸相場分析 - イタンジBB - My Agent Analytics</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script src="/static/chart.js"></script>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
             body { font-family: 'Noto Sans JP', sans-serif; }
