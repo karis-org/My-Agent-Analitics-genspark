@@ -1203,7 +1203,7 @@ properties.get('/:id/analyze', async (c) => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 年間経費 (円)
-                                <button type="button" class="ml-1 text-xs text-blue-600 hover:text-blue-800 info-tooltip" data-message="年間経費の目安&#10;&#10;建物管理費: 22,000～55,000円/戸/月&#10;(建物管理会社によって異なります)&#10;&#10;その他経費:&#10;・修繕積立金&#10;・固定資産税&#10;・都市計画税&#10;・火災保険料&#10;・PM管理費（賃貸管理費）">
+                                <button type="button" class="ml-1 text-xs text-blue-600 hover:text-blue-800 info-tooltip" data-message="年間経費に含まれる項目&#10;&#10;・固定資産税&#10;・都市計画税&#10;・不動産取得税&#10;・管理費&#10;・修繕積立金&#10;・建物部分の利息負担金&#10;・内外装修繕費用&#10;・電気代&#10;・ガス代（負担している場合）&#10;・火災保険料&#10;・PM管理費（賃貸管理費）&#10;&#10;※ 重要事項調査報告書取得費用（22,000～55,000円/戸）は、売却時や事故物件調査時の費用であり、年間経費には含みません。">
                                     <i class="fas fa-question-circle"></i>
                                 </button>
                             </label>
