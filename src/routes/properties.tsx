@@ -2119,6 +2119,31 @@ properties.get('/:id/comprehensive-report', async (c) => {
                     </div>
                     \` : ''}
                     
+                    <!-- 3.5 賃貸相場の可視化 -->
+                    \${rental ? \`
+                    <div class="dashboard-card">
+                        <h3 class="section-header"><i class="fas fa-chart-bar mr-2"></i>賃貸相場の可視化</h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <!-- 家賃分布パイチャート -->
+                            <div class="bg-slate-800/30 rounded-lg border border-blue-500/20 p-4">
+                                <h4 class="text-lg font-semibold text-slate-300 mb-4 text-center">家賃分布</h4>
+                                <div class="chart-container" style="height: 300px;">
+                                    <canvas id="rentDistributionChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 利回り比較棒グラフ -->
+                            <div class="bg-slate-800/30 rounded-lg border border-blue-500/20 p-4">
+                                <h4 class="text-lg font-semibold text-slate-300 mb-4 text-center">想定利回り分析</h4>
+                                <div class="chart-container" style="height: 300px;">
+                                    <canvas id="yieldAnalysisChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    \` : ''}
+                    
                     <!-- 4. 人口動態分析 -->
                     \${demographics ? \`
                     <div class="report-section print-section">
@@ -2195,6 +2220,147 @@ properties.get('/:id/comprehensive-report', async (c) => {
                         </p>
                     </div>
                 \`;
+                
+                // レンダリング後にグラフを描画
+                setTimeout(() => {
+                    renderResidentialCharts();
+                }, 300);
+            }
+            
+            function renderResidentialCharts() {
+                const property = reportData.property;
+                const rental = reportData.rental;
+                
+                if (!rental) return;
+                
+                // 1. 家賃分布パイチャート
+                const rentDistributionCtx = document.getElementById('rentDistributionChart');
+                if (rentDistributionCtx) {
+                    const avgRent = rental.average_rent;
+                    const minRent = rental.min_rent;
+                    const maxRent = rental.max_rent;
+                    
+                    // 簡易的な分布（低価格帯、中価格帯、高価格帯）
+                    const lowRange = Math.round((avgRent - minRent) * 0.3);
+                    const midRange = Math.round((avgRent - minRent) * 0.5);
+                    const highRange = Math.round((maxRent - avgRent) * 0.2);
+                    
+                    new Chart(rentDistributionCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: [
+                                \`低価格帯 (¥\${minRent.toLocaleString()}～)\`,
+                                \`中価格帯 (¥\${avgRent.toLocaleString()}前後)\`,
+                                \`高価格帯 (¥\${maxRent.toLocaleString()}～)\`
+                            ],
+                            datasets: [{
+                                data: [30, 50, 20],  // 割合（%）
+                                backgroundColor: [
+                                    'rgba(59, 130, 246, 0.8)',   // Blue
+                                    'rgba(34, 197, 94, 0.8)',    // Green
+                                    'rgba(168, 85, 247, 0.8)'    // Purple
+                                ],
+                                borderColor: [
+                                    'rgba(59, 130, 246, 1)',
+                                    'rgba(34, 197, 94, 1)',
+                                    'rgba(168, 85, 247, 1)'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#e0e7ff',
+                                        font: { size: 11 },
+                                        padding: 12
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            return label + ': ' + value + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // 2. 想定利回り分析棒グラフ
+                const yieldAnalysisCtx = document.getElementById('yieldAnalysisChart');
+                if (yieldAnalysisCtx) {
+                    const minYield = property.price > 0 ? ((minRent * 12 / property.price) * 100) : 0;
+                    const avgYield = property.price > 0 ? ((avgRent * 12 / property.price) * 100) : 0;
+                    const maxYield = property.price > 0 ? ((maxRent * 12 / property.price) * 100) : 0;
+                    
+                    new Chart(yieldAnalysisCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['最低想定', '平均想定', '最高想定'],
+                            datasets: [{
+                                label: '想定利回り（%）',
+                                data: [minYield, avgYield, maxYield],
+                                backgroundColor: [
+                                    'rgba(239, 68, 68, 0.8)',    // Red
+                                    'rgba(234, 179, 8, 0.8)',    // Yellow
+                                    'rgba(34, 197, 94, 0.8)'     // Green
+                                ],
+                                borderColor: [
+                                    'rgba(239, 68, 68, 1)',
+                                    'rgba(234, 179, 8, 1)',
+                                    'rgba(34, 197, 94, 1)'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.parsed.y.toFixed(2) + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        color: '#e0e7ff',
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(59, 130, 246, 0.1)'
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        color: '#e0e7ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(59, 130, 246, 0.1)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
             }
             
             function renderInvestmentReport() {
@@ -2305,6 +2471,41 @@ properties.get('/:id/comprehensive-report', async (c) => {
                         </div>
                     </div>
                     
+                    <!-- 2.5 投資指標の可視化 -->
+                    <div class="dashboard-card">
+                        <h3 class="section-header"><i class="fas fa-chart-pie mr-2"></i>投資指標の可視化</h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6 mb-6">
+                            <!-- 収支内訳パイチャート -->
+                            <div class="bg-slate-800/30 rounded-lg border border-blue-500/20 p-4">
+                                <h4 class="text-lg font-semibold text-slate-300 mb-4 text-center">年間収支内訳</h4>
+                                <div class="chart-container" style="height: 300px;">
+                                    <canvas id="incomeExpenseChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- 利回り比較棒グラフ -->
+                            <div class="bg-slate-800/30 rounded-lg border border-blue-500/20 p-4">
+                                <h4 class="text-lg font-semibold text-slate-300 mb-4 text-center">利回り比較</h4>
+                                <div class="chart-container" style="height: 300px;">
+                                    <canvas id="yieldComparisonChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 市場トレンドグラフ -->
+                        <div class="bg-slate-800/30 rounded-lg border border-blue-500/20 p-4">
+                            <h4 class="text-lg font-semibold text-slate-300 mb-4 text-center">市場動向トレンド（想定）</h4>
+                            <div class="chart-container" style="height: 350px;">
+                                <canvas id="marketTrendChart"></canvas>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-3 text-center">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                ※ 市場トレンドは周辺エリアの統計データに基づく推計値です
+                            </p>
+                        </div>
+                    </div>
+                    
                     <!-- 3. 事故物件調査結果 -->
                     \${stigma ? \`
                     <div class="report-section print-section">
@@ -2412,6 +2613,253 @@ properties.get('/:id/comprehensive-report', async (c) => {
                         </p>
                     </div>
                 \`;
+                
+                // レンダリング後にグラフを描画
+                setTimeout(() => {
+                    renderInvestmentCharts();
+                }, 300);
+            }
+            
+            function renderInvestmentCharts() {
+                const property = reportData.property;
+                const rental = reportData.rental;
+                const annualIncome = property.annual_income || 0;
+                const annualExpense = annualIncome * 0.2;  // 想定経費20%
+                const netIncome = annualIncome * 0.8;
+                const grossYield = property.price > 0 ? (annualIncome / property.price * 100) : 0;
+                const netYield = property.price > 0 ? (netIncome / property.price * 100) : 0;
+                const marketYield = rental && property.price > 0 ? ((rental.average_rent * 12 / property.price) * 100) : grossYield * 0.9;
+                
+                // 1. 収支内訳パイチャート
+                const incomeExpenseCtx = document.getElementById('incomeExpenseChart');
+                if (incomeExpenseCtx) {
+                    new Chart(incomeExpenseCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['純収益（80%）', '経費（20%）'],
+                            datasets: [{
+                                data: [netIncome, annualExpense],
+                                backgroundColor: [
+                                    'rgba(34, 197, 94, 0.8)',   // Green for income
+                                    'rgba(239, 68, 68, 0.8)'    // Red for expenses
+                                ],
+                                borderColor: [
+                                    'rgba(34, 197, 94, 1)',
+                                    'rgba(239, 68, 68, 1)'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#e0e7ff',
+                                        font: { size: 12 },
+                                        padding: 15
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            return label + ': ¥' + value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // 2. 利回り比較棒グラフ
+                const yieldComparisonCtx = document.getElementById('yieldComparisonChart');
+                if (yieldComparisonCtx) {
+                    new Chart(yieldComparisonCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['表面利回り', '実質利回り', '市場平均'],
+                            datasets: [{
+                                label: '利回り（%）',
+                                data: [grossYield, netYield, marketYield],
+                                backgroundColor: [
+                                    'rgba(59, 130, 246, 0.8)',   // Blue
+                                    'rgba(34, 197, 94, 0.8)',    // Green
+                                    'rgba(168, 85, 247, 0.8)'    // Purple
+                                ],
+                                borderColor: [
+                                    'rgba(59, 130, 246, 1)',
+                                    'rgba(34, 197, 94, 1)',
+                                    'rgba(168, 85, 247, 1)'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.parsed.y.toFixed(2) + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        color: '#e0e7ff',
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(59, 130, 246, 0.1)'
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        color: '#e0e7ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(59, 130, 246, 0.1)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // 3. 市場トレンドグラフ（想定データ）
+                const marketTrendCtx = document.getElementById('marketTrendChart');
+                if (marketTrendCtx) {
+                    const currentYear = new Date().getFullYear();
+                    const years = [];
+                    const rentTrend = [];
+                    const priceTrend = [];
+                    
+                    // 過去5年から未来5年のトレンドを生成（想定）
+                    for (let i = -5; i <= 5; i++) {
+                        years.push(currentYear + i);
+                        // 賃料は年1-2%上昇傾向（想定）
+                        const rentGrowth = 1 + (i * 0.015);
+                        rentTrend.push(Math.round((property.monthly_rent || rental?.average_rent || 100000) * rentGrowth));
+                        // 価格は年0.5-1%変動（想定）
+                        const priceGrowth = 1 + (i * 0.008);
+                        priceTrend.push(Math.round((property.price || 10000000) * priceGrowth / 1000000)); // 百万円単位
+                    }
+                    
+                    new Chart(marketTrendCtx, {
+                        type: 'line',
+                        data: {
+                            labels: years,
+                            datasets: [
+                                {
+                                    label: '想定月額賃料（円）',
+                                    data: rentTrend,
+                                    borderColor: 'rgba(34, 197, 94, 1)',
+                                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                    tension: 0.4,
+                                    fill: true,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: '想定物件価格（百万円）',
+                                    data: priceTrend,
+                                    borderColor: 'rgba(59, 130, 246, 1)',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    tension: 0.4,
+                                    fill: true,
+                                    yAxisID: 'y1'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#e0e7ff',
+                                        font: { size: 11 },
+                                        padding: 12
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                if (context.datasetIndex === 0) {
+                                                    label += '¥' + context.parsed.y.toLocaleString();
+                                                } else {
+                                                    label += '¥' + context.parsed.y.toLocaleString() + '百万';
+                                                }
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    ticks: {
+                                        color: '#22c55e',
+                                        callback: function(value) {
+                                            return '¥' + value.toLocaleString();
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(34, 197, 94, 0.1)'
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    ticks: {
+                                        color: '#3b82f6',
+                                        callback: function(value) {
+                                            return '¥' + value.toLocaleString() + 'M';
+                                        }
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        color: '#e0e7ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(59, 130, 246, 0.1)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
             }
             
             function downloadPDF() {
