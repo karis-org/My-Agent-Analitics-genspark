@@ -144,35 +144,84 @@
 
 ## 🎉 最新のアップデート（2025-11-07）
 
-### Session 10 - 実需用物件評価フォーム修正 & ユーザー名修正 ✅
+### Session 10 続編 - Phase 1 Critical Fixes ✅
 
 **対応日**: 2025年11月7日  
-**最新デプロイURL**: https://d8221925.my-agent-analytics.pages.dev
+**最新デプロイURL**: https://ac9b119f.my-agent-analytics.pages.dev
 
-**発見された問題**（ユーザー報告より）:
-1. ✅ **修正完了** 実需用物件で「評価を実行」押すとフォームがリセットされる
-2. ✅ **修正完了** 運営管理者でログインしているのに名前が「テストタロウ」と表示される
-
-**根本原因の発見**:
-1. **フォームリセット問題**: JavaScriptのイベントリスナーがDOMロード前に登録されようとしていた
-   - `document.getElementById()` がnullを返す可能性
-   - `addEventListener()` が失敗し、フォーム送信がそのまま実行される
-2. **ユーザー名表示問題**: データベースの `users` テーブルで `user-000` の `name` が「テストタロウ」になっていた
+**ユーザー報告に基づく追加対応**（包括的エラーレポート Phase 1）:
+1. ⚠️ **ユーザー報告**: 実需用物件評価フォームのリセット問題が未解決
+2. ✅ **実装完了**: OCR数値パース精度問題の修正
+3. ✅ **実装完了**: APIキーセキュリティ強化（Google Maps）
 
 **実施した修正**:
-- ✅ residential.tsx: 全てのイベントリスナーを `DOMContentLoaded` でラップ
+
+**1. OCR数値パース精度問題の修正** ✅
+- **問題**: "900,000" → 900,000,000 のような1000倍エラー
+- **原因**: OpenAI APIへのプロンプトのみに依存していた
+- **対策**:
+  - `src/lib/ocr-parser.ts` 新規作成（全角→半角変換、カンマ除去、範囲検証）
+  - `src/routes/api.tsx` OCR API endpointに統合
+  - 各フィールドに適切な範囲検証を実装（price: 10,000〜100,000,000,000円など）
+
+**2. APIキーセキュリティ強化** ✅
+- **問題**: Google Maps APIキーが`globalThis`から直接取得されていた
+- **原因**: Cloudflare Workers環境では動作しない実装
+- **対策**:
+  - `src/lib/google-maps.ts`: `getGoogleMapsClient(apiKey)`に変更
+  - `src/routes/api.tsx`: `env.GOOGLE_MAPS_API_KEY`を引数として渡す
+  - 実行前のAPIキー存在チェックを追加
+
+**3. 実需用物件評価フォームのリセット問題** ⚠️ **追加防御対応**
+- **ユーザー報告**: Session 10の修正後も問題が継続
+- **追加対策**:
+  - フォーム要素に `onsubmit="return false;"` 属性を追加
+  - JavaScript で form submit イベントをキャンセル
+  - ボタンクリックハンドラに `e.stopPropagation()` を追加
+  - `RESIDENTIAL_FORM_DEBUG_GUIDE.md` 作成（ユーザー向け詳細デバッグ手順）
+- **状況**: コード上は完全に防御したが、**実際の動作確認はユーザーが必要**
+
+**4. Migration 0010 本番適用ガイド作成** ✅
+- **問題**: Cloudflare API権限不足でwranglerからの適用が失敗（Error 7403）
+- **対策**: `MIGRATION_0010_MANUAL_GUIDE.md` 作成（Cloudflare Dashboard経由の手動適用手順）
+- **ユーザー様へ**: Cloudflare Dashboard → D1 → webapp-production → Console から以下のSQLを実行してください:
+  ```sql
+  UPDATE users 
+  SET name = '運営管理者' 
+  WHERE id = 'user-000' AND email = 'maa-unnei@support';
+  ```
+
+**テスト状況**:
+- ✅ ビルド成功: 654.36 kB
+- ✅ 本番デプロイ成功: https://ac9b119f.my-agent-analytics.pages.dev
+- ✅ GitHub プッシュ成功（commit: e13ca9b）
+- ⚠️ **実需用フォーム動作確認**: ユーザーテストが必要（ブラウザコンソールログ取得依頼）
+- ⚠️ **Migration 0010適用**: Cloudflare Dashboard経由で手動実行が必要
+
+**次のステップ**:
+1. ユーザー様が実需用物件評価フォームをテスト（ブラウザコンソール（F12）を開いた状態で）
+2. エラーが発生した場合は `RESIDENTIAL_FORM_DEBUG_GUIDE.md` の手順に従ってデバッグ情報を収集
+3. Migration 0010を `MIGRATION_0010_MANUAL_GUIDE.md` の手順に従って適用
+4. Phase 2 タスクの実装（ファイル分割、Chart.jsローカル化、キャッシング、テスト100%）
+
+---
+
+### Session 10 - 実需用物件評価フォーム修正 & ユーザー名修正 ⚠️ **部分修正**
+
+**対応日**: 2025年11月7日  
+**デプロイURL**: https://d8221925.my-agent-analytics.pages.dev
+
+**発見された問題**（ユーザー報告より）:
+1. ⚠️ **ユーザー報告で未解決** 実需用物件で「評価を実行」押すとフォームがリセットされる
+2. ✅ **Migration作成済み** 運営管理者でログインしているのに名前が「テストタロウ」と表示される
+
+**実施した修正**:
+- ⚠️ residential.tsx: 全てのイベントリスナーを `DOMContentLoaded` でラップ → **効果なし**
 - ✅ Migration 0010作成: 運営管理者のユーザー名を「運営管理者」に更新
 - ✅ ビルド成功: 650.04 kB
 - ✅ 本番デプロイ成功: https://d8221925.my-agent-analytics.pages.dev
 
-**ユーザー様への確認依頼**:
-1. ⚠️ **D1マイグレーション適用**: Cloudflare Dashboardから手動で適用が必要
-   ```bash
-   npx wrangler d1 migrations apply webapp-production --remote
-   ```
-   または Cloudflare Dashboard → D1 → webapp-production → Migrations から適用
-2. 実需用物件評価ページで「評価を実行」ボタンが正常動作するか確認
-3. ログイン後のユーザー名表示が正しいか確認
+**Session 10続編で追加対応実施** → 上記参照
 
 ---
 
