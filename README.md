@@ -15,8 +15,8 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🌍 デモ・本番環境
 
-**🚀 本番環境（最新）**: [https://ac9b119f.my-agent-analytics.pages.dev](https://ac9b119f.my-agent-analytics.pages.dev)  
-✨ **Session 11 - Issue #2 CRITICAL修正（OCR築年数バグ完全修正）** ✅ (2025-11-08)
+**🚀 本番環境（最新）**: [https://2fc7547c.my-agent-analytics.pages.dev](https://2fc7547c.my-agent-analytics.pages.dev)  
+✨ **Session 11 完了 - Issue #2 CRITICAL修正 + iOS UI改善 + ログイン情報保存UI改善** ✅ (2025-11-08)
 
 **📊 Session 10版**: [https://d8221925.my-agent-analytics.pages.dev](https://d8221925.my-agent-analytics.pages.dev)  
 実需用物件評価フォーム修正 & ユーザー名修正
