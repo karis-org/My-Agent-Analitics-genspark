@@ -69,6 +69,22 @@ properties.get('/', (c) => {
                 </div>
             </div>
 
+            <!-- Comparison Action Bar -->
+            <div id="comparison-bar" class="hidden fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 bg-white rounded-lg shadow-lg border-2 border-blue-500 p-4 flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-blue-600 text-xl"></i>
+                    <span class="font-semibold text-gray-900">
+                        <span id="selected-count">0</span>件選択中
+                    </span>
+                </div>
+                <button onclick="compareProperties()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-exchange-alt mr-2"></i>比較する
+                </button>
+                <button onclick="clearSelection()" class="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-times mr-2"></i>クリア
+                </button>
+            </div>
+
             <!-- Properties List -->
             <div id="properties-list" class="space-y-4">
                 <div class="text-center py-12 bg-white rounded-lg shadow">
@@ -83,6 +99,8 @@ properties.get('/', (c) => {
 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
         <script>
+            let selectedProperties = new Set();
+
             // Load properties
             async function loadProperties() {
                 try {
@@ -94,49 +112,107 @@ properties.get('/', (c) => {
                     const listContainer = document.getElementById('properties-list');
                     listContainer.innerHTML = properties.map(property => \`
                         <div class="bg-white rounded-lg shadow hover:shadow-lg active:shadow-xl transition-shadow p-4 sm:p-6 touch-manipulation">
-                            <div class="flex items-center justify-between mb-3 sm:mb-4 gap-2">
-                                <h3 class="text-lg sm:text-xl font-bold text-gray-900 truncate">\${property.name}</h3>
-                                <span class="px-2 py-1 sm:px-3 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap">
-                                    \${property.structure || '構造不明'}
-                                </span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
-                                <div>
-                                    <p class="text-sm text-gray-500">所在地</p>
-                                    <p class="font-medium">\${property.location || '未設定'}</p>
+                            <div class="flex items-start gap-3 sm:gap-4">
+                                <!-- Checkbox for comparison -->
+                                <div class="flex items-center pt-1">
+                                    <input type="checkbox" 
+                                           id="check-\${property.id}" 
+                                           onchange="togglePropertySelection('\${property.id}')"
+                                           class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
                                 </div>
-                                <div>
-                                    <p class="text-sm text-gray-500">価格</p>
-                                    <p class="font-medium text-lg">¥\${(property.price || 0).toLocaleString()}</p>
+                                
+                                <!-- Property info -->
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+                                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 truncate">\${property.name}</h3>
+                                        <span class="px-2 py-1 sm:px-3 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap">
+                                            \${property.structure || '構造不明'}
+                                        </span>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500">所在地</p>
+                                            <p class="font-medium">\${property.location || '未設定'}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">価格</p>
+                                            <p class="font-medium text-lg">¥\${(property.price || 0).toLocaleString()}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">延床面積</p>
+                                            <p class="font-medium">\${property.total_floor_area || 0}㎡</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">築年数</p>
+                                            <p class="font-medium">\${property.age || 0}年</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-end space-x-2">
+                                        <a href="/properties/\${property.id}" 
+                                           class="px-3 py-2 sm:px-4 text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
+                                            <i class="fas fa-eye mr-1 sm:mr-2"></i><span class="hidden sm:inline">詳細</span>
+                                        </a>
+                                        <a href="/properties/\${property.id}/analyze" 
+                                           class="px-3 py-2 sm:px-4 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
+                                            <i class="fas fa-chart-line mr-1 sm:mr-2"></i><span class="hidden sm:inline">分析</span>
+                                        </a>
+                                        <button onclick="deleteProperty('\${property.id}')"
+                                                class="px-3 py-2 sm:px-4 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm text-gray-500">延床面積</p>
-                                    <p class="font-medium">\${property.total_floor_area || 0}㎡</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-500">築年数</p>
-                                    <p class="font-medium">\${property.age || 0}年</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-end space-x-2">
-                                <a href="/properties/\${property.id}" 
-                                   class="px-3 py-2 sm:px-4 text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
-                                    <i class="fas fa-eye mr-1 sm:mr-2"></i><span class="hidden sm:inline">詳細</span>
-                                </a>
-                                <a href="/properties/\${property.id}/analyze" 
-                                   class="px-3 py-2 sm:px-4 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
-                                    <i class="fas fa-chart-line mr-1 sm:mr-2"></i><span class="hidden sm:inline">分析</span>
-                                </a>
-                                <button onclick="deleteProperty('\${property.id}')"
-                                        class="px-3 py-2 sm:px-4 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
-                                    <i class="fas fa-trash"></i>
-                                </button>
                             </div>
                         </div>
                     \`).join('');
                 } catch (error) {
                     console.error('Failed to load properties:', error);
                 }
+            }
+
+            function togglePropertySelection(propertyId) {
+                const checkbox = document.getElementById('check-' + propertyId);
+                if (checkbox.checked) {
+                    selectedProperties.add(propertyId);
+                } else {
+                    selectedProperties.delete(propertyId);
+                }
+                updateComparisonBar();
+            }
+
+            function updateComparisonBar() {
+                const comparisonBar = document.getElementById('comparison-bar');
+                const selectedCount = document.getElementById('selected-count');
+                
+                if (selectedProperties.size > 0) {
+                    comparisonBar.classList.remove('hidden');
+                    selectedCount.textContent = selectedProperties.size;
+                } else {
+                    comparisonBar.classList.add('hidden');
+                }
+            }
+
+            function compareProperties() {
+                if (selectedProperties.size < 2) {
+                    alert('比較するには最低2件の物件を選択してください');
+                    return;
+                }
+                
+                if (selectedProperties.size > 5) {
+                    alert('比較できる物件は最大5件までです');
+                    return;
+                }
+                
+                // Save to localStorage and navigate
+                const ids = Array.from(selectedProperties);
+                localStorage.setItem('comparisonIds', JSON.stringify(ids));
+                window.location.href = '/comparison?ids=' + ids.join(',');
+            }
+
+            function clearSelection() {
+                selectedProperties.clear();
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                updateComparisonBar();
             }
             
             async function deleteProperty(id) {

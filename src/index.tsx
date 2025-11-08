@@ -30,6 +30,10 @@ app.route('/api', apiRoutes)
 import properties from './routes/properties'
 app.route('/properties', properties)
 
+// Comparison routes (requires authentication)
+import comparison from './routes/comparison'
+app.route('/comparison', comparison)
+
 // Settings routes (requires authentication)
 import settings from './routes/settings'
 app.route('/settings', settings)
