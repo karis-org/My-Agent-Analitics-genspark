@@ -77,21 +77,28 @@ auth.get('/login', (c) => {
                             >
                         </div>
                         
-                        <div class="flex items-center">
-                            <input 
-                                type="checkbox" 
-                                id="remember" 
-                                name="remember" 
-                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            >
-                            <label for="remember" class="ml-2 block text-sm text-gray-700">
-                                ログイン情報を保存する
-                            </label>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div class="flex items-start">
+                                <input 
+                                    type="checkbox" 
+                                    id="remember" 
+                                    name="remember" 
+                                    checked
+                                    class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5 touch-manipulation"
+                                >
+                                <label for="remember" class="ml-3 flex-1">
+                                    <span class="block text-sm font-medium text-gray-900">ログイン情報を保存する (推奨)</span>
+                                    <span class="block text-xs text-gray-600 mt-1">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        チェックを入れると30日間ログイン状態が保持されます
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                         
                         <button 
                             type="submit"
-                            class="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:bg-blue-700 transition-colors">
+                            class="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-lg touch-manipulation">
                             <i class="fas fa-sign-in-alt mr-2"></i>ログイン
                         </button>
                     </form>
