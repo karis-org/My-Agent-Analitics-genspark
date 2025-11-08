@@ -16,13 +16,16 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 ## 🌍 デモ・本番環境
 
 **🚀 本番環境（最新）**: [https://0cf1e3f6.my-agent-analytics.pages.dev](https://0cf1e3f6.my-agent-analytics.pages.dev)  
-✨ **Session 16 完了 - Phase 3完全達成 + 全ページモバイル対応 + CI/CD構築！** ✅ (2025-11-08)
-- 全ページモバイル最適化完了（properties, dashboard, itandi） 📱
-- GitHub Actionsセットアップガイド作成（手動設定手順） 📚
-- Phase 4実装計画書作成（51-70時間の詳細ロードマップ） 📋
-- テストスイート: 28/28 (100%合格) ✅
+✨ **Session 17 完了 - Issue #2（OCR築年数バグ）完全修正！** ✅ (2025-11-08)
+- OCR築年数フィールドバグ修正（71400異常値） 🐛
+- 3層の防御実装（OCRプロンプト強化 + バックエンド警告 + フロントエンド表示） 🛡️
+- バリデーション強化：-5〜150年範囲制限 ✅
+- ユーザーフレンドリーな警告表示（黄色の警告ボックス） ⚠️
+- KNOWN_ISSUES.md更新（詳細な修正記録） 📝
+- ビルド成功: 615.19 kB ✅
 
-**📊 Session 16版（前回）**: [https://b5523e49.my-agent-analytics.pages.dev](https://b5523e49.my-agent-analytics.pages.dev)
+**📊 Session 16版（前回）**: [https://b5523e49.my-agent-analytics.pages.dev](https://b5523e49.my-agent-analytics.pages.dev)  
+Phase 3完全達成 + 全ページモバイル対応 + CI/CD構築
 
 **📊 Session 15版**: [https://e594a8b5.my-agent-analytics.pages.dev](https://e594a8b5.my-agent-analytics.pages.dev)  
 Phase 3完全達成（モバイル最適化、ドキュメント整備、CI/CD）
@@ -64,6 +67,11 @@ Phase 3完全達成（モバイル最適化、ドキュメント整備、CI/CD�
 - **🖨️ 印刷対応**: ブラウザ印刷機能完全対応
 
 ### その他機能
+- **📸 OCR物件情報読み取り**: **OpenAI GPT-4o Vision API統合**による高精度な物件概要書（マイソク）自動読み取り
+  - PDF/JPG/PNG対応、iPhone/Android対応
+  - 3層の防御実装：プロンプト強化 + バックエンド検証 + フロントエンド警告表示
+  - 築年数バリデーション強化（-5〜150年）：価格情報との誤認識を防止
+  - エラー時のユーザーフレンドリーな警告表示（黄色の警告ボックス）
 - **🔍 事故物件調査**: **Google Custom Search API + OpenAI GPT-4 統合**による高精度な心理的瑕疵調査システム
   - 実際のウェブ検索で大島てる、ニュースサイト等を検索
   - AI分析による偽陰性（false negative）排除
