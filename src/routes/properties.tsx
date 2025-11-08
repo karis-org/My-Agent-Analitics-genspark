@@ -57,15 +57,131 @@ properties.get('/', (c) => {
         <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
             <div class="mb-4 sm:mb-6">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <p class="text-sm sm:text-base text-gray-600">登録済み物件を管理します</p>
+                    <p class="text-sm sm:text-base text-gray-600">
+                        <span id="properties-count-text">登録済み物件を管理します</span>
+                    </p>
                     <div class="flex space-x-2 w-full sm:w-auto">
-                        <button class="flex-1 sm:flex-none px-3 py-2 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base touch-manipulation">
+                        <button onclick="toggleFilterPanel()" id="filter-button" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base touch-manipulation">
                             <i class="fas fa-filter mr-1 sm:mr-2"></i>フィルター
+                            <span id="active-filters-badge" class="hidden ml-2 px-2 py-0.5 bg-blue-600 text-white rounded-full text-xs">0</span>
                         </button>
-                        <button class="flex-1 sm:flex-none px-3 py-2 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base touch-manipulation">
-                            <i class="fas fa-sort mr-1 sm:mr-2"></i>並び替え
-                        </button>
+                        <div class="relative flex-1 sm:flex-none">
+                            <button onclick="toggleSortMenu()" class="w-full px-3 py-2 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base touch-manipulation">
+                                <i class="fas fa-sort mr-1 sm:mr-2"></i>並び替え
+                            </button>
+                            <!-- Sort Dropdown Menu -->
+                            <div id="sort-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                                <div class="py-2">
+                                    <button onclick="applySorting('price-asc')" class="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm">
+                                        <i class="fas fa-arrow-up mr-2 text-gray-400"></i>価格: 安い順
+                                    </button>
+                                    <button onclick="applySorting('price-desc')" class="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm">
+                                        <i class="fas fa-arrow-down mr-2 text-gray-400"></i>価格: 高い順
+                                    </button>
+                                    <button onclick="applySorting('yield-desc')" class="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm">
+                                        <i class="fas fa-arrow-down mr-2 text-gray-400"></i>利回り: 高い順
+                                    </button>
+                                    <button onclick="applySorting('yield-asc')" class="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm">
+                                        <i class="fas fa-arrow-up mr-2 text-gray-400"></i>利回り: 低い順
+                                    </button>
+                                    <button onclick="applySorting('date-desc')" class="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm">
+                                        <i class="fas fa-arrow-down mr-2 text-gray-400"></i>追加日: 新しい順
+                                    </button>
+                                    <button onclick="applySorting('date-asc')" class="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm">
+                                        <i class="fas fa-arrow-up mr-2 text-gray-400"></i>追加日: 古い順
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div id="filter-panel" class="hidden mb-6 bg-white rounded-lg shadow p-4 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">
+                        <i class="fas fa-sliders-h mr-2 text-blue-600"></i>フィルター設定
+                    </h3>
+                    <button onclick="clearFilters()" class="text-sm text-red-600 hover:text-red-700">
+                        <i class="fas fa-times mr-1"></i>クリア
+                    </button>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        価格帯
+                    </label>
+                    <div class="flex items-center space-x-4">
+                        <input type="number" id="price-min" placeholder="最小価格" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               min="0" step="1000000">
+                        <span class="text-gray-500">〜</span>
+                        <input type="number" id="price-max" placeholder="最大価格"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               min="0" step="1000000">
+                    </div>
+                </div>
+
+                <!-- Yield Range Filter -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        利回り範囲（%）
+                    </label>
+                    <div class="flex items-center space-x-4">
+                        <input type="number" id="yield-min" placeholder="最小利回り"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               min="0" max="100" step="0.1">
+                        <span class="text-gray-500">〜</span>
+                        <input type="number" id="yield-max" placeholder="最大利回り"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               min="0" max="100" step="0.1">
+                    </div>
+                </div>
+
+                <!-- Structure Filter -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        構造
+                    </label>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="RC" class="structure-filter form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm">RC</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="SRC" class="structure-filter form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm">SRC</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="S" class="structure-filter form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm">S（鉄骨）</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="W" class="structure-filter form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm">W（木造）</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Location Filter -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        エリア（キーワード検索）
+                    </label>
+                    <input type="text" id="location-filter" placeholder="例: 東京, 渋谷区, 新宿"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Apply Filters Button -->
+                <div class="flex space-x-2">
+                    <button onclick="applyFilters()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-check mr-2"></i>適用する
+                    </button>
+                    <button onclick="toggleFilterPanel()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        閉じる
+                    </button>
                 </div>
             </div>
 
@@ -214,13 +330,295 @@ properties.get('/', (c) => {
                 document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
                 updateComparisonBar();
             }
+
+            // Filter and Sort State
+            let allProperties = [];
+            let filteredProperties = [];
+            let currentFilters = {
+                priceMin: null,
+                priceMax: null,
+                yieldMin: null,
+                yieldMax: null,
+                structures: [],
+                location: null
+            };
+            let currentSort = null;
+
+            // Toggle Filter Panel
+            function toggleFilterPanel() {
+                const panel = document.getElementById('filter-panel');
+                panel.classList.toggle('hidden');
+            }
+
+            // Toggle Sort Menu
+            function toggleSortMenu() {
+                const menu = document.getElementById('sort-menu');
+                menu.classList.toggle('hidden');
+            }
+
+            // Close sort menu when clicking outside
+            document.addEventListener('click', function(event) {
+                const sortMenu = document.getElementById('sort-menu');
+                const sortButton = event.target.closest('button[onclick="toggleSortMenu()"]');
+                if (sortMenu && !sortMenu.contains(event.target) && !sortButton) {
+                    sortMenu.classList.add('hidden');
+                }
+            });
+
+            // Apply Filters
+            function applyFilters() {
+                // Get filter values
+                const priceMin = parseFloat(document.getElementById('price-min').value) || null;
+                const priceMax = parseFloat(document.getElementById('price-max').value) || null;
+                const yieldMin = parseFloat(document.getElementById('yield-min').value) || null;
+                const yieldMax = parseFloat(document.getElementById('yield-max').value) || null;
+                const location = document.getElementById('location-filter').value.trim() || null;
+                
+                // Get checked structures
+                const structureCheckboxes = document.querySelectorAll('.structure-filter:checked');
+                const structures = Array.from(structureCheckboxes).map(cb => cb.value);
+
+                // Update current filters
+                currentFilters = {
+                    priceMin,
+                    priceMax,
+                    yieldMin,
+                    yieldMax,
+                    structures,
+                    location
+                };
+
+                // Apply filters
+                filterProperties();
+                
+                // Update active filter count
+                updateActiveFilterCount();
+                
+                // Close filter panel
+                toggleFilterPanel();
+            }
+
+            // Clear Filters
+            function clearFilters() {
+                // Reset filter values
+                document.getElementById('price-min').value = '';
+                document.getElementById('price-max').value = '';
+                document.getElementById('yield-min').value = '';
+                document.getElementById('yield-max').value = '';
+                document.getElementById('location-filter').value = '';
+                document.querySelectorAll('.structure-filter').forEach(cb => cb.checked = false);
+
+                // Reset current filters
+                currentFilters = {
+                    priceMin: null,
+                    priceMax: null,
+                    yieldMin: null,
+                    yieldMax: null,
+                    structures: [],
+                    location: null
+                };
+
+                // Apply filters (show all)
+                filterProperties();
+                
+                // Update active filter count
+                updateActiveFilterCount();
+            }
+
+            // Filter Properties
+            function filterProperties() {
+                filteredProperties = allProperties.filter(property => {
+                    // Price filter
+                    if (currentFilters.priceMin !== null && property.price < currentFilters.priceMin) return false;
+                    if (currentFilters.priceMax !== null && property.price > currentFilters.priceMax) return false;
+
+                    // Yield filter (using gross_yield from analysis_results)
+                    if (currentFilters.yieldMin !== null || currentFilters.yieldMax !== null) {
+                        const yield_val = property.gross_yield || 0;
+                        if (currentFilters.yieldMin !== null && yield_val < currentFilters.yieldMin) return false;
+                        if (currentFilters.yieldMax !== null && yield_val > currentFilters.yieldMax) return false;
+                    }
+
+                    // Structure filter
+                    if (currentFilters.structures.length > 0) {
+                        if (!property.structure || !currentFilters.structures.includes(property.structure)) return false;
+                    }
+
+                    // Location filter (partial match)
+                    if (currentFilters.location) {
+                        const location = property.location || '';
+                        if (!location.includes(currentFilters.location)) return false;
+                    }
+
+                    return true;
+                });
+
+                // Apply sorting if set
+                if (currentSort) {
+                    sortProperties(currentSort);
+                } else {
+                    renderProperties();
+                }
+
+                // Update count
+                updatePropertiesCount();
+            }
+
+            // Apply Sorting
+            function applySorting(sortType) {
+                currentSort = sortType;
+                sortProperties(sortType);
+                toggleSortMenu();
+            }
+
+            // Sort Properties
+            function sortProperties(sortType) {
+                const sorted = [...filteredProperties];
+
+                switch(sortType) {
+                    case 'price-asc':
+                        sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+                        break;
+                    case 'price-desc':
+                        sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+                        break;
+                    case 'yield-asc':
+                        sorted.sort((a, b) => (a.gross_yield || 0) - (b.gross_yield || 0));
+                        break;
+                    case 'yield-desc':
+                        sorted.sort((a, b) => (b.gross_yield || 0) - (a.gross_yield || 0));
+                        break;
+                    case 'date-asc':
+                        sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                        break;
+                    case 'date-desc':
+                        sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                        break;
+                }
+
+                filteredProperties = sorted;
+                renderProperties();
+            }
+
+            // Update Active Filter Count
+            function updateActiveFilterCount() {
+                let count = 0;
+                if (currentFilters.priceMin !== null || currentFilters.priceMax !== null) count++;
+                if (currentFilters.yieldMin !== null || currentFilters.yieldMax !== null) count++;
+                if (currentFilters.structures.length > 0) count++;
+                if (currentFilters.location) count++;
+
+                const badge = document.getElementById('active-filters-badge');
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            // Update Properties Count
+            function updatePropertiesCount() {
+                const countText = document.getElementById('properties-count-text');
+                const total = allProperties.length;
+                const filtered = filteredProperties.length;
+                
+                if (filtered < total) {
+                    countText.textContent = \`\${filtered}件の物件を表示中（全\${total}件）\`;
+                } else {
+                    countText.textContent = \`登録済み物件：\${total}件\`;
+                }
+            }
+
+            // Render Properties
+            function renderProperties() {
+                const listContainer = document.getElementById('properties-list');
+                
+                if (filteredProperties.length === 0) {
+                    listContainer.innerHTML = \`
+                        <div class="text-center py-12 bg-white rounded-lg shadow">
+                            <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-600 mb-4">条件に一致する物件が見つかりません</p>
+                            <button onclick="clearFilters()" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                <i class="fas fa-times mr-2"></i>フィルターをクリア
+                            </button>
+                        </div>
+                    \`;
+                    return;
+                }
+
+                listContainer.innerHTML = filteredProperties.map(property => \`
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg active:shadow-xl transition-shadow p-4 sm:p-6 touch-manipulation">
+                        <div class="flex items-start gap-3 sm:gap-4">
+                            <!-- Checkbox for comparison -->
+                            <div class="flex items-center pt-1">
+                                <input type="checkbox" 
+                                       id="check-\${property.id}" 
+                                       onchange="togglePropertySelection('\${property.id}')"
+                                       class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                            </div>
+                            
+                            <!-- Property info -->
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+                                    <h3 class="text-lg sm:text-xl font-bold text-gray-900 truncate">\${property.name}</h3>
+                                    <span class="px-2 py-1 sm:px-3 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap">
+                                        \${property.structure || '構造不明'}
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                    <div>
+                                        <p class="text-sm text-gray-500">所在地</p>
+                                        <p class="font-medium">\${property.location || '未設定'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">価格</p>
+                                        <p class="font-medium text-lg">¥\${(property.price || 0).toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">延床面積</p>
+                                        <p class="font-medium">\${property.total_floor_area || 0}㎡</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500">築年数</p>
+                                        <p class="font-medium">\${property.age || 0}年</p>
+                                    </div>
+                                    \${property.gross_yield ? \`
+                                    <div>
+                                        <p class="text-sm text-gray-500">表面利回り</p>
+                                        <p class="font-medium text-green-600">\${property.gross_yield.toFixed(2)}%</p>
+                                    </div>
+                                    \` : ''}
+                                </div>
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="/properties/\${property.id}" 
+                                       class="px-3 py-2 sm:px-4 text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
+                                        <i class="fas fa-eye mr-1 sm:mr-2"></i><span class="hidden sm:inline">詳細</span>
+                                    </a>
+                                    <a href="/properties/\${property.id}/analyze" 
+                                       class="px-3 py-2 sm:px-4 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
+                                        <i class="fas fa-chart-line mr-1 sm:mr-2"></i><span class="hidden sm:inline">分析</span>
+                                    </a>
+                                    <button onclick="deleteProperty('\${property.id}')"
+                                            class="px-3 py-2 sm:px-4 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                \`).join('');
+            }
             
             async function deleteProperty(id) {
                 if (!confirm('この物件を削除してもよろしいですか？')) return;
                 
                 try {
                     await axios.delete(\`/api/properties/\${id}\`);
-                    loadProperties();
+                    // Remove from allProperties array
+                    allProperties = allProperties.filter(p => p.id !== id);
+                    // Re-filter and render
+                    filterProperties();
                 } catch (error) {
                     console.error('Failed to delete property:', error);
                     alert('物件の削除に失敗しました');
@@ -228,6 +626,52 @@ properties.get('/', (c) => {
             }
             
             // Load on page load
+            async function loadProperties() {
+                try {
+                    const response = await axios.get('/api/properties');
+                    allProperties = response.data.properties;
+                    
+                    if (allProperties.length === 0) {
+                        document.getElementById('properties-list').innerHTML = \`
+                            <div class="text-center py-12 bg-white rounded-lg shadow">
+                                <i class="fas fa-building text-6xl text-gray-300 mb-4"></i>
+                                <p class="text-gray-600 mb-4">まだ物件が登録されていません</p>
+                                <a href="/properties/new" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>最初の物件を登録
+                                </a>
+                            </div>
+                        \`;
+                        return;
+                    }
+                    
+                    // Load analysis results for yield data
+                    const analysisPromises = allProperties.map(async (property) => {
+                        try {
+                            const analysisRes = await axios.get(\`/api/properties/\${property.id}/analysis\`);
+                            if (analysisRes.data && analysisRes.data.gross_yield) {
+                                property.gross_yield = analysisRes.data.gross_yield;
+                                property.net_yield = analysisRes.data.net_yield;
+                                property.noi = analysisRes.data.noi;
+                            }
+                        } catch (err) {
+                            // If analysis doesn't exist, skip
+                        }
+                        return property;
+                    });
+                    
+                    await Promise.all(analysisPromises);
+                    
+                    // Initialize filtered properties
+                    filteredProperties = [...allProperties];
+                    
+                    // Render properties
+                    renderProperties();
+                    updatePropertiesCount();
+                } catch (error) {
+                    console.error('Failed to load properties:', error);
+                }
+            }
+            
             loadProperties();
         </script>
     </body>
