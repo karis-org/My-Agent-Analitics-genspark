@@ -127,7 +127,7 @@ export class ItandiClient {
       }
 
       // レスポンスボディからトークンを取得する場合
-      const loginData = await loginResponse.json();
+      const loginData = await loginResponse.json() as any;
       if (loginData.token || loginData.sessionId) {
         this.sessionToken = loginData.token || loginData.sessionId;
         return true;
@@ -183,7 +183,7 @@ export class ItandiClient {
         return this.generateDemoData(params);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       console.log('[Itandi Client] Analysis result received:', data);
       return this.parseAnalysisResult(data);
     } catch (error) {
@@ -271,7 +271,7 @@ export class ItandiClient {
         return this.generateDemoTrendData(months);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       return this.parseTrendResult(data);
     } catch (error) {
       console.error('[Itandi Client] Exception during trend API call:', error);

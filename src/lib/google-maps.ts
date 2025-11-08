@@ -171,7 +171,7 @@ export class GoogleMapsClient {
 
     try {
       const response = await fetch(`${geocodeUrl}?${params.toString()}`);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (data.status === 'OK' && data.results.length > 0) {
         const location = data.results[0].geometry.location;

@@ -205,7 +205,7 @@ export function analyzeProperty(params: {
     riskLevel = 'high';
   } else if (dscr < 1.5) {
     riskFactors.push('DSCR がやや低い（1.5未満）');
-    riskLevel = riskLevel === 'high' ? 'high' : 'medium';
+    riskLevel = (riskLevel as string) === 'high' ? 'high' : 'medium';
   }
   
   if (ltv > 80) {

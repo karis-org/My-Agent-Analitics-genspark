@@ -122,7 +122,7 @@ export async function deleteCacheByPrefix(
         deleted++;
       }
       
-      cursor = list.cursor;
+      cursor = (list as any).cursor;
     } while (cursor);
     
     console.log(`[Cache] BATCH DELETE: ${prefix}* (${deleted} keys)`);

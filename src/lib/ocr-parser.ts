@@ -188,7 +188,7 @@ export function safeParseOCRNumber(
   try {
     return parseOCRNumber(text, fieldName);
   } catch (error) {
-    console.warn(`[OCR Parser] ${error.message}`);
+    console.warn(`[OCR Parser] ${(error as any).message}`);
     return null;
   }
 }

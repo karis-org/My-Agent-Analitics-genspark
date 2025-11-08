@@ -73,7 +73,7 @@ export class EStatClient {
         throw new Error(`e-Stat API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       return this.parsePopulationData(data);
     } catch (error) {
@@ -106,7 +106,7 @@ export class EStatClient {
         throw new Error(`e-Stat API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       return this.parseEconomicData(data);
     } catch (error) {
@@ -139,7 +139,7 @@ export class EStatClient {
         throw new Error(`e-Stat API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       return this.parseLandPriceData(data);
     } catch (error) {
@@ -168,7 +168,7 @@ export class EStatClient {
         throw new Error(`e-Stat API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       return data.GET_STATS_LIST?.DATALIST_INF?.TABLE_INF || [];
     } catch (error) {
@@ -199,7 +199,7 @@ export class EStatClient {
         throw new Error(`e-Stat API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       return data.GET_META_INFO?.METADATA_INF?.CLASS_INF?.CLASS_OBJ || [];
     } catch (error) {

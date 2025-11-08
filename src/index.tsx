@@ -11,10 +11,10 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 app.use('/api/*', cors())
 
 // Serve static files from public/static directory
-app.use('/static/*', serveStatic({ root: './public' }))
+app.use('/static/*', serveStatic({ root: './public' }) as any)
 
 // Serve Service Worker - use serveStatic with rewrite
-app.use('/sw.js', serveStatic({ path: 'sw.js', rewriteRequestPath: () => '/sw.js' }))
+app.use('/sw.js', serveStatic({ path: 'sw.js', rewriteRequestPath: () => '/sw.js' }) as any)
 
 // Auth routes (no auth middleware needed)
 app.route('/auth', auth)

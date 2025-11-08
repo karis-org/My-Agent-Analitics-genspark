@@ -141,7 +141,7 @@ export class ReinfolibClient {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       return {
         status: 'success',
         data: data.data || [],
@@ -177,7 +177,7 @@ export class ReinfolibClient {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       return {
         status: 'success',
         data: data.data || [],
@@ -204,7 +204,7 @@ export class ReinfolibClient {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       return {
         status: 'success',
         data: data.data || [],

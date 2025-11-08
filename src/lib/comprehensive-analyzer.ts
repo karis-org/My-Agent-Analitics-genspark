@@ -438,7 +438,7 @@ export class ComprehensivePropertyAnalyzer {
         averagePricePerSqm: marketAnalysis.averagePricePerSquareMeter,
         transactionCount: marketAnalysis.transactionCount,
         priceRange: marketAnalysis.priceRange,
-        priceTrend: marketAnalysis.priceTrend,
+        priceTrend: (marketAnalysis as any).pricetrend || marketAnalysis.pricetrend,
         popularPropertyTypes: marketAnalysis.popularPropertyTypes,
         comparables: this.convertToComparableProperties(comparables),
         landPrices,
@@ -464,16 +464,16 @@ export class ComprehensivePropertyAnalyzer {
       );
       
       return {
-        totalPopulation: populationData.totalPopulation || 0,
-        populationChange: populationData.populationChangeRate || 0,
-        households: populationData.households || 0,
-        averageHouseholdSize: populationData.averageHouseholdSize || 2.5,
-        ageDistribution: populationData.ageDistribution || {
+        totalPopulation: (populationData as any).totalPopulation || 0,
+        populationChange: (populationData as any).populationChangeRate || 0,
+        households: (populationData as any).households || 0,
+        averageHouseholdSize: (populationData as any).averageHouseholdSize || 2.5,
+        ageDistribution: (populationData as any).ageDistribution || {
           '0-14': 12,
           '15-64': 65,
           '65+': 23,
         },
-        populationDensity: populationData.populationDensity || 0,
+        populationDensity: (populationData as any).populationDensity || 0,
       };
     } catch (error) {
       console.error('[ComprehensiveAnalyzer] Error gathering demographic data:', error);

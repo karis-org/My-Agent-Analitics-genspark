@@ -94,7 +94,7 @@ export class AIMarketAnalyzer {
         throw new Error(`OpenAI API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       const content = data.choices[0]?.message?.content;
       
       if (!content) {
@@ -148,7 +148,7 @@ export class AIMarketAnalyzer {
         throw new Error(`OpenAI API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       const content = data.choices[0]?.message?.content;
       
       if (!content) {
@@ -228,7 +228,7 @@ ${properties.map((p, i) => `
         throw new Error(`OpenAI API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       const content = data.choices[0]?.message?.content;
       
       if (!content) {
