@@ -150,31 +150,44 @@ export function parseOCRDate(text: string | null | undefined): Date | null {
 /**
  * Parse building structure type
  * @param text - OCR extracted text
- * @returns Standardized structure type
+ * @returns Standardized structure type ("RC造", "SRC造", "鉄骨造", "木造")
  */
-export function parseStructureType(text: string | null | undefined): string {
-  if (!text) return 'その他';
+export function parseStructureType(text: string | null | undefined): string | null {
+  if (!text) return null;
 
-  const normalized = String(text).toUpperCase().replace(/\s+/g, '');
+  const normalized = String(text).toUpperCase().replace(/\s+/g, '').replace(/[　]/g, '');
 
-  const structureMap: Record<string, string> = {
-    'RC': '鉄筋コンクリート造',
-    '鉄筋コンクリート': '鉄筋コンクリート造',
-    'SRC': '鉄骨鉄筋コンクリート造',
-    '鉄骨鉄筋コンクリート': '鉄骨鉄筋コンクリート造',
-    'S': '鉄骨造',
-    '鉄骨': '鉄骨造',
-    'W': '木造',
-    '木造': '木造',
-  };
-
-  for (const [key, value] of Object.entries(structureMap)) {
-    if (normalized.includes(key)) {
-      return value;
+  // RC造パターン
+  if (normalized.includes('鉄筋コンクリート') || normalized.includes('RC') || normalized.includes('ＲＣ')) {
+    // SRC造を除外
+    if (normalized.includes('鉄骨鉄筋') || normalized.includes('SRC') || normalized.includes('ＳＲＣ')) {
+      return 'SRC造';
     }
+    return 'RC造';
   }
 
-  return 'その他';
+  // SRC造パターン
+  if (normalized.includes('鉄骨鉄筋コンクリート') || normalized.includes('SRC') || normalized.includes('ＳＲＣ')) {
+    return 'SRC造';
+  }
+
+  // 鉄骨造パターン
+  if (
+    normalized.includes('鉄骨') ||
+    normalized.includes('S造') ||
+    normalized.includes('Ｓ造') ||
+    normalized.includes('軽量鉄骨') ||
+    normalized.includes('重量鉄骨')
+  ) {
+    return '鉄骨造';
+  }
+
+  // 木造パターン
+  if (normalized.includes('木造') || normalized.includes('W造') || normalized.includes('Ｗ造')) {
+    return '木造';
+  }
+
+  return null;
 }
 
 /**

@@ -53,6 +53,28 @@ admin.get('/', async (c) => {
   
   const users = usersResult.results || [];
   
+  // Get system statistics
+  const statsResult = await c.env.DB.prepare(`
+    SELECT 
+      (SELECT COUNT(*) FROM users) as total_users,
+      (SELECT COUNT(*) FROM users WHERE is_active = 1) as active_users,
+      (SELECT COUNT(*) FROM properties) as total_properties,
+      (SELECT COUNT(*) FROM analysis_results) as total_analyses,
+      (SELECT COUNT(*) FROM accident_investigations) as total_stigma_checks,
+      (SELECT COUNT(*) FROM rental_market_data) as total_market_data,
+      (SELECT COUNT(*) FROM activity_logs WHERE DATE(created_at) = DATE('now')) as today_activities
+  `).first();
+  
+  const stats = statsResult || {
+    total_users: 0,
+    active_users: 0,
+    total_properties: 0,
+    total_analyses: 0,
+    total_stigma_checks: 0,
+    total_market_data: 0,
+    today_activities: 0
+  };
+  
   return c.html(`
     <!DOCTYPE html>
     <html lang="ja">
@@ -62,6 +84,7 @@ admin.get('/', async (c) => {
         <title>運営管理画面 - My Agent Analytics</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
             body { font-family: 'Noto Sans JP', sans-serif; }
@@ -125,6 +148,87 @@ admin.get('/', async (c) => {
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <!-- System Statistics Dashboard -->
+            <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-white">
+                        <i class="fas fa-chart-line mr-2"></i>システム統計
+                    </h2>
+                    <div class="text-white text-sm opacity-90">
+                        <i class="fas fa-sync-alt mr-1"></i>リアルタイム更新
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- User Statistics -->
+                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4 border border-white border-opacity-30">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-sm text-white opacity-90">全ユーザー</p>
+                            <div class="text-2xl text-white">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-white">${stats.total_users}</p>
+                        <p class="text-xs text-white opacity-75 mt-1">
+                            有効: ${stats.active_users} / 無効: ${stats.total_users - stats.active_users}
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4 border border-white border-opacity-30">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-sm text-white opacity-90">登録物件数</p>
+                            <div class="text-2xl text-white">
+                                <i class="fas fa-building"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-white">${stats.total_properties}</p>
+                        <p class="text-xs text-white opacity-75 mt-1">
+                            全ユーザーの物件総数
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4 border border-white border-opacity-30">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-sm text-white opacity-90">分析実行数</p>
+                            <div class="text-2xl text-white">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-white">${stats.total_analyses}</p>
+                        <p class="text-xs text-white opacity-75 mt-1">
+                            事故調査: ${stats.total_stigma_checks}件
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-4 border border-white border-opacity-30">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-sm text-white opacity-90">賃貸相場データ</p>
+                            <div class="text-2xl text-white">
+                                <i class="fas fa-database"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-white">${stats.total_market_data}</p>
+                        <p class="text-xs text-white opacity-75 mt-1">
+                            イタンジBB取得データ
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-white border-opacity-30">
+                    <div class="flex items-center justify-between text-white">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-line mr-2 text-yellow-300"></i>
+                                <span class="text-sm">本日のアクティビティ: <strong>${stats.today_activities}件</strong></span>
+                            </div>
+                        </div>
+                        <div class="text-sm opacity-75">
+                            <i class="fas fa-clock mr-1"></i>${new Date().toLocaleString('ja-JP')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white rounded-lg shadow p-6">
@@ -235,6 +339,10 @@ admin.get('/', async (c) => {
                         <button onclick="exportToCSV()" 
                                 class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
                             <i class="fas fa-file-csv mr-1"></i>CSV
+                        </button>
+                        <button onclick="exportToExcel()" 
+                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
+                            <i class="fas fa-file-excel mr-1"></i>Excel
                         </button>
                         <button onclick="window.print()" 
                                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
@@ -367,6 +475,9 @@ admin.get('/', async (c) => {
                         <p class="text-gray-500">登録ユーザーはまだいません</p>
                     </div>
                 ` : ''}
+                
+                <!-- Pagination Controls -->
+                <div id="paginationControls" class="px-6 pb-6"></div>
             </div>
 
             <!-- Activity Logs Section -->
@@ -377,6 +488,27 @@ admin.get('/', async (c) => {
                     </h2>
                 </div>
                 <div id="activityLogs" class="p-6">
+                    <p class="text-gray-500 text-center py-4">読み込み中...</p>
+                </div>
+            </div>
+            
+            <!-- System Error Logs Section -->
+            <div class="bg-white rounded-lg shadow mt-8">
+                <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-gray-900">
+                            <i class="fas fa-exclamation-triangle mr-2 text-red-600"></i>システムエラーログ
+                        </h2>
+                        <button onclick="loadErrorLogs()" 
+                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors">
+                            <i class="fas fa-sync-alt mr-1"></i>更新
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>最新の50件のエラーログを表示
+                    </p>
+                </div>
+                <div id="errorLogs" class="p-6">
                     <p class="text-gray-500 text-center py-4">読み込み中...</p>
                 </div>
             </div>
@@ -445,38 +577,178 @@ admin.get('/', async (c) => {
         <script>
             const allUsers = ${JSON.stringify(users)};
             
+            // Pagination state
+            let currentPage = 1;
+            const ITEMS_PER_PAGE = 100;
+            let filteredUsers = [...allUsers];
+            
             // Filter users
             function filterUsers() {
                 const searchTerm = document.getElementById('searchInput').value.toLowerCase();
                 const roleFilter = document.getElementById('roleFilter').value;
                 const statusFilter = document.getElementById('statusFilter').value;
                 
-                const rows = document.querySelectorAll('.user-row');
-                let visibleCount = 0;
-                
-                rows.forEach(row => {
-                    const userId = row.dataset.userId.toLowerCase();
-                    const email = row.dataset.email.toLowerCase();
-                    const name = row.dataset.name.toLowerCase();
-                    const role = row.dataset.role;
-                    const isActive = row.dataset.isActive;
-                    
+                // Apply filters to get filtered user list
+                filteredUsers = allUsers.filter(user => {
                     const matchesSearch = !searchTerm || 
-                                        userId.includes(searchTerm) || 
-                                        email.includes(searchTerm) || 
-                                        name.includes(searchTerm);
-                    const matchesRole = !roleFilter || role === roleFilter;
-                    const matchesStatus = !statusFilter || isActive === statusFilter;
+                                        user.id.toLowerCase().includes(searchTerm) || 
+                                        user.email.toLowerCase().includes(searchTerm) || 
+                                        (user.name || '').toLowerCase().includes(searchTerm);
+                    const matchesRole = !roleFilter || user.role === roleFilter;
+                    const matchesStatus = !statusFilter || String(user.is_active) === statusFilter;
                     
-                    if (matchesSearch && matchesRole && matchesStatus) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
+                    return matchesSearch && matchesRole && matchesStatus;
                 });
                 
-                document.getElementById('filteredCount').textContent = \`(\${visibleCount}件)\`;
+                // Reset to page 1 when filters change
+                currentPage = 1;
+                
+                // Update pagination and display
+                updatePagination();
+                renderUserRows();
+            }
+            
+            // Render user rows with pagination
+            function renderUserRows() {
+                const tbody = document.querySelector('#usersTable tbody');
+                tbody.innerHTML = '';
+                
+                const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+                const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, filteredUsers.length);
+                const pageUsers = filteredUsers.slice(startIndex, endIndex);
+                
+                if (pageUsers.length === 0) {
+                    tbody.innerHTML = \`
+                        <tr>
+                            <td colspan="9" class="px-6 py-12 text-center">
+                                <div class="text-gray-400 text-5xl mb-4">
+                                    <i class="fas fa-users-slash"></i>
+                                </div>
+                                <p class="text-gray-500">検索条件に一致するユーザーはいません</p>
+                            </td>
+                        </tr>
+                    \`;
+                    return;
+                }
+                
+                pageUsers.forEach(u => {
+                    const roleLabel = u.is_admin ? 
+                        (u.role === 'super_admin' ? '運営管理者' : '管理者') : 
+                        '一般ユーザー';
+                    const roleColor = u.is_admin ? 
+                        (u.role === 'super_admin' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800') : 
+                        'bg-green-100 text-green-800';
+                    const statusLabel = u.is_active ? '有効' : '無効';
+                    const statusColor = u.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    const statusIcon = u.is_active ? 'fa-check-circle' : 'fa-ban';
+                    const createdAt = new Date(u.created_at).toLocaleString('ja-JP');
+                    
+                    const row = \`
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">\${u.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">\${u.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">\${u.name || '-'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full \${roleColor}">
+                                    <i class="fas fa-shield-alt mr-1"></i>\${roleLabel}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full \${statusColor}">
+                                    <i class="fas \${statusIcon} mr-1"></i>\${statusLabel}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">\${u.property_count || 0}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">\${u.analysis_count || 0}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">\${createdAt}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm no-print">
+                                <div class="flex space-x-2">
+                                    <button onclick="viewUserDetails('\${u.id}')" 
+                                            class="text-blue-600 hover:text-blue-800"
+                                            title="詳細">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    \${u.id !== '${user?.id}' ? \`
+                                        <button onclick="toggleUserStatus('\${u.id}', \${u.is_active})" 
+                                                class="\${u.is_active ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'}"
+                                                title="\${u.is_active ? '無効化' : '有効化'}">
+                                            <i class="fas fa-\${u.is_active ? 'ban' : 'check-circle'}"></i>
+                                        </button>
+                                        <button onclick="changeUserRole('\${u.id}', '\${u.role}')" 
+                                                class="text-purple-600 hover:text-purple-800"
+                                                title="権限変更">
+                                            <i class="fas fa-user-cog"></i>
+                                        </button>
+                                    \` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    \`;
+                    tbody.innerHTML += row;
+                });
+                
+                // Update count display
+                document.getElementById('filteredCount').textContent = 
+                    \`(全\${filteredUsers.length}件中 \${startIndex + 1}-\${endIndex}件を表示)\`;
+            }
+            
+            // Update pagination controls
+            function updatePagination() {
+                const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+                const paginationContainer = document.getElementById('paginationControls');
+                
+                if (totalPages <= 1) {
+                    paginationContainer.innerHTML = '';
+                    return;
+                }
+                
+                let html = '<div class="flex items-center justify-center space-x-2 mt-4">';
+                
+                // Previous button
+                html += \`
+                    <button onclick="goToPage(\${currentPage - 1})" 
+                            class="px-3 py-1 rounded \${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}"
+                            \${currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i> 前へ
+                    </button>
+                \`;
+                
+                // Page numbers (show max 5 pages)
+                const startPage = Math.max(1, currentPage - 2);
+                const endPage = Math.min(totalPages, startPage + 4);
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    html += \`
+                        <button onclick="goToPage(\${i})" 
+                                class="px-3 py-1 rounded \${i === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'}">\${i}</button>
+                    \`;
+                }
+                
+                // Next button
+                html += \`
+                    <button onclick="goToPage(\${currentPage + 1})" 
+                            class="px-3 py-1 rounded \${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'}"
+                            \${currentPage === totalPages ? 'disabled' : ''}>
+                        次へ <i class="fas fa-chevron-right"></i>
+                    </button>
+                \`;
+                
+                html += '</div>';
+                
+                paginationContainer.innerHTML = html;
+            }
+            
+            // Go to specific page
+            function goToPage(page) {
+                const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+                if (page < 1 || page > totalPages) return;
+                
+                currentPage = page;
+                renderUserRows();
+                updatePagination();
+                
+                // Scroll to top of table
+                document.querySelector('#usersTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
             // Reset filters
@@ -486,6 +758,9 @@ admin.get('/', async (c) => {
                 document.getElementById('statusFilter').value = '';
                 filterUsers();
             }
+            
+            // Initialize on page load
+            filterUsers();
             
             // CSV Export
             function exportToCSV() {
@@ -513,6 +788,49 @@ admin.get('/', async (c) => {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+            }
+            
+            // Excel Export (using SheetJS)
+            function exportToExcel() {
+                // Prepare data for Excel
+                const excelData = allUsers.map(user => ({
+                    'ユーザーID': user.id,
+                    'メールアドレス': user.email,
+                    '名前': user.name || '',
+                    '権限': user.is_admin ? 
+                        (user.role === 'super_admin' ? '運営管理者' : '管理者') : 
+                        '一般ユーザー',
+                    'ステータス': user.is_active ? '有効' : '無効',
+                    '物件数': user.property_count || 0,
+                    '分析数': user.analysis_count || 0,
+                    '登録日時': new Date(user.created_at).toLocaleString('ja-JP')
+                }));
+                
+                // Create workbook and worksheet
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(excelData);
+                
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 30 },  // ユーザーID
+                    { wch: 30 },  // メールアドレス
+                    { wch: 20 },  // 名前
+                    { wch: 12 },  // 権限
+                    { wch: 10 },  // ステータス
+                    { wch: 8 },   // 物件数
+                    { wch: 8 },   // 分析数
+                    { wch: 20 }   // 登録日時
+                ];
+                
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'ユーザー一覧');
+                
+                // Generate filename with timestamp
+                const timestamp = new Date().toISOString().split('T')[0];
+                const filename = \`users_\${timestamp}.xlsx\`;
+                
+                // Download file
+                XLSX.writeFile(wb, filename);
             }
             
             // View user details
@@ -698,8 +1016,62 @@ admin.get('/', async (c) => {
                 }
             }
             
-            // Load activity logs on page load
+            // Load error logs from Cloudflare
+            async function loadErrorLogs() {
+                document.getElementById('errorLogs').innerHTML = 
+                    '<p class="text-gray-500 text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>読み込み中...</p>';
+                
+                try {
+                    const response = await fetch('/admin/api/error-logs');
+                    const data = await response.json();
+                    
+                    if (data.success && data.logs.length > 0) {
+                        const logsHtml = data.logs.map(log => {
+                            const severity = log.level || 'error';
+                            const severityColors = {
+                                'error': 'bg-red-100 text-red-800 border-red-200',
+                                'warning': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                                'info': 'bg-blue-100 text-blue-800 border-blue-200'
+                            };
+                            const severityColor = severityColors[severity] || severityColors['error'];
+                            
+                            return \`
+                                <div class="border \${severityColor} rounded-lg p-4 mb-3">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-\${severity === 'error' ? 'times-circle' : severity === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                                            <span class="font-semibold uppercase text-xs">\${severity}</span>
+                                        </div>
+                                        <span class="text-xs opacity-75">
+                                            \${new Date(log.timestamp).toLocaleString('ja-JP')}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-medium mb-1">\${log.message || 'エラーメッセージなし'}</p>
+                                    \${log.details ? \`
+                                        <details class="mt-2">
+                                            <summary class="cursor-pointer text-xs font-medium mb-1">詳細を表示</summary>
+                                            <pre class="text-xs bg-black bg-opacity-10 p-2 rounded overflow-x-auto mt-1">\${JSON.stringify(log.details, null, 2)}</pre>
+                                        </details>
+                                    \` : ''}
+                                    \${log.user_id ? \`<p class="text-xs opacity-75 mt-1">ユーザーID: \${log.user_id}</p>\` : ''}
+                                </div>
+                            \`;
+                        }).join('');
+                        
+                        document.getElementById('errorLogs').innerHTML = logsHtml;
+                    } else {
+                        document.getElementById('errorLogs').innerHTML = 
+                            '<div class="text-center py-8"><div class="text-green-500 text-5xl mb-4"><i class="fas fa-check-circle"></i></div><p class="text-gray-600">エラーログはありません</p></div>';
+                    }
+                } catch (error) {
+                    document.getElementById('errorLogs').innerHTML = 
+                        '<p class="text-red-500 text-center py-4"><i class="fas fa-exclamation-circle mr-2"></i>読み込みエラー</p>';
+                }
+            }
+            
+            // Load logs on page load
             loadActivityLogs();
+            loadErrorLogs();
             
             // Close modal when clicking outside
             window.onclick = function(event) {
@@ -1160,50 +1532,141 @@ admin.get('/api/docs/:filename', async (c) => {
     return c.text('File not found', 404);
   }
   
-  // In Cloudflare Workers, we need to serve docs from a different approach
-  // Since we can't read files directly, we'll return a placeholder
-  // In production, these should be uploaded to R2 or KV storage
+  // Fetch documents from GitHub repository
+  const githubRawUrl = `https://raw.githubusercontent.com/karis-org/My-Agent-Analitics-genspark/main/docs/${filename}`;
   
-  const docContent = `# ドキュメント: ${filename}
+  try {
+    const response = await fetch(githubRawUrl);
+    
+    if (!response.ok) {
+      // Fallback to placeholder
+      const placeholderContent = `# ${filename}
 
-このドキュメントは現在開発中です。
+## ドキュメント読み込みエラー
 
-**Note**: Cloudflare Workers環境では、ドキュメントファイルをR2またはKV storageに保存する必要があります。
+このドキュメントは現在GitHubリポジトリから読み込めません。
 
-## 実装オプション
+### 代替アクセス方法
 
-### オプション1: R2 Storage
+GitHubリポジトリから直接閲覧できます：
+[${filename}](https://github.com/karis-org/My-Agent-Analitics-genspark/blob/main/docs/${filename})
+
+### 管理者向け
+
+ドキュメントが表示されない場合は、以下を確認してください：
+1. GitHubリポジトリが公開されているか
+2. docs/ ディレクトリにファイルが存在するか
+3. ファイル名が正しいか
+
+**Note**: Cloudflare Workers環境では、ファイルシステムに直接アクセスできないため、ドキュメントをGitHubから取得しています。
+
+### 本番環境での推奨設定
+
+より高速で信頼性の高いドキュメント配信のため、R2 Storageまたは KV Storageの使用を推奨します。
+
+#### R2 Storage (推奨)
 \`\`\`bash
 # ドキュメントをR2にアップロード
 npx wrangler r2 object put my-agent-analytics-docs/${filename} --file=docs/${filename}
 \`\`\`
 
-### オプション2: KV Storage  
+#### KV Storage
 \`\`\`bash
 # ドキュメントをKVに保存
 npx wrangler kv:key put "${filename}" --path=docs/${filename} --binding=DOCS
 \`\`\`
-
-### オプション3: GitHub Pages
-- docsディレクトリをGitHub Pagesで公開
-- 管理画面から直接リンク
-
-## 一時的な解決策
-
-ドキュメントファイルはGitHubリポジトリで参照できます:
-- [ユーザーマニュアル](https://github.com/YOUR_ORG/webapp/blob/main/docs/USER_MANUAL_V6.7.4.md)
-- [システム仕様書](https://github.com/YOUR_ORG/webapp/blob/main/docs/OPERATIONS_MANUAL_SPECIFICATIONS.md)
-- [エラー対処法](https://github.com/YOUR_ORG/webapp/blob/main/docs/OPERATIONS_MANUAL_ERROR_HANDLING.md)
-- [運用ガイド](https://github.com/YOUR_ORG/webapp/blob/main/docs/OPERATIONS_MANUAL_GUIDE.md)
-- [監視設定ガイド](https://github.com/YOUR_ORG/webapp/blob/main/docs/MONITORING_SETUP.md)
-- [リリースチェックリスト](https://github.com/YOUR_ORG/webapp/blob/main/docs/PRE_RELEASE_CHECKLIST.md)
 `;
-
-  return c.text(docContent, {
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8'
+      
+      return c.text(placeholderContent, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8'
+        }
+      });
     }
-  });
+    
+    const docContent = await response.text();
+    
+    return c.text(docContent, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600' // 1時間キャッシュ
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching document:', error);
+    
+    const errorContent = `# ドキュメント読み込みエラー
+
+ドキュメント "${filename}" の読み込みに失敗しました。
+
+### エラー詳細
+\`\`\`
+${error instanceof Error ? error.message : 'Unknown error'}
+\`\`\`
+
+### 代替アクセス方法
+
+GitHubリポジトリから直接閲覧してください：
+[${filename}](https://github.com/karis-org/My-Agent-Analitics-genspark/blob/main/docs/${filename})
+`;
+    
+    return c.text(errorContent, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8'
+      }
+    }, 500);
+  }
+});
+
+/**
+ * API: Get error logs
+ * Note: In production, this would fetch from Cloudflare Analytics API
+ * For now, we'll return simulated data
+ */
+admin.get('/api/error-logs', async (c) => {
+  try {
+    // In production, you would fetch from Cloudflare Analytics API
+    // For now, we'll query recent errors from activity_logs table
+    // or return empty array
+    
+    // Example: Fetch recent error-related activities
+    const errorLogsResult = await c.env.DB.prepare(`
+      SELECT 
+        id,
+        action as message,
+        details,
+        created_at as timestamp,
+        user_id
+      FROM activity_logs
+      WHERE action LIKE '%error%' OR action LIKE '%fail%'
+      ORDER BY created_at DESC
+      LIMIT 50
+    `).all();
+    
+    const logs = (errorLogsResult.results || []).map((log: any) => ({
+      id: log.id,
+      message: log.message,
+      details: log.details ? JSON.parse(log.details) : null,
+      timestamp: log.timestamp,
+      user_id: log.user_id,
+      level: 'error' // Default level
+    }));
+    
+    return c.json({
+      success: true,
+      logs: logs,
+      count: logs.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching error logs:', error);
+    return c.json({
+      success: false,
+      logs: [],
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, 500);
+  }
 });
 
 export default admin;
