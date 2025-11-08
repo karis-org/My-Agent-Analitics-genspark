@@ -31,19 +31,19 @@ agents.get('/', async (c) => {
     </head>
     <body class="bg-gray-50">
         <!-- Header -->
-        <header class="bg-white shadow-sm border-b border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <a href="/dashboard">
-                            <img src="/static/icons/header-logo.png" alt="My Agent Analytics" class="h-12">
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <a href="/dashboard" class="touch-manipulation">
+                            <img src="/static/icons/header-logo.png" alt="My Agent Analytics" class="h-10 sm:h-12">
                         </a>
-                        <h1 class="text-xl font-bold text-gray-900">AIエージェント管理</h1>
+                        <h1 class="text-lg sm:text-xl font-bold text-gray-900">AIエージェント管理</h1>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-600">${user.email}</span>
-                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900">
-                            <i class="fas fa-arrow-left mr-2"></i>ダッシュボード
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <span class="text-xs sm:text-sm text-gray-600 hidden sm:inline">${user.email}</span>
+                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900 text-sm sm:text-base touch-manipulation">
+                            <i class="fas fa-arrow-left mr-1 sm:mr-2"></i><span class="hidden sm:inline">ダッシュボード</span>
                         </a>
                     </div>
                 </div>
@@ -52,18 +52,20 @@ agents.get('/', async (c) => {
 
         <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
             <!-- Header Actions -->
-            <div class="mb-6 flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900">AIエージェント</h2>
-                    <p class="text-gray-600 mt-1">自動分析を実行するAIエージェントを管理します</p>
+            <div class="mb-4 sm:mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">AIエージェント</h2>
+                        <p class="text-sm sm:text-base text-gray-600 mt-1">自動分析を実行するAIエージェントを管理します</p>
+                    </div>
+                    <button onclick="showCreateModal()" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors touch-manipulation whitespace-nowrap">
+                        <i class="fas fa-plus mr-2"></i>新規作成
+                    </button>
                 </div>
-                <button onclick="showCreateModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                    <i class="fas fa-plus mr-2"></i>新規作成
-                </button>
             </div>
 
             <!-- Agents List -->
-            <div id="agents-list" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="agents-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div class="text-center py-12">
                     <i class="fas fa-spinner fa-spin text-4xl text-gray-400 mb-4"></i>
                     <p class="text-gray-600">読み込み中...</p>
@@ -72,7 +74,7 @@ agents.get('/', async (c) => {
         </main>
 
         <!-- Create/Edit Modal -->
-        <div id="agent-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div id="agent-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
             <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div class="p-6 border-b border-gray-200">
                     <h3 id="modal-title" class="text-xl font-bold text-gray-900">新規エージェント作成</h3>

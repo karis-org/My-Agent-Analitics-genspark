@@ -55,27 +55,27 @@ settings.get('/', (c) => {
     </head>
     <body class="bg-gray-50">
         <!-- Header -->
-        <header class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <a href="/dashboard">
-                            <img src="/static/icons/header-logo.png?v=${Date.now()}" alt="My Agent Analytics" class="h-12" style="height: auto; max-height: 48px;">
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <a href="/dashboard" class="touch-manipulation">
+                            <img src="/static/icons/header-logo.png?v=${Date.now()}" alt="My Agent Analytics" class="h-10 sm:h-12" style="height: auto; max-height: 48px;">
                         </a>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900">
-                            <i class="fas fa-home mr-2"></i>ダッシュボード
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900 text-sm sm:text-base touch-manipulation">
+                            <i class="fas fa-home mr-1 sm:mr-2"></i><span class="hidden sm:inline">ダッシュボード</span>
                         </a>
-                        <div class="flex items-center space-x-3">
+                        <div class="hidden md:flex items-center space-x-3">
                             <img src="${user?.picture || 'https://via.placeholder.com/40'}" 
                                  alt="${user?.name}" 
-                                 class="h-10 w-10 rounded-full">
+                                 class="h-8 w-8 sm:h-10 sm:w-10 rounded-full">
                             <div>
-                                <p class="text-sm font-medium text-gray-900">${user?.name}</p>
+                                <p class="text-xs sm:text-sm font-medium text-gray-900">${user?.name}</p>
                             </div>
                         </div>
-                        <a href="/auth/logout" class="text-sm text-gray-600 hover:text-gray-900">
+                        <a href="/auth/logout" class="text-xs sm:text-sm text-gray-600 hover:text-gray-900 touch-manipulation">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
                     </div>
@@ -86,16 +86,16 @@ settings.get('/', (c) => {
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
             <!-- Page Title -->
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">
+            <div class="mb-6 sm:mb-8">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                     <i class="fas fa-info-circle mr-2"></i>システム情報
                 </h2>
-                <p class="text-gray-600">利用可能な機能とシステムの状態</p>
+                <p class="text-sm sm:text-base text-gray-600">利用可能な機能とシステムの状態</p>
             </div>
 
             <!-- System Status Overview -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 mb-8 text-white">
-                <div class="grid md:grid-cols-3 gap-6">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 text-white">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                     <div class="text-center">
                         <div class="text-5xl font-bold mb-2">${availabilityPercentage}%</div>
                         <p class="text-lg opacity-90">機能稼働率</p>

@@ -25,16 +25,16 @@ help.get('/', (c) => {
     </head>
     <body class="bg-gray-50">
         <!-- Header -->
-        <header class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <a href="/dashboard" class="touch-manipulation">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-10 w-10 sm:h-12 sm:w-12" style="object-fit: contain;">
                         </a>
-                        <h1 class="text-2xl font-bold text-gray-900">使い方ガイド</h1>
+                        <h1 class="text-lg sm:text-2xl font-bold text-gray-900">使い方ガイド</h1>
                     </div>
-                    <a href="/dashboard" class="text-gray-600 hover:text-gray-900">
+                    <a href="/dashboard" class="text-gray-600 hover:text-gray-900 touch-manipulation">
                         <i class="fas fa-home"></i>
                     </a>
                 </div>
@@ -44,49 +44,49 @@ help.get('/', (c) => {
         <!-- Main Content -->
         <main class="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
             <!-- Quick Start -->
-            <div class="bg-white rounded-lg shadow p-8 mb-6">
-                <h2 class="text-3xl font-bold text-gray-900 mb-6">
-                    <i class="fas fa-rocket text-blue-600 mr-3"></i>クイックスタート
+            <div class="bg-white rounded-lg shadow p-4 sm:p-8 mb-4 sm:mb-6">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
+                    <i class="fas fa-rocket text-blue-600 mr-2 sm:mr-3"></i>クイックスタート
                 </h2>
-                <div class="space-y-6">
-                    <div class="flex items-start space-x-4">
-                        <div class="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                <div class="space-y-4 sm:space-y-6">
+                    <div class="flex items-start space-x-3 sm:space-x-4">
+                        <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm sm:text-base font-bold">
                             1
                         </div>
                         <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">物件を登録する</h3>
-                            <p class="text-gray-600">「新規物件登録」ボタンから物件情報を入力します。マイソクや物件概要書をアップロードすると、自動的に情報が入力されます。</p>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">物件を登録する</h3>
+                            <p class="text-sm sm:text-base text-gray-600">「新規物件登録」ボタンから物件情報を入力します。マイソクや物件概要書をアップロードすると、自動的に情報が入力されます。</p>
                         </div>
                     </div>
                     
-                    <div class="flex items-start space-x-4">
-                        <div class="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                    <div class="flex items-start space-x-3 sm:space-x-4">
+                        <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm sm:text-base font-bold">
                             2
                         </div>
                         <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">分析を実行する</h3>
-                            <p class="text-gray-600">登録した物件の「分析」ボタンをクリックし、収支シミュレーションのパラメータを入力します。</p>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">分析を実行する</h3>
+                            <p class="text-sm sm:text-base text-gray-600">登録した物件の「分析」ボタンをクリックし、収支シミュレーションのパラメータを入力します。</p>
                         </div>
                     </div>
                     
-                    <div class="flex items-start space-x-4">
-                        <div class="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                    <div class="flex items-start space-x-3 sm:space-x-4">
+                        <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm sm:text-base font-bold">
                             3
                         </div>
                         <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">結果を確認する</h3>
-                            <p class="text-gray-600">利回り、NOI、キャッシュフローなどの投資指標が自動計算され、グラフィカルに表示されます。</p>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">結果を確認する</h3>
+                            <p class="text-sm sm:text-base text-gray-600">利回り、NOI、キャッシュフローなどの投資指標が自動計算され、グラフィカルに表示されます。</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Main Features -->
-            <div class="bg-white rounded-lg shadow p-8 mb-6">
-                <h2 class="text-3xl font-bold text-gray-900 mb-6">
-                    <i class="fas fa-star text-yellow-500 mr-3"></i>主な機能
+            <div class="bg-white rounded-lg shadow p-4 sm:p-8 mb-4 sm:mb-6">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
+                    <i class="fas fa-star text-yellow-500 mr-2 sm:mr-3"></i>主な機能
                 </h2>
-                <div class="grid md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div class="border-l-4 border-blue-600 pl-4">
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">
                             <i class="fas fa-file-image text-blue-600 mr-2"></i>マイソク読み取り
