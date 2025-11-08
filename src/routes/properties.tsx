@@ -92,14 +92,14 @@ properties.get('/', (c) => {
                     
                     const listContainer = document.getElementById('properties-list');
                     listContainer.innerHTML = properties.map(property => \`
-                        <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-bold text-gray-900">\${property.name}</h3>
-                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        <div class="bg-white rounded-lg shadow hover:shadow-lg active:shadow-xl transition-shadow p-4 sm:p-6 touch-manipulation">
+                            <div class="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+                                <h3 class="text-lg sm:text-xl font-bold text-gray-900 truncate">\${property.name}</h3>
+                                <span class="px-2 py-1 sm:px-3 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap">
                                     \${property.structure || '構造不明'}
                                 </span>
                             </div>
-                            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
                                 <div>
                                     <p class="text-sm text-gray-500">所在地</p>
                                     <p class="font-medium">\${property.location || '未設定'}</p>
@@ -119,15 +119,15 @@ properties.get('/', (c) => {
                             </div>
                             <div class="flex items-center justify-end space-x-2">
                                 <a href="/properties/\${property.id}" 
-                                   class="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                    <i class="fas fa-eye mr-2"></i>詳細
+                                   class="px-3 py-2 sm:px-4 text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
+                                    <i class="fas fa-eye mr-1 sm:mr-2"></i><span class="hidden sm:inline">詳細</span>
                                 </a>
                                 <a href="/properties/\${property.id}/analyze" 
-                                   class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                                    <i class="fas fa-chart-line mr-2"></i>分析
+                                   class="px-3 py-2 sm:px-4 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
+                                    <i class="fas fa-chart-line mr-1 sm:mr-2"></i><span class="hidden sm:inline">分析</span>
                                 </a>
                                 <button onclick="deleteProperty('\${property.id}')"
-                                        class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                        class="px-3 py-2 sm:px-4 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
