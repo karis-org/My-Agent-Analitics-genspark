@@ -203,13 +203,23 @@ properties.get('/new', (c) => {
                 <div class="text-center">
                     <i class="fas fa-file-image text-5xl text-blue-600 mb-4"></i>
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">マイソク・物件概要書を読み取り</h3>
-                    <p class="text-sm text-gray-600 mb-4">画像またはPDFをアップロードすると自動で物件情報を入力します</p>
+                    <p class="text-sm text-gray-600 mb-2">画像またはPDFをアップロードすると自動で物件情報を入力します</p>
+                    <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                        <p class="text-xs text-blue-800">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <strong>推奨:</strong> 文字がはっきり読める高解像度の画像をご使用ください。
+                            PDF、JPG、PNG形式に対応。処理には10-30秒程度かかります。
+                        </p>
+                    </div>
                     <input type="file" id="mysoku-upload" accept="image/jpeg,image/jpg,image/png,application/pdf" class="hidden">
                     <button type="button" onclick="document.getElementById('mysoku-upload').click()"
-                            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg font-medium transition-colors touch-manipulation shadow-lg">
                         <i class="fas fa-upload mr-2"></i>ファイルをアップロード
                     </button>
-                    <p class="text-xs text-gray-500 mt-2">対応形式: JPG, PNG, PDF（PDFは自動的に画像に変換されます）</p>
+                    <p class="text-xs text-gray-500 mt-2">
+                        対応形式: JPG, PNG, PDF（PDFは自動的に画像に変換されます）<br>
+                        <span class="text-blue-600">iPhoneでは「写真ライブラリ」または「写真を撮る」から選択できます</span>
+                    </p>
                 </div>
                 <div id="upload-status" class="mt-4 hidden">
                     <div class="flex items-center justify-center space-x-2">
