@@ -15,18 +15,20 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🌍 デモ・本番環境
 
-**🚀 本番環境（最新）**: [https://c104a989.my-agent-analytics.pages.dev](https://c104a989.my-agent-analytics.pages.dev)  
-✨ **Session 19 修正完了 - 正規ブランドロゴ修正版反映！** ✅ (2025-11-08)
-- ✅ **修正版ブランドロゴ完全実装** 🎨
-  - 横型ロゴ修正: テキストカラー修正完了（My Agent: Navy Blue #0E2A47, Analytics: Gold #C9A03D）
-  - 縦型ロゴ（Vertical Logo）: アプリアイコン用（1024/512/384/192/180px）
-  - 横型ロゴ（Horizontal Logo）: ヘッダー、バナー用（1024/512/400/200/192px）
-  - Favicon生成（16x16, 32x32, 48x48マルチサイズICO）
-  - ブランドガイドライン完全遵守（カラー・サイズ・透明度）
-  - マルチOS対応（Mac, Windows, iOS, Android）
-- ✅ **全ロゴファイル差し替え完了** 🔄
-  - PNG形式、8-bit sRGB、透明度保持
-- ビルド成功: 615.19 kB ✅
+**🚀 本番環境（最新）**: [https://26a41ff2.my-agent-analytics.pages.dev](https://26a41ff2.my-agent-analytics.pages.dev)  
+✨ **Phase 4-1 完了 - 物件比較機能実装！** ✅ (2025-11-08)
+- ✅ **物件比較機能完全実装** 📊
+  - チェックボックスによる物件選択UI（2〜5件）
+  - 総合比較Radarチャート（利回り、NOI、DSCR、LTV、コスト効率）
+  - 主要指標Barチャート（表面利回り、実質利回り、価格、NOI）
+  - 詳細比較テーブル（全指標を横並び表示）
+  - 投資推奨度分析（スコアリングシステム）
+  - 印刷・エクスポート機能（将来CSV実装予定）
+  - レスポンシブデザイン（モバイル対応）
+- ビルド成功: 649.26 kB ✅
+
+**📊 Session 19修正版（前回）**: [https://c104a989.my-agent-analytics.pages.dev](https://c104a989.my-agent-analytics.pages.dev)  
+修正版ブランドロゴ完全実装（横型・縦型、マルチOS対応）
 
 **📊 Session 18版（前回）**: [https://e47eaa52.my-agent-analytics.pages.dev](https://e47eaa52.my-agent-analytics.pages.dev)  
 GitHub Actions CI/CD完全自動化、全ページモバイル最適化完了
@@ -97,6 +99,13 @@ Phase 3完全達成（モバイル最適化、ドキュメント整備、CI/CD�
 - ✅ **物件収益データ入力フォーム** (`/properties/:id/analyze`)
   - 物件価格、想定家賃収入、稼働率、年間経費
   - ローン借入額、金利、返済期間、自己資金
+- ✅ **物件比較機能** (`/comparison`) 🆕 **Phase 4-1**
+  - チェックボックスで複数物件選択（2〜5件）
+  - 総合比較Radarチャート（5つの指標を同時比較）
+  - 主要指標Barチャート（利回り、価格、NOI）
+  - 詳細比較テーブル（全項目横並び表示）
+  - 投資推奨度分析とスコアリング
+  - 印刷・エクスポート対応
 - ✅ **統合分析レポートページ** (`/properties/:id/comprehensive-report`)
   - インタラクティブダッシュボード、グラスモーフィズムデザイン
   - 全分析結果の統合表示、Chart.jsグラフ、PDF/印刷機能
