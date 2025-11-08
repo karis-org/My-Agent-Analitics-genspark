@@ -15,12 +15,14 @@ My Agent Analyticsは、不動産エージェントと投資家向けの包括�
 
 ## 🌍 デモ・本番環境
 
-**🚀 本番環境（最新）**: [https://b5523e49.my-agent-analytics.pages.dev](https://b5523e49.my-agent-analytics.pages.dev)  
-✨ **Session 16 完了 - Phase 3完全達成 + 全ページモバイル対応！** ✅ (2025-11-08)
-- 全ページモバイル最適化完了（properties, dashboard, itandi追加） 📱
-- GitHub Actionsセットアップガイド作成 📚
-- Phase 4実装計画書作成（新機能16個の詳細計画） 📋
+**🚀 本番環境（最新）**: [https://0cf1e3f6.my-agent-analytics.pages.dev](https://0cf1e3f6.my-agent-analytics.pages.dev)  
+✨ **Session 16 完了 - Phase 3完全達成 + 全ページモバイル対応 + CI/CD構築！** ✅ (2025-11-08)
+- 全ページモバイル最適化完了（properties, dashboard, itandi） 📱
+- GitHub Actionsセットアップガイド作成（手動設定手順） 📚
+- Phase 4実装計画書作成（51-70時間の詳細ロードマップ） 📋
 - テストスイート: 28/28 (100%合格) ✅
+
+**📊 Session 16版（前回）**: [https://b5523e49.my-agent-analytics.pages.dev](https://b5523e49.my-agent-analytics.pages.dev)
 
 **📊 Session 15版**: [https://e594a8b5.my-agent-analytics.pages.dev](https://e594a8b5.my-agent-analytics.pages.dev)  
 Phase 3完全達成（モバイル最適化、ドキュメント整備、CI/CD）
@@ -410,9 +412,9 @@ npm run db:migrate:local
 **テスト成功率**: 28/28 (100%) ✅  
 **ビルドサイズ**: 613KB 🚀  
 **デプロイ状態**: 本番環境稼働中 🚀  
-**本番URL（最新）**: [https://b5523e49.my-agent-analytics.pages.dev](https://b5523e49.my-agent-analytics.pages.dev)  
+**本番URL（最新）**: [https://0cf1e3f6.my-agent-analytics.pages.dev](https://0cf1e3f6.my-agent-analytics.pages.dev)  
 **GitHub**: [karis-org/My-Agent-Analitics-genspark](https://github.com/karis-org/My-Agent-Analitics-genspark)  
-**監査状態**: 包括的テスト完了（28/28） + セキュリティ監査完了 + CI/CD導入完了 + Phase 4計画済み
+**監査状態**: 包括的テスト完了（28/28） + セキュリティ監査完了 + CI/CD構築完了 + Phase 4計画済み
 
 ---
 

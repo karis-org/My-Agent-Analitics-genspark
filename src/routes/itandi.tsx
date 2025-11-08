@@ -93,10 +93,10 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
                         </div>
                     </div>
                     
-                    <div class="grid md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">間取り</label>
-                            <select id="roomType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <select id="roomType" class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 touch-manipulation">
                                 <option value="">全て</option>
                                 <option value="1R">1R</option>
                                 <option value="1K">1K</option>
@@ -111,12 +111,12 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">最小面積 (㎡)</label>
                             <input type="number" id="minArea" step="0.1" placeholder="例: 20"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                   class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 touch-manipulation">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">最大面積 (㎡)</label>
                             <input type="number" id="maxArea" step="0.1" placeholder="例: 80"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                   class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 touch-manipulation">
                         </div>
                     </div>
                     
