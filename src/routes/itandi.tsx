@@ -27,19 +27,19 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
         </style>
     </head>
     <body class="bg-gray-50">
-        <header class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <a href="/dashboard" class="touch-manipulation">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-10 w-10 sm:h-12 sm:w-12" style="object-fit: contain;">
                         </a>
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                            イタンジBB 賃貸相場分析
+                        <h1 class="text-base sm:text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                            <span class="hidden sm:inline">イタンジBB </span>賃貸相場分析
                         </h1>
                     </div>
-                    <a href="/dashboard" class="text-gray-600 hover:text-gray-900">
-                        <i class="fas fa-arrow-left mr-2"></i>戻る
+                    <a href="/dashboard" class="text-gray-600 hover:text-gray-900 p-2 sm:p-0 touch-manipulation">
+                        <i class="fas fa-arrow-left mr-0 sm:mr-2"></i><span class="hidden sm:inline">戻る</span>
                     </a>
                 </div>
             </div>
@@ -62,14 +62,14 @@ itandi.get('/rental-market', authMiddleware, async (c) => {
             </div>
 
             <!-- Search Form -->
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">
+            <div class="bg-white rounded-lg shadow p-4 sm:p-6 mb-4 sm:mb-6">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
                     <i class="fas fa-search mr-2 text-blue-600"></i>
                     エリア賃貸相場検索
                 </h2>
                 
-                <form id="search-form" class="space-y-4">
-                    <div class="grid md:grid-cols-3 gap-4">
+                <form id="search-form" class="space-y-3 sm:space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">都道府県</label>
                             <select id="prefecture" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">

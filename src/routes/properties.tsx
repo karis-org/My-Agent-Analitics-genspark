@@ -32,21 +32,21 @@ properties.get('/', (c) => {
     </head>
     <body class="bg-gray-50">
         <!-- Header -->
-        <header class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <a href="/dashboard">
-                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-12 w-12" style="object-fit: contain;">
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <a href="/dashboard" class="touch-manipulation">
+                            <img src="/static/icons/app-icon.png" alt="My Agent Analytics" class="h-10 w-10 sm:h-12 sm:w-12" style="object-fit: contain;">
                         </a>
-                        <h1 class="text-2xl font-bold text-gray-900">物件一覧</h1>
+                        <h1 class="text-lg sm:text-2xl font-bold text-gray-900">物件一覧</h1>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="/properties/new" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                            <i class="fas fa-plus mr-2"></i>新規登録
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <a href="/properties/new" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 sm:px-4 rounded-lg text-sm sm:text-base font-medium transition-colors touch-manipulation">
+                            <i class="fas fa-plus mr-1 sm:mr-2"></i><span class="hidden sm:inline">新規登録</span><span class="sm:hidden">新規</span>
                         </a>
-                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900">
-                            <i class="fas fa-home"></i>
+                        <a href="/dashboard" class="text-gray-600 hover:text-gray-900 p-2 touch-manipulation">
+                            <i class="fas fa-home text-lg sm:text-xl"></i>
                         </a>
                     </div>
                 </div>
@@ -55,15 +55,15 @@ properties.get('/', (c) => {
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <div class="mb-6">
-                <div class="flex items-center justify-between">
-                    <p class="text-gray-600">登録済み物件を管理します</p>
-                    <div class="flex space-x-2">
-                        <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                            <i class="fas fa-filter mr-2"></i>フィルター
+            <div class="mb-4 sm:mb-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <p class="text-sm sm:text-base text-gray-600">登録済み物件を管理します</p>
+                    <div class="flex space-x-2 w-full sm:w-auto">
+                        <button class="flex-1 sm:flex-none px-3 py-2 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base touch-manipulation">
+                            <i class="fas fa-filter mr-1 sm:mr-2"></i>フィルター
                         </button>
-                        <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                            <i class="fas fa-sort mr-2"></i>並び替え
+                        <button class="flex-1 sm:flex-none px-3 py-2 sm:px-4 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base touch-manipulation">
+                            <i class="fas fa-sort mr-1 sm:mr-2"></i>並び替え
                         </button>
                     </div>
                 </div>
