@@ -1,0 +1,47 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Install PM2
+        run: npm install -g pm2
+      
+      - name: Start server with PM2
+        run: |
+          cd ${{ github.workspace }}
+          pm2 start ecosystem.config.cjs
+          sleep 5
+      
+      - name: Check server health
+        run: |
+          curl http://localhost:3000 || exit 1
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Stop PM2
+        if: always()
+        run: pm2 delete all || true
