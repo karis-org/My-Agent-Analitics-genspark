@@ -70,6 +70,10 @@ app.route('/itandi', itandiRoutes)
 import stigmaRoutes from './routes/stigma'
 app.route('/stigma', stigmaRoutes)
 
+// Tags management routes (requires authentication)
+import tagsRoutes from './routes/tags'
+app.route('/tags', tagsRoutes)
+
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ 

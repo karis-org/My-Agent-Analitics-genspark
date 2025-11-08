@@ -4439,4 +4439,522 @@ api.get('/agents/:id/executions', authMiddleware, async (c) => {
   }
 });
 
+// ============================================================
+// タグ管理API（Phase 4-3）
+// ============================================================
+
+/**
+ * Get all tags for current user
+ * GET /api/tags
+ */
+api.get('/tags', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+
+    const tags = await env.DB.prepare(`
+      SELECT id, name, color, created_at
+      FROM tags
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `).bind(user.id).all();
+
+    return c.json({
+      success: true,
+      tags: tags.results || []
+    });
+  } catch (error: any) {
+    console.error('Get tags error:', error);
+    return c.json({
+      error: 'タグの取得に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Create new tag
+ * POST /api/tags
+ * Body: { name: string, color: string }
+ */
+api.post('/tags', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const { name, color } = await c.req.json();
+
+    // Validation
+    if (!name || name.trim() === '') {
+      return c.json({ error: 'タグ名は必須です' }, 400);
+    }
+
+    if (!color || !/^#[0-9A-Fa-f]{6}$/.test(color)) {
+      return c.json({ error: '有効な色コードを指定してください（例: #3B82F6）' }, 400);
+    }
+
+    // Check if tag name already exists for this user
+    const existing = await env.DB.prepare(`
+      SELECT id FROM tags WHERE user_id = ? AND name = ?
+    `).bind(user.id, name.trim()).first();
+
+    if (existing) {
+      return c.json({ error: 'このタグ名は既に存在します' }, 409);
+    }
+
+    // Generate tag ID
+    const tagId = `tag-${crypto.randomUUID()}`;
+
+    // Insert tag
+    await env.DB.prepare(`
+      INSERT INTO tags (id, name, color, user_id)
+      VALUES (?, ?, ?, ?)
+    `).bind(tagId, name.trim(), color, user.id).run();
+
+    // Get created tag
+    const tag = await env.DB.prepare(`
+      SELECT id, name, color, created_at FROM tags WHERE id = ?
+    `).bind(tagId).first();
+
+    return c.json({
+      success: true,
+      tag
+    }, 201);
+  } catch (error: any) {
+    console.error('Create tag error:', error);
+    return c.json({
+      error: 'タグの作成に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Update tag
+ * PUT /api/tags/:id
+ * Body: { name?: string, color?: string }
+ */
+api.put('/tags/:id', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const tagId = c.req.param('id');
+    const { name, color } = await c.req.json();
+
+    // Verify tag exists and belongs to user
+    const tag = await env.DB.prepare(`
+      SELECT * FROM tags WHERE id = ? AND user_id = ?
+    `).bind(tagId, user.id).first();
+
+    if (!tag) {
+      return c.json({ error: 'タグが見つかりません' }, 404);
+    }
+
+    // Validation
+    if (name !== undefined && name.trim() === '') {
+      return c.json({ error: 'タグ名は必須です' }, 400);
+    }
+
+    if (color !== undefined && !/^#[0-9A-Fa-f]{6}$/.test(color)) {
+      return c.json({ error: '有効な色コードを指定してください（例: #3B82F6）' }, 400);
+    }
+
+    // Check if new name conflicts with existing tag
+    if (name !== undefined && name.trim() !== (tag as any).name) {
+      const existing = await env.DB.prepare(`
+        SELECT id FROM tags WHERE user_id = ? AND name = ? AND id != ?
+      `).bind(user.id, name.trim(), tagId).first();
+
+      if (existing) {
+        return c.json({ error: 'このタグ名は既に存在します' }, 409);
+      }
+    }
+
+    // Build update query dynamically
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (name !== undefined) {
+      updates.push('name = ?');
+      values.push(name.trim());
+    }
+    if (color !== undefined) {
+      updates.push('color = ?');
+      values.push(color);
+    }
+
+    if (updates.length === 0) {
+      return c.json({ error: '更新するフィールドが指定されていません' }, 400);
+    }
+
+    values.push(tagId, user.id);
+
+    await env.DB.prepare(`
+      UPDATE tags SET ${updates.join(', ')} WHERE id = ? AND user_id = ?
+    `).bind(...values).run();
+
+    // Get updated tag
+    const updatedTag = await env.DB.prepare(`
+      SELECT id, name, color, created_at FROM tags WHERE id = ?
+    `).bind(tagId).first();
+
+    return c.json({
+      success: true,
+      tag: updatedTag
+    });
+  } catch (error: any) {
+    console.error('Update tag error:', error);
+    return c.json({
+      error: 'タグの更新に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Delete tag
+ * DELETE /api/tags/:id
+ */
+api.delete('/tags/:id', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const tagId = c.req.param('id');
+
+    // Verify tag exists and belongs to user
+    const tag = await env.DB.prepare(`
+      SELECT * FROM tags WHERE id = ? AND user_id = ?
+    `).bind(tagId, user.id).first();
+
+    if (!tag) {
+      return c.json({ error: 'タグが見つかりません' }, 404);
+    }
+
+    // Delete tag (CASCADE will delete property_tags automatically)
+    await env.DB.prepare(`
+      DELETE FROM tags WHERE id = ? AND user_id = ?
+    `).bind(tagId, user.id).run();
+
+    return c.json({
+      success: true,
+      message: 'タグを削除しました'
+    });
+  } catch (error: any) {
+    console.error('Delete tag error:', error);
+    return c.json({
+      error: 'タグの削除に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+// ============================================================
+// 物件タグ付けAPI（Phase 4-3）
+// ============================================================
+
+/**
+ * Get tags for a property
+ * GET /api/properties/:id/tags
+ */
+api.get('/properties/:id/tags', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const propertyId = c.req.param('id');
+
+    // Verify property exists and belongs to user
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (!property) {
+      return c.json({ error: '物件が見つかりません' }, 404);
+    }
+
+    // Get tags for this property
+    const tags = await env.DB.prepare(`
+      SELECT t.id, t.name, t.color, t.created_at, pt.created_at as tagged_at
+      FROM tags t
+      JOIN property_tags pt ON t.id = pt.tag_id
+      WHERE pt.property_id = ?
+      ORDER BY pt.created_at DESC
+    `).bind(propertyId).all();
+
+    return c.json({
+      success: true,
+      tags: tags.results || []
+    });
+  } catch (error: any) {
+    console.error('Get property tags error:', error);
+    return c.json({
+      error: '物件のタグ取得に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Add tag to property
+ * POST /api/properties/:id/tags/:tagId
+ */
+api.post('/properties/:id/tags/:tagId', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const propertyId = c.req.param('id');
+    const tagId = c.req.param('tagId');
+
+    // Verify property exists and belongs to user
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (!property) {
+      return c.json({ error: '物件が見つかりません' }, 404);
+    }
+
+    // Verify tag exists and belongs to user
+    const tag = await env.DB.prepare(`
+      SELECT * FROM tags WHERE id = ? AND user_id = ?
+    `).bind(tagId, user.id).first();
+
+    if (!tag) {
+      return c.json({ error: 'タグが見つかりません' }, 404);
+    }
+
+    // Check if tag is already assigned to property
+    const existing = await env.DB.prepare(`
+      SELECT * FROM property_tags WHERE property_id = ? AND tag_id = ?
+    `).bind(propertyId, tagId).first();
+
+    if (existing) {
+      return c.json({ error: 'このタグは既に付けられています' }, 409);
+    }
+
+    // Add tag to property
+    await env.DB.prepare(`
+      INSERT INTO property_tags (property_id, tag_id)
+      VALUES (?, ?)
+    `).bind(propertyId, tagId).run();
+
+    return c.json({
+      success: true,
+      message: 'タグを追加しました',
+      tag
+    }, 201);
+  } catch (error: any) {
+    console.error('Add property tag error:', error);
+    return c.json({
+      error: 'タグの追加に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Remove tag from property
+ * DELETE /api/properties/:id/tags/:tagId
+ */
+api.delete('/properties/:id/tags/:tagId', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const propertyId = c.req.param('id');
+    const tagId = c.req.param('tagId');
+
+    // Verify property exists and belongs to user
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (!property) {
+      return c.json({ error: '物件が見つかりません' }, 404);
+    }
+
+    // Remove tag from property
+    await env.DB.prepare(`
+      DELETE FROM property_tags WHERE property_id = ? AND tag_id = ?
+    `).bind(propertyId, tagId).run();
+
+    return c.json({
+      success: true,
+      message: 'タグを削除しました'
+    });
+  } catch (error: any) {
+    console.error('Remove property tag error:', error);
+    return c.json({
+      error: 'タグの削除に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+// ============================================================
+// メモ機能API（Phase 4-3）
+// ============================================================
+
+/**
+ * Get note for a property
+ * GET /api/properties/:id/note
+ */
+api.get('/properties/:id/note', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const propertyId = c.req.param('id');
+
+    // Verify property exists and belongs to user
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (!property) {
+      return c.json({ error: '物件が見つかりません' }, 404);
+    }
+
+    // Get note for this property
+    const note = await env.DB.prepare(`
+      SELECT id, content, created_at, updated_at
+      FROM notes
+      WHERE property_id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (!note) {
+      return c.json({
+        success: true,
+        note: null
+      });
+    }
+
+    return c.json({
+      success: true,
+      note
+    });
+  } catch (error: any) {
+    console.error('Get note error:', error);
+    return c.json({
+      error: 'メモの取得に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Create or update note for a property
+ * POST /api/properties/:id/note
+ * Body: { content: string }
+ */
+api.post('/properties/:id/note', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const propertyId = c.req.param('id');
+    const { content } = await c.req.json();
+
+    // Validation
+    if (content === undefined || content === null) {
+      return c.json({ error: 'メモの内容が必要です' }, 400);
+    }
+
+    // Verify property exists and belongs to user
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (!property) {
+      return c.json({ error: '物件が見つかりません' }, 404);
+    }
+
+    // Check if note already exists
+    const existing = await env.DB.prepare(`
+      SELECT id FROM notes WHERE property_id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (existing) {
+      // Update existing note
+      await env.DB.prepare(`
+        UPDATE notes
+        SET content = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE property_id = ? AND user_id = ?
+      `).bind(content, propertyId, user.id).run();
+
+      // Get updated note
+      const note = await env.DB.prepare(`
+        SELECT id, content, created_at, updated_at
+        FROM notes
+        WHERE property_id = ? AND user_id = ?
+      `).bind(propertyId, user.id).first();
+
+      return c.json({
+        success: true,
+        message: 'メモを更新しました',
+        note
+      });
+    } else {
+      // Create new note
+      const noteId = `note-${crypto.randomUUID()}`;
+
+      await env.DB.prepare(`
+        INSERT INTO notes (id, property_id, user_id, content)
+        VALUES (?, ?, ?, ?)
+      `).bind(noteId, propertyId, user.id, content).run();
+
+      // Get created note
+      const note = await env.DB.prepare(`
+        SELECT id, content, created_at, updated_at
+        FROM notes
+        WHERE id = ?
+      `).bind(noteId).first();
+
+      return c.json({
+        success: true,
+        message: 'メモを作成しました',
+        note
+      }, 201);
+    }
+  } catch (error: any) {
+    console.error('Save note error:', error);
+    return c.json({
+      error: 'メモの保存に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
+/**
+ * Delete note for a property
+ * DELETE /api/properties/:id/note
+ */
+api.delete('/properties/:id/note', authMiddleware, async (c) => {
+  try {
+    const { env } = c;
+    const user = c.get('user');
+    const propertyId = c.req.param('id');
+
+    // Verify property exists and belongs to user
+    const property = await env.DB.prepare(`
+      SELECT * FROM properties WHERE id = ? AND user_id = ?
+    `).bind(propertyId, user.id).first();
+
+    if (!property) {
+      return c.json({ error: '物件が見つかりません' }, 404);
+    }
+
+    // Delete note
+    await env.DB.prepare(`
+      DELETE FROM notes WHERE property_id = ? AND user_id = ?
+    `).bind(propertyId, user.id).run();
+
+    return c.json({
+      success: true,
+      message: 'メモを削除しました'
+    });
+  } catch (error: any) {
+    console.error('Delete note error:', error);
+    return c.json({
+      error: 'メモの削除に失敗しました',
+      details: error.message,
+    }, 500);
+  }
+});
+
 export default api;

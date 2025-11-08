@@ -174,6 +174,21 @@ properties.get('/', (c) => {
                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
 
+                <!-- Tag Filter (Phase 4-3) -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-gray-700">
+                            タグ
+                        </label>
+                        <a href="/tags" class="text-xs text-blue-600 hover:text-blue-700">
+                            <i class="fas fa-cog mr-1"></i>タグ管理
+                        </a>
+                    </div>
+                    <div id="tag-filter-checkboxes" class="flex flex-wrap gap-2">
+                        <!-- Tag checkboxes will be rendered here -->
+                    </div>
+                </div>
+
                 <!-- Apply Filters Button -->
                 <div class="flex space-x-2">
                     <button onclick="applyFilters()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
@@ -340,7 +355,8 @@ properties.get('/', (c) => {
                 yieldMin: null,
                 yieldMax: null,
                 structures: [],
-                location: null
+                location: null,
+                tags: []  // Phase 4-3: Tag filter
             };
             let currentSort = null;
 
@@ -377,6 +393,10 @@ properties.get('/', (c) => {
                 // Get checked structures
                 const structureCheckboxes = document.querySelectorAll('.structure-filter:checked');
                 const structures = Array.from(structureCheckboxes).map(cb => cb.value);
+                
+                // Get checked tags (Phase 4-3)
+                const tagCheckboxes = document.querySelectorAll('.tag-filter:checked');
+                const tags = Array.from(tagCheckboxes).map(cb => cb.value);
 
                 // Update current filters
                 currentFilters = {
@@ -385,7 +405,8 @@ properties.get('/', (c) => {
                     yieldMin,
                     yieldMax,
                     structures,
-                    location
+                    location,
+                    tags
                 };
 
                 // Apply filters
@@ -407,6 +428,7 @@ properties.get('/', (c) => {
                 document.getElementById('yield-max').value = '';
                 document.getElementById('location-filter').value = '';
                 document.querySelectorAll('.structure-filter').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.tag-filter').forEach(cb => cb.checked = false);  // Phase 4-3
 
                 // Reset current filters
                 currentFilters = {
@@ -415,6 +437,7 @@ properties.get('/', (c) => {
                     yieldMin: null,
                     yieldMax: null,
                     structures: [],
+                    tags: [],  // Phase 4-3
                     location: null
                 };
 
@@ -448,6 +471,15 @@ properties.get('/', (c) => {
                     if (currentFilters.location) {
                         const location = property.location || '';
                         if (!location.includes(currentFilters.location)) return false;
+                    }
+                    
+                    // Tag filter (Phase 4-3)
+                    if (currentFilters.tags.length > 0) {
+                        const propertyTags = property.tags || [];
+                        const propertyTagIds = propertyTags.map(t => t.id);
+                        // Check if property has at least one of the selected tags
+                        const hasTag = currentFilters.tags.some(tagId => propertyTagIds.includes(tagId));
+                        if (!hasTag) return false;
                     }
 
                     return true;
@@ -507,6 +539,7 @@ properties.get('/', (c) => {
                 if (currentFilters.yieldMin !== null || currentFilters.yieldMax !== null) count++;
                 if (currentFilters.structures.length > 0) count++;
                 if (currentFilters.location) count++;
+                if (currentFilters.tags.length > 0) count++;  // Phase 4-3
 
                 const badge = document.getElementById('active-filters-badge');
                 if (count > 0) {
@@ -590,7 +623,23 @@ properties.get('/', (c) => {
                                     </div>
                                     \` : ''}
                                 </div>
-                                <div class="flex items-center justify-end space-x-2">
+                                
+                                <!-- Tags Section -->
+                                <div class="mb-4">
+                                    <div class="flex items-center gap-2 flex-wrap" id="tags-\${property.id}">
+                                        <!-- Tags will be loaded here -->
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <!-- Tags Management Button -->
+                                    <button onclick="openTagsModal('\${property.id}')" 
+                                            class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                                        <i class="fas fa-tag mr-1"></i>タグ
+                                    </button>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="flex items-center space-x-2">
                                     <a href="/properties/\${property.id}" 
                                        class="px-3 py-2 sm:px-4 text-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-lg text-sm sm:text-base transition-colors touch-manipulation">
                                         <i class="fas fa-eye mr-1 sm:mr-2"></i><span class="hidden sm:inline">詳細</span>
@@ -644,9 +693,10 @@ properties.get('/', (c) => {
                         return;
                     }
                     
-                    // Load analysis results for yield data
-                    const analysisPromises = allProperties.map(async (property) => {
+                    // Load analysis results for yield data and tags (Phase 4-3)
+                    const dataPromises = allProperties.map(async (property) => {
                         try {
+                            // Load analysis data
                             const analysisRes = await axios.get(\`/api/properties/\${property.id}/analysis\`);
                             if (analysisRes.data && analysisRes.data.gross_yield) {
                                 property.gross_yield = analysisRes.data.gross_yield;
@@ -656,10 +706,20 @@ properties.get('/', (c) => {
                         } catch (err) {
                             // If analysis doesn't exist, skip
                         }
+                        
+                        try {
+                            // Load tags (Phase 4-3)
+                            const tagsRes = await axios.get(\`/api/properties/\${property.id}/tags\`);
+                            property.tags = tagsRes.data.tags || [];
+                        } catch (err) {
+                            // If tags don't exist, set empty array
+                            property.tags = [];
+                        }
+                        
                         return property;
                     });
                     
-                    await Promise.all(analysisPromises);
+                    await Promise.all(dataPromises);
                     
                     // Initialize filtered properties
                     filteredProperties = [...allProperties];
@@ -672,8 +732,215 @@ properties.get('/', (c) => {
                 }
             }
             
-            loadProperties();
+            // ============================================================
+            // タグ機能（Phase 4-3）
+            // ============================================================
+            
+            let allAvailableTags = [];
+            let currentTagPropertyId = null;
+            
+            // Load available tags
+            async function loadAvailableTags() {
+                try {
+                    const response = await axios.get('/api/tags');
+                    allAvailableTags = response.data.tags || [];
+                } catch (error) {
+                    console.error('Failed to load tags:', error);
+                }
+            }
+            
+            // Load tags for a property
+            async function loadPropertyTags(propertyId) {
+                try {
+                    const response = await axios.get(\`/api/properties/\${propertyId}/tags\`);
+                    const tags = response.data.tags || [];
+                    
+                    const container = document.getElementById(\`tags-\${propertyId}\`);
+                    if (!container) return;
+                    
+                    if (tags.length === 0) {
+                        container.innerHTML = '<span class="text-sm text-gray-400">タグなし</span>';
+                        return;
+                    }
+                    
+                    container.innerHTML = tags.map(tag => \`
+                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full" 
+                              style="background-color: \${tag.color}20; color: \${tag.color}; border: 1px solid \${tag.color}40;">
+                            \${tag.name}
+                        </span>
+                    \`).join('');
+                } catch (error) {
+                    console.error('Failed to load property tags:', error);
+                }
+            }
+            
+            // Load tags for all properties
+            async function loadAllPropertyTags() {
+                const tagPromises = filteredProperties.map(property => loadPropertyTags(property.id));
+                await Promise.all(tagPromises);
+            }
+            
+            // Open tags modal
+            function openTagsModal(propertyId) {
+                currentTagPropertyId = propertyId;
+                const property = allProperties.find(p => p.id === propertyId);
+                
+                document.getElementById('tags-modal-title').textContent = \`タグ管理 - \${property?.name || '物件'}\`;
+                document.getElementById('tags-modal').classList.remove('hidden');
+                
+                loadModalPropertyTags();
+            }
+            
+            // Close tags modal
+            function closeTagsModal() {
+                document.getElementById('tags-modal').classList.add('hidden');
+                currentTagPropertyId = null;
+            }
+            
+            // Load property tags in modal
+            async function loadModalPropertyTags() {
+                try {
+                    const response = await axios.get(\`/api/properties/\${currentTagPropertyId}/tags\`);
+                    const propertyTags = response.data.tags || [];
+                    
+                    const container = document.getElementById('current-property-tags');
+                    
+                    if (propertyTags.length === 0) {
+                        container.innerHTML = '<p class="text-sm text-gray-400 py-2">タグが付けられていません</p>';
+                    } else {
+                        container.innerHTML = propertyTags.map(tag => \`
+                            <div class="flex items-center justify-between p-2 border border-gray-200 rounded">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-4 h-4 rounded-full" style="background-color: \${tag.color}"></div>
+                                    <span class="text-sm font-medium">\${tag.name}</span>
+                                </div>
+                                <button onclick="removePropertyTag('\${tag.id}')" 
+                                        class="text-red-600 hover:text-red-700 text-sm">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        \`).join('');
+                    }
+                    
+                    // Render available tags to add
+                    const propertyTagIds = propertyTags.map(t => t.id);
+                    const availableTags = allAvailableTags.filter(t => !propertyTagIds.includes(t.id));
+                    
+                    const addContainer = document.getElementById('available-tags');
+                    if (availableTags.length === 0) {
+                        addContainer.innerHTML = '<p class="text-sm text-gray-400 py-2">追加できるタグがありません</p>';
+                    } else {
+                        addContainer.innerHTML = availableTags.map(tag => \`
+                            <button onclick="addPropertyTag('\${tag.id}')"
+                                    class="flex items-center gap-2 p-2 border border-gray-200 rounded hover:bg-gray-50 transition-colors w-full text-left">
+                                <div class="w-4 h-4 rounded-full" style="background-color: \${tag.color}"></div>
+                                <span class="text-sm font-medium">\${tag.name}</span>
+                            </button>
+                        \`).join('');
+                    }
+                } catch (error) {
+                    console.error('Failed to load modal tags:', error);
+                }
+            }
+            
+            // Add tag to property
+            async function addPropertyTag(tagId) {
+                try {
+                    await axios.post(\`/api/properties/\${currentTagPropertyId}/tags/\${tagId}\`);
+                    await loadModalPropertyTags();
+                    await loadPropertyTags(currentTagPropertyId);
+                } catch (error) {
+                    console.error('Failed to add tag:', error);
+                    alert(error.response?.data?.error || 'タグの追加に失敗しました');
+                }
+            }
+            
+            // Remove tag from property
+            async function removePropertyTag(tagId) {
+                try {
+                    await axios.delete(\`/api/properties/\${currentTagPropertyId}/tags/\${tagId}\`);
+                    await loadModalPropertyTags();
+                    await loadPropertyTags(currentTagPropertyId);
+                } catch (error) {
+                    console.error('Failed to remove tag:', error);
+                    alert(error.response?.data?.error || 'タグの削除に失敗しました');
+                }
+            }
+            
+            // Render tag filter checkboxes
+            function renderTagFilters() {
+                const container = document.getElementById('tag-filter-checkboxes');
+                if (!container) return;
+                
+                if (allAvailableTags.length === 0) {
+                    container.innerHTML = '<p class="text-sm text-gray-400">タグがありません</p>';
+                    return;
+                }
+                
+                container.innerHTML = allAvailableTags.map(tag => \`
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" value="\${tag.id}" class="tag-filter form-checkbox h-4 w-4 text-blue-600">
+                        <span class="ml-2 text-sm inline-flex items-center gap-1">
+                            <div class="w-3 h-3 rounded-full" style="background-color: \${tag.color}"></div>
+                            \${tag.name}
+                        </span>
+                    </label>
+                \`).join('');
+            }
+            
+            // Initialize tags
+            async function initializeTags() {
+                await loadAvailableTags();
+                renderTagFilters();  // Render tag filter checkboxes
+                await loadAllPropertyTags();
+            }
+            
+            loadProperties().then(() => {
+                initializeTags();
+            });
         </script>
+        
+        <!-- Tags Modal (Phase 4-3) -->
+        <div id="tags-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+                    <h3 id="tags-modal-title" class="text-xl font-bold text-gray-900">タグ管理</h3>
+                    <button onclick="closeTagsModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Current Tags -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">現在のタグ</h4>
+                        <div id="current-property-tags" class="space-y-2">
+                            <!-- Current tags will be rendered here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Available Tags to Add -->
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-medium text-gray-700">タグを追加</h4>
+                            <a href="/tags" class="text-sm text-blue-600 hover:text-blue-700">
+                                <i class="fas fa-cog mr-1"></i>タグ管理
+                            </a>
+                        </div>
+                        <div id="available-tags" class="space-y-2">
+                            <!-- Available tags will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-4">
+                    <button onclick="closeTagsModal()" 
+                            class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                        閉じる
+                    </button>
+                </div>
+            </div>
+        </div>
     </body>
     </html>
   `);
