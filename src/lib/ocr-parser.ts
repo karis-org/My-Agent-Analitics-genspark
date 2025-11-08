@@ -83,8 +83,8 @@ function validateRange(value: number, fieldName: string): number {
     land_area: { min: 0.01, max: 1_000_000 },             // Same as landArea
     total_floor_area: { min: 0.01, max: 1_000_000 },      // 0.01〜100万㎡
     buildingArea: { min: 0.01, max: 1_000_000 },          // 0.01〜100万㎡
-    age: { min: 0, max: 200 },                            // 0〜200年
-    buildingAge: { min: 0, max: 200 },                    // 0〜200年
+    age: { min: -5, max: 150 },                           // -5〜150年（新築予定物件: -1〜-5、既存物件: 0〜150）
+    buildingAge: { min: -5, max: 150 },                   // -5〜150年
     occupancyRate: { min: 0, max: 100 },                  // 0〜100%
     distance_from_station: { min: 0, max: 300 },          // 0〜300分
     distanceFromStation: { min: 0, max: 300 },            // Same

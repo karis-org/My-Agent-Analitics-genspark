@@ -284,8 +284,10 @@ properties.get('/new', (c) => {
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">築年数</label>
-                                <input type="number" name="age"
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <input type="number" name="age" min="-5" max="150"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="例: 10">
+                                <p class="text-xs text-gray-500 mt-1">有効範囲: -5年（新築予定）〜150年</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">駅距離 (分)</label>
@@ -596,6 +598,15 @@ properties.get('/new', (c) => {
                 
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData.entries());
+                
+                // フロントエンドバリデーション
+                const age = parseInt(data.age);
+                if (data.age && !isNaN(age)) {
+                    if (age < -5 || age > 150) {
+                        alert('築年数の値が不正です（' + age + '年）。\n\n有効範囲: -5年〜150年\n\n※価格情報（坪単価など）を築年数に入力していないか確認してください。');
+                        return;
+                    }
+                }
                 
                 // チェックされた分析オプションを取得
                 const selectedAnalyses = {
