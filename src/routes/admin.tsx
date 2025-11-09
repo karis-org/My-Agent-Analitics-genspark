@@ -47,7 +47,7 @@ admin.get('/', async (c) => {
     FROM users u
     LEFT JOIN properties p ON u.id = p.user_id
     LEFT JOIN analysis_results a ON p.id = a.property_id
-    GROUP BY u.id
+    GROUP BY u.id, u.email, u.name, u.role, u.is_admin, u.is_active, u.created_at
     ORDER BY u.created_at DESC
   `).all();
   
