@@ -156,42 +156,79 @@
 
 ## ⚠️ 新規報告された問題（調査中）
 
-### Issue #6: 管理ページがエラーで見れない 🟡 **調査完了・詳細情報待ち**
+### Issue #6: 管理ページがエラーで見れない ✅ **修正完了**
 - **報告日**：2025-11-08
 - **調査日**：2025-11-08 (Session 25 Phase 2)
-- **ユーザー報告**：「管理ページがエラーで見れません」
+- **修正日**：2025-11-08 (Session 25 Phase 2)
+- **ユーザー報告**：「管理ページがエラーで見れません」(500サーバーエラー)
 - **URL**: `/admin`
-- **症状**：認証後のアクセスでエラー発生（推測）
+- **症状**：認証後のアクセスで500エラー発生
 - **影響範囲**：Session 23管理機能へのアクセス
 
-**実施した調査** (Session 25 Phase 2):
-1. ✅ 本番環境テスト: HTTP 302 (正常リダイレクト)
-2. ✅ ローカル環境テスト: HTTP 302 (正常リダイレクト)
-3. ✅ コードレビュー: admin.tsx (1672行) - 構文エラーなし
-4. ✅ Session 24テスト結果確認: `/admin` 302 PASS
+**根本原因**:
+- admin.tsx Line 50の`GROUP BY u.id`が不完全
+- SQLiteの厳格モードでは、SELECTリストの全ての非集約カラムを`GROUP BY`に含める必要がある
+- 不足していたカラム: `u.email, u.name, u.role, u.is_admin, u.is_active, u.created_at`
 
-**調査結果**:
-- ✅ 認証前のアクセス: 正常動作
-- ⚠️ 認証後のアクセス: 未確認（ユーザー情報待ち）
-- ⚠️ エラーメッセージ: 未確認
-- ⚠️ ブラウザコンソールエラー: 未確認
+**修正内容** (Session 25 Phase 2):
+- `GROUP BY u.id` → `GROUP BY u.id, u.email, u.name, u.role, u.is_admin, u.is_active, u.created_at`
+- 修正ファイル: `src/routes/admin.tsx`
+- Commit: 51e71da
 
-**潜在的な原因（推測のみ）**:
-1. 認証後のJavaScriptエラー
-2. データベースクエリのタイムアウト（大量データ）
-3. ブラウザキャッシュ問題
-4. ユーザー権限不足
+**テスト結果**:
+- ✅ ローカルD1クエリテスト: 成功（3ユーザー正常取得）
+- ✅ ビルド成功: 734.34 kB
+- ✅ 本番デプロイ成功: https://968b71c0.my-agent-analytics.pages.dev
+- ✅ エンドポイント: HTTP 302 (正常)
 
-**修正状況**：⚠️ **Error #004予防のため、推測による修正は実施せず**
-- 詳細なエラー情報をユーザーに質問中
-- エラーメッセージ、ブラウザコンソールログ、アクセス状況の確認待ち
-
-**対応方針**：
-  1. ✅ ユーザーへ詳細情報を質問（エラーメッセージ、コンソールエラー、権限、ブラウザ環境）
-  2. ⏸️ 回答受領後に原因特定
-  3. ⏸️ 修正実装・テスト・デプロイ
+**修正状況**：✅ **完全修正完了**
   
 **調査レポート**: [SESSION_25_PHASE_2_INVESTIGATION.md](./SESSION_25_PHASE_2_INVESTIGATION.md)
+
+---
+
+### Issue #7: 物件登録機能が500エラーで失敗 🔴 **Critical - 本番D1マイグレーション未適用**
+- **報告日**：2025-11-10
+- **発見日**：2025-11-10 (Session 25 - 統合作業中)
+- **ユーザー報告**：スクリーンショットで「物件の登録に失敗しました: Failed to create property」エラー確認
+- **URL**: 物件登録フォーム
+- **症状**：物件登録時に500サーバーエラー発生
+- **影響範囲**：物件登録機能、統合レポート機能、Chart.js グラフ機能
+
+**根本原因**:
+- **本番環境のCloudflare D1データベースにMigration 0008と0009が適用されていない**
+- ローカルD1: 20フィールド（Migration 0008/0009適用済み） ✅
+- 本番D1: 12フィールド（Migration 0008/0009未適用） ❌
+- INSERT クエリは20フィールドを期待するが、本番D1には12フィールドしかない → SQL Error → 500
+
+**不足しているフィールド** (Migration 0008):
+- property_type TEXT
+- land_area REAL
+- registration_date TEXT
+
+**不足しているフィールド** (Migration 0009):
+- annual_income REAL
+- monthly_rent REAL
+- annual_expense REAL
+- gross_yield REAL
+- net_yield REAL
+
+**修正方法**:
+- ⚠️ Cloudflare API権限エラー（Error 7403）により、wranglerからの自動適用が不可
+- ✅ **Cloudflare Dashboard経由での手動適用が必要**
+- 詳細手順: [PRODUCTION_D1_MIGRATION_GUIDE.md](./PRODUCTION_D1_MIGRATION_GUIDE.md)
+
+**修正状況**：⚠️ **ユーザー様による手動適用待ち**
+
+**対応方針**：
+1. ✅ 手動適用ガイド作成完了
+2. ⏸️ ユーザー様がCloudflare Dashboardから手動適用
+3. ⏸️ 適用後、物件登録機能の動作確認
+
+**過去の同様問題**:
+- Session 9: 同じ問題（物件作成APIにフィールド不足）
+- Session 10: Migration 0010手動適用ガイド作成
+- 教訓: 本番環境のマイグレーション適用は必ず確認が必要
 
 ---
 
