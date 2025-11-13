@@ -89,7 +89,9 @@ app.get('/api/hello', (c) => {
 
 // Add redirects for alternative paths
 app.get('/stigma-check', (c) => c.redirect('/stigma/check'))
+app.get('/stigma', (c) => c.redirect('/stigma/check'))
 app.get('/itandi-bb', (c) => c.redirect('/itandi/rental-market'))
+app.get('/itandi', (c) => c.redirect('/itandi/rental-market'))
 app.get('/fact-check', (c) => c.redirect('/help'))
 app.get('/login', (c) => c.redirect('/auth/login'))
 

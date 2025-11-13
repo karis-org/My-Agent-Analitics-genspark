@@ -975,6 +975,12 @@ api.post('/properties', authMiddleware, async (c) => {
       return c.json({ error: 'Name and price are required' }, 400);
     }
     
+    // Validate minimum price (3,000,000 yen)
+    const priceValue = parseFloat(price);
+    if (isNaN(priceValue) || priceValue < 3000000) {
+      return c.json({ error: '物件価格は300万円以上で入力してください' }, 400);
+    }
+    
     const propertyId = `prop-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const now = new Date().toISOString();
     
