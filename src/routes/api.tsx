@@ -28,6 +28,7 @@ import {
   type LandPriceData,
   type AssetEvaluationFactors,
 } from '../lib/residential-evaluator';
+import { logActivity, ActivityActions } from '../lib/activity-logger';
 import { 
   parseOCRNumber, 
   parseOCRDate, 
@@ -1019,6 +1020,9 @@ api.post('/properties', authMiddleware, async (c) => {
       SELECT * FROM properties WHERE id = ?
     `).bind(propertyId).first();
     
+    // Log activity
+    await logActivity(env.DB, user.id, ActivityActions.PROPERTY_CREATED, `物件「${name}」を登録`);
+    
     return c.json({
       success: true,
       property,
@@ -1109,6 +1113,9 @@ api.put('/properties/:id', authMiddleware, async (c) => {
       SELECT * FROM properties WHERE id = ?
     `).bind(propertyId).first();
     
+    // Log activity
+    await logActivity(env.DB, user.id, ActivityActions.PROPERTY_UPDATED, `物件「${name || existing.name}」を更新`);
+    
     return c.json({
       success: true,
       property,
@@ -1140,6 +1147,9 @@ api.delete('/properties/:id', authMiddleware, async (c) => {
     if (!existing) {
       return c.json({ error: 'Property not found' }, 404);
     }
+    
+    // Log activity before deletion
+    await logActivity(env.DB, user.id, ActivityActions.PROPERTY_DELETED, `物件「${existing.name}」を削除`);
     
     // Delete property (CASCADE will delete related data)
     await env.DB.prepare(`
@@ -1273,6 +1283,12 @@ api.post('/properties/investigate', async (c) => {
     };
     
     const report = generateInvestigationReport(result);
+    
+    // Log activity (get user from context if authenticated)
+    const user = c.get('user');
+    if (user) {
+      await logActivity(c.env.DB, user.id, ActivityActions.STIGMA_COMPLETED, `事故物件調査完了: ${address}`);
+    }
     
     return c.json({
       success: true,

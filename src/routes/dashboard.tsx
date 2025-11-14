@@ -10,6 +10,67 @@ const dashboard = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 dashboard.use('/*', authMiddleware);
 
 /**
+ * Helper function to get time ago string
+ */
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'たった今';
+  if (diffMins < 60) return `${diffMins}分前`;
+  if (diffHours < 24) return `${diffHours}時間前`;
+  if (diffDays < 7) return `${diffDays}日前`;
+  return date.toLocaleDateString('ja-JP');
+}
+
+/**
+ * Helper function to get activity icon
+ */
+function getActivityIcon(action: string): string {
+  if (action.includes('property_created')) return 'fas fa-plus';
+  if (action.includes('property_updated')) return 'fas fa-edit';
+  if (action.includes('property_deleted')) return 'fas fa-trash';
+  if (action.includes('analysis')) return 'fas fa-chart-line';
+  if (action.includes('ocr')) return 'fas fa-camera';
+  if (action.includes('itandi')) return 'fas fa-building';
+  if (action.includes('stigma')) return 'fas fa-exclamation-triangle';
+  if (action.includes('report')) return 'fas fa-file-alt';
+  return 'fas fa-info-circle';
+}
+
+/**
+ * Helper function to get activity color
+ */
+function getActivityColor(action: string): string {
+  if (action.includes('created')) return 'bg-green-500';
+  if (action.includes('updated')) return 'bg-blue-500';
+  if (action.includes('deleted')) return 'bg-red-500';
+  if (action.includes('analysis')) return 'bg-purple-500';
+  if (action.includes('stigma')) return 'bg-orange-500';
+  return 'bg-gray-500';
+}
+
+/**
+ * Helper function to get activity label
+ */
+function getActivityLabel(action: string): string {
+  const labels: Record<string, string> = {
+    'property_created': '物件登録',
+    'property_updated': '物件更新',
+    'property_deleted': '物件削除',
+    'analysis_completed': '分析完了',
+    'ocr_completed': 'OCR実行',
+    'itandi_completed': 'イタンジBB検索',
+    'stigma_completed': '事故物件調査',
+    'report_generated': 'レポート生成',
+  };
+  return labels[action] || 'アクティビティ';
+}
+
+/**
  * Dashboard home page
  */
 dashboard.get('/', async (c) => {
@@ -20,6 +81,7 @@ dashboard.get('/', async (c) => {
   let propertyCount = 0;
   let analysisCount = 0;
   let reportCount = 0;
+  let activities: any[] = [];
   
   try {
     // 物件数を取得
@@ -36,6 +98,16 @@ dashboard.get('/', async (c) => {
     
     // レポート数を取得（実際には分析があればレポート生成可能なので、分析数と同じとする）
     reportCount = analysisCount;
+    
+    // アクティビティログを取得
+    const activitiesResult = await env.DB.prepare(`
+      SELECT action, details, created_at
+      FROM activity_logs
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+      LIMIT 10
+    `).bind(user.id).all();
+    activities = activitiesResult.results || [];
     
   } catch (error) {
     console.error('[Dashboard] Failed to fetch stats:', error);
@@ -234,11 +306,45 @@ dashboard.get('/', async (c) => {
             <!-- Recent Activity -->
             <div class="bg-white rounded-lg shadow p-8">
                 <h3 class="text-xl font-bold text-gray-900 mb-6">最近のアクティビティ</h3>
+                ${activities.length === 0 ? `
                 <div class="text-center py-12 text-gray-500">
                     <i class="fas fa-inbox text-6xl mb-4 opacity-50"></i>
                     <p>まだアクティビティがありません</p>
                     <p class="text-sm mt-2">物件を登録して分析を始めましょう</p>
                 </div>
+                ` : `
+                <div class="space-y-4">
+                    ${activities.map((activity: any) => {
+                      const date = new Date(activity.created_at);
+                      const timeAgo = getTimeAgo(date);
+                      const icon = getActivityIcon(activity.action);
+                      const color = getActivityColor(activity.action);
+                      
+                      return `
+                        <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                            <div class="flex-shrink-0">
+                                <div class="${color} rounded-full p-2 w-10 h-10 flex items-center justify-center">
+                                    <i class="${icon} text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900">
+                                    ${getActivityLabel(activity.action)}
+                                </p>
+                                ${activity.details ? `
+                                <p class="text-sm text-gray-600 mt-1">
+                                    ${activity.details}
+                                </p>
+                                ` : ''}
+                                <p class="text-xs text-gray-400 mt-1">
+                                    ${timeAgo}
+                                </p>
+                            </div>
+                        </div>
+                      `;
+                    }).join('')}
+                </div>
+                `}
             </div>
         </main>
     </body>
